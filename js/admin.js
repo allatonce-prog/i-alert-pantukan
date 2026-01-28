@@ -57,19 +57,174 @@ async function checkAuth() {
 // Initialize
 checkAuth();
 
-// Logout Handler
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    try {
-        if (reportsListener) {
-            reportsListener();
-        }
-        localStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Logout error:', error);
-        showToast('Error logging out', 'error');
+// User Menu Logic
+const userMenuBtn = document.getElementById('userMenuBtn');
+const userDropdown = document.getElementById('userDropdown');
+
+// Toggle User Menu
+if (userMenuBtn) {
+    userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('active');
+    });
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (userMenuBtn && userDropdown && !userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('active');
     }
 });
+
+// Profile Management
+const profileLink = document.querySelector('a[href="#"][class="dropdown-item"]:first-child');
+const profileModal = document.getElementById('profileModal');
+const profileForm = document.getElementById('profileForm');
+const closeProfileModalBtn = document.getElementById('closeProfileModal');
+const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+
+// Open Profile Modal
+if (profileLink) {
+    profileLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        userDropdown.classList.remove('active');
+
+        // Fill current data
+        if (currentAdmin) {
+            document.getElementById('profileName').value = currentAdmin.name || '';
+            document.getElementById('profileEmail').value = currentAdmin.email || '';
+            document.getElementById('profileDepartment').value = currentAdmin.department || '';
+            document.getElementById('profilePassword').value = ''; // Clear password field
+        }
+
+        profileModal.classList.add('active');
+    });
+}
+
+// Close Profile Modal
+function closeProfileModal() {
+    profileModal.classList.remove('active');
+    profileForm.reset();
+}
+
+if (closeProfileModalBtn) closeProfileModalBtn.addEventListener('click', closeProfileModal);
+if (cancelProfileBtn) cancelProfileBtn.addEventListener('click', closeProfileModal);
+
+// Handle Profile Update
+if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const saveBtn = document.getElementById('saveProfileBtn');
+        const originalBtnContent = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<div class="spinner"></div> Saving...';
+
+        const updates = {
+            name: document.getElementById('profileName').value
+        };
+
+        const newPassword = document.getElementById('profilePassword').value;
+        if (newPassword) {
+            updates.password = newPassword;
+        }
+
+        try {
+            // Update Firestore (ADMIN collection)
+            await db.collection('ADMIN').doc(currentAdmin.uid).update(updates);
+
+            // Update Local State and Storage
+            const updatedAdmin = { ...currentAdmin, ...updates };
+            delete updatedAdmin.password; // Don't store password in local state
+            currentAdmin = updatedAdmin;
+            localStorage.setItem('currentUser', JSON.stringify(updatedAdmin));
+
+            // Update UI if needed (e.g. sidebar name if we showed it)
+
+            showToast('Profile updated successfully', 'success');
+            closeProfileModal();
+
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            showToast('Failed to update profile', 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnContent;
+        }
+    });
+}
+
+// Settings Management
+const settingsLink = document.querySelector('a[href="#"][class="dropdown-item"]:nth-child(2)');
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsModalBtn = document.getElementById('closeSettingsModal');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const darkModeToggle = document.getElementById('darkModeToggle');
+
+// Open Settings
+if (settingsLink) {
+    settingsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        userDropdown.classList.remove('active');
+        settingsModal.classList.add('active');
+    });
+}
+
+// Close Settings
+function closeSettings() {
+    settingsModal.classList.remove('active');
+}
+
+if (closeSettingsModalBtn) closeSettingsModalBtn.addEventListener('click', closeSettings);
+if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+
+// Dark Mode Logic
+function initTheme() {
+    const isDark = localStorage.getItem('theme') === 'dark';
+    applyTheme(isDark);
+    if (darkModeToggle) {
+        darkModeToggle.checked = isDark;
+    }
+}
+
+function applyTheme(isDark) {
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        // document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f172a');
+    } else {
+        document.body.classList.remove('dark-mode');
+        // document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff');
+    }
+}
+
+// Toggle Handler
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('change', (e) => {
+        const isDark = e.target.checked;
+        applyTheme(isDark);
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}
+
+// Initialize Theme
+document.addEventListener('DOMContentLoaded', initTheme);
+
+// Logout Handler
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        try {
+            if (reportsListener) {
+                reportsListener(); // Unsubscribe from listener
+            }
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+            showToast('Error logging out', 'error');
+        }
+    });
+}
 
 // Navigation
 // Navigation

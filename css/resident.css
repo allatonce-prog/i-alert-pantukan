@@ -1,13 +1,124 @@
-/* Header */
-.app-header {
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: var(--shadow-md);
+/* Light Mode (Default) Variables */
+:root {
+    --color-primary: #DC2626;
+    /* Red-600 */
+    --color-primary-dark: #B91C1C;
+    /* Red-700 */
+    --color-bg-primary: #F8FAFC;
+    /* Slate-50 */
+    --color-bg-secondary: #FFFFFF;
+    /* White */
+    --color-bg-tertiary: #F1F5F9;
+    /* Slate-100 */
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #FFFFFF;
+
+    --color-text-primary: #0F172A;
+    /* Slate-900 */
+    --color-text-secondary: #475569;
+    /* Slate-600 */
+    --color-text-muted: #94A3B8;
+    /* Slate-400 */
+
+    --border-color: #E2E8F0;
+    /* Slate-200 */
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.5rem;
+    --border-radius-lg: 0.75rem;
+    --border-radius-full: 9999px;
+
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
 }
+
+/* Dark Mode Overrides */
+body.dark-mode {
+    --color-bg-primary: #0F172A;
+    /* Slate-900 */
+    --color-bg-secondary: #1E293B;
+    /* Slate-800 */
+    --color-bg-tertiary: #334155;
+    /* Slate-700 */
+
+    --color-surface: #1E293B;
+    --color-surface-elevated: #334155;
+
+    --color-text-primary: #F8FAFC;
+    /* Slate-50 */
+    --color-text-secondary: #CBD5E1;
+    /* Slate-300 */
+    --color-text-muted: #94A3B8;
+    /* Slate-400 */
+
+    --border-color: #334155;
+    /* Slate-700 */
+}
+
+/* Base Styles Update */
+body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Update Specific Components for Light/Dark Context */
+.app-header {
+    background: rgba(255, 255, 255, 0.9);
+    /* Light mode header */
+    border-bottom: 1px solid var(--border-color);
+}
+
+body.dark-mode .app-header {
+    background: rgba(15, 23, 42, 0.9);
+}
+
+.emergency-card {
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.emergency-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+}
+
+.modal-content {
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+}
+
+/* Keep input/text visible in light mode */
+input,
+textarea,
+select {
+    background: var(--color-bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--color-text-primary);
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: var(--color-bg-tertiary);
+    border-color: transparent;
+}
+
 
 .header-content {
     max-width: 1200px;
@@ -56,7 +167,8 @@
     width: 48px;
     height: 48px;
     background: var(--color-surface);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    /* Use variable */
     border-radius: var(--border-radius-md);
     display: flex;
     align-items: center;
@@ -74,6 +186,122 @@
 .btn-icon:hover {
     background: var(--color-bg-tertiary);
     transform: translateY(-2px);
+}
+
+/* User Menu */
+.user-menu {
+    position: relative;
+    z-index: 101;
+    /* Ensure higher z-index than other header elements */
+}
+
+.user-avatar {
+    border-radius: 50%;
+    background: var(--color-surface);
+    /* Changed from surface-elevated to surface for better contrast in light mode */
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: 220px;
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+    /* Use variable */
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-xl);
+    padding: var(--spacing-xs);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-normal);
+}
+
+.dropdown-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: var(--border-radius-sm);
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+}
+
+.dropdown-item svg {
+    width: 18px;
+    height: 18px;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: var(--spacing-xs) 0;
+}
+
+.text-danger {
+    color: var(--color-error);
+}
+
+.text-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+}
+
+/* Toggle Switch */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked+.slider {
+    background-color: var(--color-primary);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--color-primary);
+}
+
+input:checked+.slider:before {
+    transform: translateX(24px);
 }
 
 /* Main Content */
@@ -138,7 +366,8 @@
 
 .emergency-card {
     background: var(--color-surface);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    /* Use variable instead of hardcoded white alpha */
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
     cursor: pointer;
@@ -255,7 +484,8 @@
 
 .report-item {
     background: var(--color-surface);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    /* Use variable instead of hardcoded white alpha */
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-lg);
     display: flex;

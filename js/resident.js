@@ -57,6 +57,159 @@ async function checkAuth() {
 checkAuth();
 
 // Logout Handler
+// User Menu Toggle
+const userMenuBtn = document.getElementById('userMenuBtn');
+const userDropdown = document.getElementById('userDropdown');
+
+userMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userDropdown.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('active');
+    }
+});
+
+// Profile Management
+const profileLink = document.querySelector('a[href="#"][class="dropdown-item"]:first-child');
+const profileModal = document.getElementById('profileModal');
+const profileForm = document.getElementById('profileForm');
+const closeProfileModalBtn = document.getElementById('closeProfileModal');
+const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+
+// Open Profile Modal
+profileLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    userDropdown.classList.remove('active');
+
+    // Fill current data
+    if (currentUser) {
+        document.getElementById('profileName').value = currentUser.name || '';
+        document.getElementById('profilePhone').value = currentUser.phone || '';
+        document.getElementById('profileAddress').value = currentUser.address || '';
+        document.getElementById('profilePassword').value = ''; // Clear password field
+    }
+
+    profileModal.classList.add('active');
+});
+
+// Close Profile Modal
+function closeProfileModal() {
+    profileModal.classList.remove('active');
+    profileForm.reset();
+}
+
+closeProfileModalBtn.addEventListener('click', closeProfileModal);
+cancelProfileBtn.addEventListener('click', closeProfileModal);
+
+// Handle Profile Update
+profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const originalBtnContent = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<div class="spinner"></div> Saving...';
+
+    const updates = {
+        name: document.getElementById('profileName').value,
+        phone: document.getElementById('profilePhone').value,
+        address: document.getElementById('profileAddress').value
+    };
+
+    const newPassword = document.getElementById('profilePassword').value;
+    if (newPassword) {
+        updates.password = newPassword;
+    }
+
+    try {
+        // Update Firestore
+        await db.collection('USERS').doc(currentUser.uid).update(updates);
+
+        // Update Local State and Storage
+        const updatedUser = { ...currentUser, ...updates };
+        delete updatedUser.password; // Don't store password in local state
+        currentUser = updatedUser;
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser)); // Only stores safe data usually, but syncing just in case
+
+        // Update UI
+        document.getElementById('userName').textContent = `Welcome, ${currentUser.name}`;
+
+        showToast('Profile updated successfully', 'success');
+        closeProfileModal();
+
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        showToast('Failed to update profile', 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalBtnContent;
+    }
+});
+
+// Settings Management
+const settingsLink = document.querySelector('a[href="#"][class="dropdown-item"]:nth-child(2)'); // "Settings" link
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsModalBtn = document.getElementById('closeSettingsModal');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const darkModeToggle = document.getElementById('darkModeToggle');
+
+// Open Settings
+settingsLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    userDropdown.classList.remove('active');
+    settingsModal.classList.add('active');
+});
+
+// Close Settings
+function closeSettings() {
+    settingsModal.classList.remove('active');
+}
+
+closeSettingsModalBtn.addEventListener('click', closeSettings);
+closeSettingsBtn.addEventListener('click', closeSettings);
+
+// Dark Mode Logic
+function initTheme() {
+    const isDark = localStorage.getItem('theme') === 'dark';
+
+    // Apply theme
+    applyTheme(isDark);
+
+    // Set toggle state
+    if (darkModeToggle) {
+        darkModeToggle.checked = isDark;
+    }
+}
+
+function applyTheme(isDark) {
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        // Optional: Update meta theme color
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f172a');
+    } else {
+        document.body.classList.remove('dark-mode');
+        // Optional: Update meta theme color
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#dc2626');
+    }
+}
+
+// Toggle Handler
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('change', (e) => {
+        const isDark = e.target.checked;
+        applyTheme(isDark);
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+}
+
+// Initialize Theme on Load
+document.addEventListener('DOMContentLoaded', initTheme);
+
+// Logout Handler
 document.getElementById('logoutBtn').addEventListener('click', () => {
     try {
         localStorage.removeItem('currentUser');
