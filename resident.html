@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#DC2626">
+
+    <title>Emergency Report - iAlert Pantukan</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/resident.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo-small">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+                        <path d="M12 8v8M8 12h8" />
+                    </svg>
+                </div>
+                <div>
+                    <h2>iAlert Pantukan</h2>
+                    <p id="userName">Welcome, Resident</p>
+                </div>
+            </div>
+            <button class="btn-icon" id="logoutBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Status Banner -->
+            <div class="status-banner" id="statusBanner">
+                <div class="status-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </div>
+                <div class="status-text">
+                    <h3>Ready to Report</h3>
+                    <p>Select an emergency type below to send an alert</p>
+                </div>
+            </div>
+
+            <!-- Emergency Types Grid -->
+            <div class="emergency-grid">
+                <div class="emergency-card" data-type="fire">
+                    <div class="emergency-icon fire">
+                        <span>🔥</span>
+                    </div>
+                    <h3>Fire Emergency</h3>
+                    <p>Fire incidents and burning structures</p>
+                </div>
+
+                <div class="emergency-card" data-type="police">
+                    <div class="emergency-icon police">
+                        <span>👮</span>
+                    </div>
+                    <h3>Police Assistance</h3>
+                    <p>Crime, security threats, or police help</p>
+                </div>
+
+                <div class="emergency-card" data-type="medical">
+                    <div class="emergency-icon medical">
+                        <span>🏥</span>
+                    </div>
+                    <h3>Medical Emergency</h3>
+                    <p>Health emergencies requiring ambulance</p>
+                </div>
+
+                <div class="emergency-card" data-type="rescue">
+                    <div class="emergency-icon rescue">
+                        <span>⛑️</span>
+                    </div>
+                    <h3>Search & Rescue</h3>
+                    <p>Missing persons, trapped individuals</p>
+                </div>
+
+                <div class="emergency-card" data-type="disaster">
+                    <div class="emergency-icon disaster">
+                        <span>🌊</span>
+                    </div>
+                    <h3>Natural Disaster</h3>
+                    <p>Floods, landslides, earthquakes</p>
+                </div>
+
+                <div class="emergency-card" data-type="traffic">
+                    <div class="emergency-icon traffic">
+                        <span>🚦</span>
+                    </div>
+                    <h3>Traffic Accident</h3>
+                    <p>Vehicle accidents, road incidents</p>
+                </div>
+
+                <div class="emergency-card" data-type="environmental">
+                    <div class="emergency-icon environmental">
+                        <span>🌳</span>
+                    </div>
+                    <h3>Environmental</h3>
+                    <p>Chemical spills, pollution hazards</p>
+                </div>
+
+                <div class="emergency-card" data-type="other">
+                    <div class="emergency-icon other">
+                        <span>⚠️</span>
+                    </div>
+                    <h3>Other Emergency</h3>
+                    <p>Emergencies not listed above</p>
+                </div>
+            </div>
+
+            <!-- My Reports Section -->
+            <div class="my-reports-section">
+                <div class="section-header">
+                    <h2>My Recent Reports</h2>
+                    <button class="btn btn-secondary" id="refreshReportsBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10" />
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div id="myReportsList" class="reports-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Emergency Report Modal -->
+    <div id="emergencyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span id="modalEmergencyIcon"></span>
+                    <span id="modalEmergencyType">Emergency Report</span>
+                </h2>
+                <button class="btn-close" id="closeModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="emergencyForm">
+                    <div class="form-group">
+                        <label for="description">
+                            Describe the Emergency
+                        </label>
+                        <textarea id="description"
+                            placeholder="Provide detailed information about the emergency situation..." rows="5"
+                            required></textarea>
+                    </div>
+
+                    <div class="location-section">
+                        <div class="location-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span>Your Location</span>
+                            <button type="button" class="btn btn-secondary" id="getLocationBtn"
+                                style="margin-left: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 2v20M2 12h20" />
+                                </svg>
+                                Get Current Location
+                            </button>
+                        </div>
+                        <div id="map" class="location-map"></div>
+                        <p id="locationText" class="location-text">Click the button above to get your current location
+                        </p>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                        <button type="submit" class="btn btn-danger" id="submitEmergency">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+                            </svg>
+                            <span>Send Emergency Alert</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/resident.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,246 @@
+/* Clean Red Theme */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    /* Split background: Red top, light gray bottom */
+    background: linear-gradient(to bottom, var(--color-primary) 40vh, #f1f5f9 40vh);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Remove old animations and pseudo-elements */
+.auth-container::before {
+    display: none;
+}
+
+.auth-card {
+    background: #ffffff;
+    border-radius: var(--border-radius-xl);
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 0.6s ease-out;
+    border: none;
+    /* Removed glassmorphism border */
+}
+
+/* Header */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo-container {
+    margin-bottom: 1.5rem;
+}
+
+.logo-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1rem;
+    background: rgba(220, 38, 38, 0.1);
+    /* Light red bg */
+    border-radius: 50%;
+    /* Circle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    /* Clean flat look */
+    animation: none;
+}
+
+.logo-icon svg {
+    width: 36px;
+    height: 36px;
+    color: var(--color-primary);
+    /* Red icon */
+}
+
+/* For admin page logo if needed, but keeping it consistent */
+.logo-icon.admin {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.logo-icon.admin svg {
+    color: var(--color-info);
+}
+
+.auth-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    /* Dark text */
+    margin-bottom: 0.5rem;
+    background: none;
+    -webkit-text-fill-color: initial;
+}
+
+.tagline {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Tabs */
+.auth-tabs {
+    display: flex;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 2rem;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 0.6rem;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.auth-tab.active {
+    background: #ffffff;
+    color: var(--color-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.auth-tab:hover:not(.active) {
+    color: #334155;
+}
+
+/* Forms */
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    /* Hide the SVG just in case some remain in HTML */
+}
+
+.form-group label svg {
+    display: none;
+}
+
+/* Input Style matches a clean, minimal look */
+.form-group input,
+.form-group select {
+    background: #f8fafc;
+    /* Very light gray */
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius-md);
+    padding: 0.875rem 1rem;
+    color: #1e293b;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    background: #ffffff;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    outline: none;
+}
+
+.form-group input::placeholder {
+    color: #94a3b8;
+}
+
+/* Button */
+.btn-primary {
+    width: 100%;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 0.9rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+.btn-primary svg {
+    display: none;
+    /* Simplify button - just text usually looks cleaner, or small icon */
+}
+
+/* Auth Footer (Admin Link etc) */
+/* Note: We removed the admin link in login, but if register has links */
+.auth-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-footer a {
+    color: var(--color-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* Admin Note */
+.admin-note {
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    padding: 1rem;
+    border-radius: var(--border-radius-md);
+    display: flex;
+    gap: 0.75rem;
+}
+
+.admin-note p {
+    color: #1e40af;
+    font-size: 0.85rem;
+}
+
+.admin-note svg {
+    color: #3b82f6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-container {
+        padding: 1rem;
+        background: #ffffff;
+        /* Simplifies on mobile */
+    }
+
+    .auth-card {
+        box-shadow: none;
+        padding: 1rem 0;
+    }
+}

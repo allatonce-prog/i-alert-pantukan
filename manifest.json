@@ -1,0 +1,28 @@
+{
+  "name": "iAlert Pantukan",
+  "short_name": "iAlert",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1E293B",
+  "theme_color": "#DC2626",
+  "description": "Emergency Response System for Pantukan with real-time GPS tracking",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
