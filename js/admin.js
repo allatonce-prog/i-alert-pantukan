@@ -374,6 +374,15 @@ window.viewReportDetails = async function (reportId) {
                         Coordinates: ${report.location.lat.toFixed(6)}, ${report.location.lng.toFixed(6)} (±${Math.round(report.location.accuracy)}m)
                     </p>
                 </div>
+
+                ${report.imageUrl ? `
+                <div style="margin-bottom: var(--spacing-xl);">
+                    <h4 style="color: var(--color-text-primary); margin-bottom: var(--spacing-md);">Proof Image</h4>
+                    <div style="border-radius: var(--border-radius-md); overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                        <img src="${report.imageUrl}" alt="Emergency Proof" style="width: 100%; max-height: 400px; object-fit: contain; background: black; display: block;">
+                    </div>
+                </div>
+                ` : ''}
                 
                 <div style="display: flex; gap: var(--spacing-md);">
                     ${report.status === 'pending' ? `

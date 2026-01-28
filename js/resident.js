@@ -200,6 +200,164 @@ document.getElementById('getLocationBtn').addEventListener('click', () => {
     );
 });
 
+// Image & Camera Logic
+const proofImageInput = document.getElementById('proofImage');
+const imagePreview = document.getElementById('imagePreview');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const removeImageBtn = document.getElementById('removeImageBtn');
+const openCameraBtn = document.getElementById('openCameraBtn');
+const cameraInterface = document.getElementById('cameraInterface');
+const cameraFeed = document.getElementById('cameraFeed');
+const captureBtn = document.getElementById('captureBtn');
+const switchCameraBtn = document.getElementById('switchCameraBtn');
+const closeCameraBtn = document.getElementById('closeCameraBtn');
+
+let selectedImageFile = null;
+let stream = null;
+let currentFacingMode = 'environment'; // Default to back camera
+
+// Handle File Input
+proofImageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setImage(file);
+    }
+});
+
+// Set Image Helper
+function setImage(file) {
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        imagePreview.src = e.target.result;
+        imagePreviewContainer.style.display = 'block';
+        cameraInterface.style.display = 'none';
+        stopCamera();
+    };
+    reader.readAsDataURL(file);
+}
+
+// Remove Image
+removeImageBtn.addEventListener('click', () => {
+    selectedImageFile = null;
+    imagePreview.src = '';
+    imagePreviewContainer.style.display = 'none';
+    proofImageInput.value = ''; // Reset input
+});
+
+// Start Camera
+async function startCamera(facingMode = 'environment') {
+    try {
+        if (stream) {
+            stopCamera();
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: facingMode
+            },
+            audio: false
+        });
+
+        cameraFeed.srcObject = stream;
+        cameraInterface.style.display = 'block';
+        imagePreviewContainer.style.display = 'none';
+
+    } catch (error) {
+        console.error('Camera error:', error);
+        showToast('Unable to access camera', 'error');
+    }
+}
+
+// Stop Camera
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    cameraInterface.style.display = 'none';
+}
+
+// Open Camera Button
+openCameraBtn.addEventListener('click', () => {
+    startCamera(currentFacingMode);
+});
+
+// Close Camera Button
+closeCameraBtn.addEventListener('click', stopCamera);
+
+// Switch Camera
+switchCameraBtn.addEventListener('click', () => {
+    currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+    startCamera(currentFacingMode);
+});
+
+// Capture Image
+captureBtn.addEventListener('click', () => {
+    if (!stream) return;
+
+    const canvas = document.getElementById('cameraCanvas');
+    const context = canvas.getContext('2d');
+
+    // Set canvas dimensions to match video stream
+    canvas.width = cameraFeed.videoWidth;
+    canvas.height = cameraFeed.videoHeight;
+
+    // Draw current video frame to canvas
+    context.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+
+    // Convert to file
+    canvas.toBlob((blob) => {
+        const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        setImage(file);
+        stopCamera();
+    }, 'image/jpeg', 0.8);
+});
+
+// Helper to generate SHA1 hash for Cloudinary signature
+async function generateSHA1(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Upload Image to Cloudinary
+async function uploadImageToCloudinary(file) {
+    const cloudName = 'djghkklph';
+    const apiKey = '613592386419746';
+    const apiSecret = 'CSrGl9AN4MNyylk_4Zb2UA7S22g'; // Note: Exposed secret is insecure for production
+    const timestamp = Math.round((new Date()).getTime() / 1000);
+
+    // Generate signature
+    // Parameters to sign: timestamp (sorted alphabetically)
+    const paramsToSign = `timestamp=${timestamp}${apiSecret}`;
+    const signature = await generateSHA1(paramsToSign);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', apiKey);
+    formData.append('timestamp', timestamp);
+    formData.append('signature', signature);
+
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        return data.secure_url; // Return the image URL
+    } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        throw error;
+    }
+}
+
 // Submit Emergency Report
 document.getElementById('emergencyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -216,6 +374,21 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
     submitBtn.innerHTML = '<div class="spinner"></div> <span>Sending alert...</span>';
 
     try {
+        let imageUrl = null;
+
+        // Upload image if selected
+        if (selectedImageFile) {
+            submitBtn.innerHTML = '<div class="spinner"></div> <span>Uploading image...</span>';
+            try {
+                imageUrl = await uploadImageToCloudinary(selectedImageFile);
+            } catch (uploadError) {
+                console.error('Image upload failed, continuing without image:', uploadError);
+                showToast('Image upload failed, sending report without image', 'warning');
+            }
+        }
+
+        submitBtn.innerHTML = '<div class="spinner"></div> <span>Saving report...</span>';
+
         // Get user data
         const userDoc = await db.collection('USERS').doc(currentUser.uid).get();
         const userData = userDoc.data();
@@ -228,6 +401,7 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
             userAddress: userData.address,
             type: selectedEmergencyType,
             description: description,
+            imageUrl: imageUrl, // Add image URL if exists
             location: {
                 lat: currentLocation.lat,
                 lng: currentLocation.lng,
@@ -290,13 +464,14 @@ async function loadMyReports() {
         // Display top 10
         reports.slice(0, 10).forEach(report => {
             const emergency = EMERGENCY_TYPES[report.type];
+            const hasImage = report.imageUrl ? '<span style="font-size: 12px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">📷 Image</span>' : '';
 
             const reportItem = document.createElement('div');
             reportItem.className = 'report-item';
             reportItem.innerHTML = `
                 <div class="report-status ${report.status}"></div>
                 <div class="report-content">
-                    <div class="report-type">${emergency.icon} ${emergency.label}</div>
+                    <div class="report-type">${emergency.icon} ${emergency.label} ${hasImage}</div>
                     <div class="report-desc">${report.description}</div>
                     <div class="report-time">${formatTimestamp(report.createdAt)} • ${STATUS_LABELS[report.status]}</div>
                 </div>
