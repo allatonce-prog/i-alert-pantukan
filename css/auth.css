@@ -1,122 +1,192 @@
-/* Clean Red Theme */
+/* Modern, Clean & Arranged Auth Theme */
 .auth-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-lg);
-    /* Split background: Red top, light gray bottom */
-    background: linear-gradient(to bottom, var(--color-primary) 40vh, #f1f5f9 40vh);
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
     position: relative;
     overflow: hidden;
 }
 
-/* Remove old animations and pseudo-elements */
+/* Optional soft shapes in background for a more premium feel */
+.auth-container::before,
+.auth-container::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    z-index: 0;
+}
+
 .auth-container::before {
-    display: none;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, transparent 70%);
+    top: -200px;
+    left: -200px;
+}
+
+.auth-container::after {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%);
+    bottom: -150px;
+    right: -150px;
 }
 
 .auth-card {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
     border-radius: var(--border-radius-xl);
     padding: 3rem 2.5rem;
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    max-width: 440px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
     position: relative;
     z-index: 10;
-    animation: fadeIn 0.6s ease-out;
-    border: none;
-    /* Removed glassmorphism border */
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255, 255, 255, 1);
 }
 
 /* Header */
 .auth-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .logo-container {
     margin-bottom: 1.5rem;
+    position: relative;
+    display: inline-block;
 }
 
 .logo-icon {
     width: 72px;
     height: 72px;
-    margin: 0 auto 1rem;
-    background: rgba(220, 38, 38, 0.1);
-    /* Light red bg */
-    border-radius: 50%;
-    /* Circle */
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: none;
-    /* Clean flat look */
-    animation: none;
+    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.15), inset 0 0 0 1px rgba(220, 38, 38, 0.1);
+    position: relative;
+    z-index: 1;
+    transform: rotate(-5deg);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+}
+
+.logo-container:hover .logo-icon {
+    transform: rotate(0deg) scale(1.05);
+}
+
+.logo-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logo-img-1 {
+    animation: fadeOutImage 5s infinite alternate ease-in-out;
+}
+
+.logo-img-2 {
+    opacity: 0;
+    animation: fadeInImage 5s infinite alternate ease-in-out;
+}
+
+@keyframes fadeOutImage {
+
+    0%,
+    35% {
+        opacity: 1;
+    }
+
+    65%,
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeInImage {
+
+    0%,
+    35% {
+        opacity: 0;
+    }
+
+    65%,
+    100% {
+        opacity: 1;
+    }
+}
+
+.auth-card.admin-card .logo-icon {
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15), inset 0 0 0 1px rgba(37, 99, 235, 0.1);
 }
 
 .logo-icon svg {
     width: 36px;
     height: 36px;
-    color: var(--color-primary);
-    /* Red icon */
+    color: #DC2626;
 }
 
-/* For admin page logo if needed, but keeping it consistent */
-.logo-icon.admin {
-    background: rgba(59, 130, 246, 0.1);
-}
-
-.logo-icon.admin svg {
-    color: var(--color-info);
+.auth-card.admin-card .logo-icon svg {
+    color: #2563EB;
 }
 
 .auth-header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    /* Dark text */
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #102a43;
     margin-bottom: 0.5rem;
-    background: none;
-    -webkit-text-fill-color: initial;
+    letter-spacing: -0.025em;
 }
 
 .tagline {
-    color: #64748b;
-    font-size: 0.9rem;
+    color: #627d98;
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 /* Tabs */
 .auth-tabs {
     display: flex;
-    background: #f1f5f9;
-    padding: 0.25rem;
+    background: #f0f4f8;
+    padding: 0.35rem;
     border-radius: var(--border-radius-lg);
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    position: relative;
 }
 
 .auth-tab {
     flex: 1;
-    padding: 0.6rem;
+    padding: 0.75rem;
     background: transparent;
     border: none;
-    color: #64748b;
+    color: #627d98;
     font-weight: 600;
-    font-size: 0.9rem;
-    border-radius: var(--border-radius-md);
+    font-size: 0.95rem;
+    border-radius: calc(var(--border-radius-lg) - 0.35rem);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    z-index: 1;
 }
 
 .auth-tab.active {
     background: #ffffff;
-    color: var(--color-primary);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    color: #102a43;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .auth-tab:hover:not(.active) {
-    color: #334155;
+    color: #334e68;
 }
 
 /* Forms */
@@ -134,101 +204,151 @@
 }
 
 .form-group label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 0.5rem;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    color: #334155;
-    /* Hide the SVG just in case some remain in HTML */
+    color: #334e68;
 }
 
 .form-group label svg {
-    display: none;
+    width: 16px;
+    height: 16px;
+    color: #829ab1;
 }
 
-/* Input Style matches a clean, minimal look */
 .form-group input,
 .form-group select {
+    width: 100%;
     background: #f8fafc;
-    /* Very light gray */
     border: 1px solid #e2e8f0;
     border-radius: var(--border-radius-md);
     padding: 0.875rem 1rem;
-    color: #1e293b;
-    font-size: 0.95rem;
-    transition: all 0.2s;
+    color: #102a43;
+    font-size: 1rem;
+    transition: all 0.2s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     background: #ffffff;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    border-color: #DC2626;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
     outline: none;
 }
 
+.auth-card.admin-card .form-group input:focus,
+.auth-card.admin-card .form-group select:focus {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
 .form-group input::placeholder {
-    color: #94a3b8;
+    color: #9fb3c8;
 }
 
 /* Button */
 .btn-primary {
     width: 100%;
-    background: var(--color-primary);
+    background: linear-gradient(135deg, #DC2626 0%, #b91c1c 100%);
     color: white;
     border: none;
-    padding: 0.9rem;
+    padding: 1rem;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     border-radius: var(--border-radius-md);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 1rem;
+    cursor: pointer;
+}
+
+.auth-card.admin-card .btn-primary {
+    background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary:hover {
-    background: var(--color-primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+}
+
+.auth-card.admin-card .btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 .btn-primary svg {
-    display: none;
-    /* Simplify button - just text usually looks cleaner, or small icon */
+    display: block;
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
 }
 
-/* Auth Footer (Admin Link etc) */
-/* Note: We removed the admin link in login, but if register has links */
+.btn-primary:hover svg {
+    transform: translateX(4px);
+}
+
+/* Auth Footer */
 .auth-footer {
-    margin-top: 1.5rem;
+    margin-top: 2rem;
     text-align: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f0f4f8;
 }
 
 .auth-footer a {
-    color: var(--color-primary);
+    color: #627d98;
     font-weight: 500;
     font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.auth-footer a:hover {
+    color: #102a43;
+    text-decoration: underline;
 }
 
 /* Admin Note */
 .admin-note {
-    background: #eff6ff;
-    border: 1px solid #dbeafe;
+    background: #f0f4f8;
+    border: 1px solid #d9e2ec;
     padding: 1rem;
     border-radius: var(--border-radius-md);
     display: flex;
     gap: 0.75rem;
-}
-
-.admin-note p {
-    color: #1e40af;
-    font-size: 0.85rem;
+    color: #334e68;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
 }
 
 .admin-note svg {
-    color: #3b82f6;
+    color: #2563EB;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Responsive */
@@ -236,11 +356,21 @@
     .auth-container {
         padding: 1rem;
         background: #ffffff;
-        /* Simplifies on mobile */
+    }
+
+    .auth-container::before,
+    .auth-container::after {
+        display: none;
     }
 
     .auth-card {
         box-shadow: none;
-        padding: 1rem 0;
+        padding: 2rem 1rem;
+        border: none;
+        background: transparent;
+    }
+
+    .auth-footer {
+        border-top: none;
     }
 }

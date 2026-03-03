@@ -319,39 +319,56 @@ input:checked+.slider:before {
 .status-banner {
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-xl);
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.05) 100%);
-    border: 1px solid rgba(220, 38, 38, 0.2);
+    gap: 1.25rem;
+    padding: 1.5rem 2rem;
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+    border-left: 5px solid #2563EB;
     border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     margin-bottom: var(--spacing-2xl);
+    position: relative;
+    overflow: hidden;
+}
+
+body.dark-mode .status-banner {
+    background: var(--color-surface-elevated);
+    border-left-color: #3B82F6;
 }
 
 .status-icon {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    border-radius: var(--border-radius-md);
+    width: 48px;
+    height: 48px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563EB;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
+body.dark-mode .status-icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60A5FA;
+}
+
 .status-icon svg {
-    width: 32px;
-    height: 32px;
-    color: white;
+    width: 24px;
+    height: 24px;
 }
 
 .status-text h3 {
-    font-size: var(--font-size-2xl);
-    margin-bottom: var(--spacing-sm);
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
     color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
 .status-text p {
-    font-size: var(--font-size-base);
+    font-size: 0.95rem;
     color: var(--color-text-secondary);
     margin: 0;
 }
@@ -359,165 +376,221 @@ input:checked+.slider:before {
 /* Emergency Grid */
 .emergency-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
     margin-bottom: var(--spacing-2xl);
 }
 
 .emergency-card {
     background: var(--color-surface);
     border: 1px solid var(--border-color);
-    /* Use variable instead of hardcoded white alpha */
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-md);
+    padding: 1.5rem;
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
-    overflow: hidden;
-}
-
-.emergency-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    transform: scaleX(0);
-    transition: transform var(--transition-normal);
-}
-
-.emergency-card:hover::before {
-    transform: scaleX(1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .emergency-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--color-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.08);
+    border-color: #94A3B8;
+}
+
+body.dark-mode .emergency-card:hover {
+    border-color: #64748B;
 }
 
 .emergency-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--border-radius-lg);
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
-    margin-bottom: var(--spacing-lg);
-    transition: all var(--transition-normal);
+    font-size: 26px;
+    margin-bottom: 1.25rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .emergency-card:hover .emergency-icon {
-    transform: scale(1.1) rotate(5deg);
+    transform: scale(1.05);
 }
 
+/* Flat, solid colors for specific emergencies for cleaner look */
 .emergency-icon.fire {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+    background: #fee2e2;
+    color: #DC2626;
+    border-color: #fca5a5;
 }
 
 .emergency-icon.police {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+    background: #dbeafe;
+    color: #2563EB;
+    border-color: #93c5fd;
 }
 
 .emergency-icon.medical {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%);
+    background: #d1fae5;
+    color: #059669;
+    border-color: #6ee7b7;
 }
 
 .emergency-icon.rescue {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%);
+    background: #fef3c7;
+    color: #D97706;
+    border-color: #fcd34d;
 }
 
 .emergency-icon.disaster {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%);
+    background: #ede9fe;
+    color: #7C3AED;
+    border-color: #c4b5fd;
 }
 
 .emergency-icon.traffic {
-    background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(219, 39, 119, 0.1) 100%);
+    background: #fce7f3;
+    color: #DB2777;
+    border-color: #f9a8d4;
 }
 
 .emergency-icon.environmental {
-    background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(13, 148, 136, 0.1) 100%);
+    background: #ccfbf1;
+    color: #0D9488;
+    border-color: #5eead4;
 }
 
 .emergency-icon.other {
-    background: linear-gradient(135deg, rgba(148, 163, 184, 0.2) 0%, rgba(100, 116, 139, 0.1) 100%);
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+body.dark-mode .emergency-icon {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .emergency-icon.fire {
+    background: rgba(220, 38, 38, 0.2);
+}
+
+body.dark-mode .emergency-icon.police {
+    background: rgba(37, 99, 235, 0.2);
+}
+
+body.dark-mode .emergency-icon.medical {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+body.dark-mode .emergency-icon.rescue {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+body.dark-mode .emergency-icon.disaster {
+    background: rgba(139, 92, 246, 0.2);
+}
+
+body.dark-mode .emergency-icon.traffic {
+    background: rgba(236, 72, 153, 0.2);
+}
+
+body.dark-mode .emergency-icon.environmental {
+    background: rgba(20, 184, 166, 0.2);
+}
+
+body.dark-mode .emergency-icon.other {
+    background: rgba(148, 163, 184, 0.2);
 }
 
 .emergency-card h3 {
-    font-size: var(--font-size-xl);
-    margin-bottom: var(--spacing-sm);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
     color: var(--color-text-primary);
 }
 
 .emergency-card p {
-    font-size: var(--font-size-sm);
+    font-size: 0.85rem;
     color: var(--color-text-secondary);
     margin: 0;
+    line-height: 1.4;
 }
 
 /* My Reports Section */
 .my-reports-section {
-    margin-top: var(--spacing-2xl);
+    margin-top: 3rem;
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .section-header h2 {
-    font-size: var(--font-size-2xl);
+    font-size: 1.25rem;
+    font-weight: 700;
     color: var(--color-text-primary);
     margin: 0;
 }
 
 .reports-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
 }
 
 .report-item {
-    background: var(--color-surface);
+    background: var(--color-bg-primary);
     border: 1px solid var(--border-color);
-    /* Use variable instead of hardcoded white alpha */
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    padding: 1.25rem;
     display: flex;
     align-items: center;
-    gap: var(--spacing-lg);
-    transition: all var(--transition-normal);
+    gap: 1.25rem;
+    transition: all 0.2s ease;
 }
 
 .report-item:hover {
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-md);
+    background: var(--color-surface-elevated);
+    border-color: #94A3B8;
 }
 
 .report-status {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
 }
 
 .report-status.pending {
     background: var(--color-warning);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
     animation: pulse 2s ease-in-out infinite;
 }
 
 .report-status.responding {
     background: var(--color-info);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
     animation: pulse 2s ease-in-out infinite;
 }
 
 .report-status.resolved {
     background: var(--color-success);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .report-content {
@@ -525,20 +598,24 @@ input:checked+.slider:before {
 }
 
 .report-type {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-text-primary);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 0.15rem;
+    font-size: 1rem;
 }
 
 .report-desc {
-    font-size: var(--font-size-sm);
+    font-size: 0.9rem;
     color: var(--color-text-secondary);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 0.35rem;
 }
 
 .report-time {
-    font-size: var(--font-size-xs);
+    font-size: 0.75rem;
     color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 /* Modal */

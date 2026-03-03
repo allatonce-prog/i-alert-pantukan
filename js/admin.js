@@ -281,9 +281,9 @@ async function loadDashboard() {
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // Get reports for this department
+        // Get reports for this department (and 'other' unclassified emergencies)
         const allReports = await db.collection('emergencyReports')
-            .where('type', '==', adminDepartment)
+            .where('type', 'in', [adminDepartment, 'other'])
             .get();
 
         const todayReports = [];
@@ -383,7 +383,7 @@ function loadRecentAlerts(reports) {
 async function loadReports(statusFilter = 'all') {
     try {
         let query = db.collection('emergencyReports')
-            .where('type', '==', adminDepartment);
+            .where('type', 'in', [adminDepartment, 'other']);
         // Removed .orderBy('createdAt', 'desc') to avoid index error
 
         if (statusFilter !== 'all') {
@@ -627,7 +627,7 @@ document.getElementById('closeReportModal').addEventListener('click', () => {
 async function loadHistory() {
     try {
         const historySnapshot = await db.collection('emergencyReports')
-            .where('type', '==', adminDepartment)
+            .where('type', 'in', [adminDepartment, 'other'])
             .where('status', '==', 'resolved')
             .get();
 
@@ -692,7 +692,7 @@ async function loadHistory() {
 async function loadAnalytics() {
     try {
         const reportsSnapshot = await db.collection('emergencyReports')
-            .where('type', '==', adminDepartment)
+            .where('type', 'in', [adminDepartment, 'other'])
             .get();
 
         let totalResponse = 0;
@@ -733,16 +733,51 @@ async function loadAnalytics() {
 }
 
 // Realtime Listener
+let initialLoad = true; // Use a flag to prevent on-load alert sounds
 function startRealtimeListener() {
     if (reportsListener) {
         reportsListener();
     }
 
     reportsListener = db.collection('emergencyReports')
-        .where('type', '==', adminDepartment)
+        .where('type', 'in', [adminDepartment, 'other'])
         .where('status', '==', 'pending')
-        .onSnapshot(() => {
-            loadDashboard();
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                // If it's literally a newly added report and not the initial connection populating our local data cache
+                if (change.type === 'added' && !initialLoad) {
+                    const reportData = change.doc.data();
+                    const emergency = EMERGENCY_TYPES[reportData.type];
+                    showToast(`🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`, 'error');
+
+                    // Play simple system beep/alert securely using Web Audio API
+                    try {
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        if (audioCtx) {
+                            const oscillator = audioCtx.createOscillator();
+                            const gainNode = audioCtx.createGain();
+
+                            oscillator.type = 'square';
+                            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frequency in Hz
+                            oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+
+                            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioCtx.destination);
+
+                            oscillator.start();
+                            oscillator.stop(audioCtx.currentTime + 0.4);
+                        }
+                    } catch (err) {
+                        console.log("Audio not supported or played yet.");
+                    }
+                }
+            });
+
+            initialLoad = false; // Initial batch of logs is finished
+            loadDashboard(); // Refresh the counts and lists
         }, (error) => {
             console.error('Realtime listener error:', error);
         });

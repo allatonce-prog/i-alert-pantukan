@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ialert-v2';
+const CACHE_NAME = 'ialert-v3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
