@@ -67,9 +67,7 @@ const EMERGENCY_TYPES = {
     police: { label: 'Police Assistance', icon: '👮', color: '#3B82F6' },
     medical: { label: 'Medical Emergency', icon: '🏥', color: '#10B981' },
     rescue: { label: 'Search & Rescue', icon: '⛑️', color: '#F59E0B' },
-    disaster: { label: 'Natural Disaster', icon: '🌊', color: '#8B5CF6' },
-    traffic: { label: 'Traffic Accident', icon: '🚦', color: '#EC4899' },
-    environmental: { label: 'Environmental', icon: '🌳', color: '#14B8A6' },
+    traffic: { label: 'Road Accident', icon: '🚦', color: '#EC4899' },
     other: { label: 'Other Emergency', icon: '⚠️', color: '#64748B' }
 };
 
@@ -86,9 +84,7 @@ const DEPARTMENT_CODES = {
     police: 'POLICE2026',
     medical: 'MEDICAL2026',
     rescue: 'RESCUE2026',
-    disaster: 'DISASTER2026',
-    traffic: 'TRAFFIC2026',
-    environmental: 'ENV2026'
+    traffic: 'TRAFFIC2026'
 };
 
 console.log('Firebase initialized successfully');
