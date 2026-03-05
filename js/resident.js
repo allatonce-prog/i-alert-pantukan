@@ -446,7 +446,8 @@ async function startCamera(facingMode = 'environment') {
 
         stream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: facingMode
+                facingMode: facingMode,
+                aspectRatio: { ideal: 0.75 } // Prefer portrait 3:4 for vertical mobile use
             },
             audio: false
         });
