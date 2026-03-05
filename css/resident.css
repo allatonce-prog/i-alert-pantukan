@@ -169,13 +169,15 @@ body.dark-mode .app-header {
 .logo-small {
     width: 44px;
     height: 44px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    border-radius: var(--radius-md);
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px var(--color-primary-glow);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
+    overflow: hidden;
     transition: transform var(--transition-spring), box-shadow var(--transition-normal);
 }
 
@@ -184,10 +186,11 @@ body.dark-mode .app-header {
     box-shadow: 0 6px 20px var(--color-primary-glow);
 }
 
-.logo-small svg {
-    width: 24px;
-    height: 24px;
-    color: white;
+.logo-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
 }
 
 .header-left h2 {
