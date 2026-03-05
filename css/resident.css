@@ -2582,3 +2582,103 @@ body {
         transform: translateY(-6px);
     }
 }
+
+/* ── Location Warning Banner ────────────────── */
+.location-alert-banner {
+    display: none;
+    position: sticky;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    z-index: 99;
+    padding: var(--sp-3) var(--sp-6);
+    background: linear-gradient(90deg, #F59E0B, #D97706);
+    color: white;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+    animation: slideDownFade 0.5s var(--transition-spring);
+}
+
+.location-alert-banner.active {
+    display: flex;
+}
+
+.location-alert-content {
+    max-width: 1280px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+}
+
+.loc-icon-pulse {
+    font-size: 1.5rem;
+    animation: iconPulse 2s infinite ease-in-out;
+}
+
+.location-alert-text {
+    flex: 1;
+}
+
+.location-alert-text strong {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.location-alert-text p {
+    font-size: 0.8rem;
+    margin: 0;
+    opacity: 0.95;
+    line-height: 1.2;
+}
+
+.btn-enable-gps {
+    background: white;
+    color: #B45309;
+    border: none;
+    padding: var(--sp-2) var(--sp-5);
+    border-radius: var(--radius-lg);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-enable-gps:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-enable-gps:active {
+    transform: translateY(0);
+}
+
+@keyframes slideDownFade {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes iconPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}

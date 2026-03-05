@@ -315,9 +315,11 @@ function initMap() {
     }
 }
 
-// Request location transparently on background
+// Request location transparently in the background
 function requestBackgroundLocation() {
     if (!navigator.geolocation) return;
+
+    const banner = document.getElementById('locationAlert');
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -327,16 +329,21 @@ function requestBackgroundLocation() {
                 accuracy: position.coords.accuracy
             };
             console.log('Background GPS location acquired successfully.');
-            // Optionally, if the user opens the map quickly, the marker handles it.
+            if (banner) banner.classList.remove('active');
         },
         (error) => {
-            console.error('Background GPS location failed or denied:', error);
-            // Don't show an intrusive toast here unless requested, 
-            // the user can manually click 'Get Location' in the form if needed.
+            console.warn('Background GPS location failed or denied:', error);
+            // On failure or denial, show the banner
+            if (banner) banner.classList.add('active');
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
 }
+
+// Global listener for "Enable GPS" button
+document.getElementById('enableGPSBtn')?.addEventListener('click', () => {
+    requestBackgroundLocation();
+});
 
 // Get Current Location via Button
 document.getElementById('getLocationBtn').addEventListener('click', () => {
