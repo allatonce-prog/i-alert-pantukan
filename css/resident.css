@@ -1395,6 +1395,107 @@ body.dark-mode .section-header {
     transition: background 0.5s ease, border-color 0.5s ease;
 }
 
+/* ── Profile Specific Modal Enhancements ── */
+.profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: var(--sp-6);
+    border-bottom: 1px solid var(--border-color);
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+.profile-header .header-main {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    width: 100%;
+}
+
+.profile-header .btn-close {
+    position: absolute;
+    top: var(--sp-5);
+    right: var(--sp-5);
+}
+
+.profile-avatar-large {
+    width: 64px;
+    height: 64px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 8px 16px rgba(238, 68, 68, 0.25),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    border: none;
+}
+
+body.dark-mode .profile-avatar-large {
+    border-color: var(--color-bg-secondary);
+}
+
+.header-text h2 {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+}
+
+.header-text p {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.profile-body {
+    padding-top: var(--sp-8);
+}
+
+.profile-body .form-group label {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--sp-2);
+}
+
+.profile-body .form-group label svg {
+    opacity: 0.5;
+}
+
+.profile-body input,
+.profile-body textarea {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: var(--sp-4);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.profile-body input:focus,
+.profile-body textarea:focus {
+    background: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-glow);
+    outline: none;
+}
+
+body.dark-mode .profile-body input:focus,
+body.dark-mode .profile-body textarea:focus {
+    background: var(--color-bg-tertiary);
+}
+
+.profile-actions {
+    margin-top: var(--sp-10);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--border-color);
+}
+
 /* Fire Theme: Intense Pulsing Glow */
 [data-type="fire"] .modal-content {
     background: linear-gradient(180deg, #fff 0%, #FFF5F5 100%);
