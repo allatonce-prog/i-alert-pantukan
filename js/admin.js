@@ -539,37 +539,39 @@ window.viewReportDetails = async function (reportId) {
                 </div>
                 ` : ''}
                 
-                <div style="display: flex; gap: var(--spacing-md);">
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
                     ${report.status === 'pending' ? `
-                        <button class="btn btn-primary" onclick="updateReportStatus('${reportId}', 'responding')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="updateReportStatus('${reportId}', 'responding')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
                                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                             </svg>
                             Start Response
                         </button>
                     ` : ''}
                     ${report.status === 'responding' ? `
-                        <button class="btn btn-success" onclick="updateReportStatus('${reportId}', 'resolved')">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="updateReportStatus('${reportId}', 'resolved')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                 <polyline points="22 4 12 14.01 9 11.01"/>
                             </svg>
                             Mark as Resolved
                         </button>
                     ` : ''}
-                    <a href="tel:${report.userPhone}" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                        </svg>
-                        Call Reporter
-                    </a>
-                    <a href="https://www.google.com/maps?q=${report.location.lat},${report.location.lng}" target="_blank" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        Open in Google Maps
-                    </a>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                        <a href="tel:${report.userPhone}" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                            </svg>
+                            Call
+                        </a>
+                        <a href="https://www.google.com/maps?q=${report.location.lat},${report.location.lng}" target="_blank" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            Map
+                        </a>
+                    </div>
                 </div>
             </div>
         `;

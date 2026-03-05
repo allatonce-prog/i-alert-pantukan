@@ -20,6 +20,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/resident.css">
+
 </head>
 
 <body>
@@ -79,85 +80,150 @@
     </header>
 
     <!-- ── Main Content ────────────────────── -->
-    <main class="main-content">
-        <div class="container">
+    <main class="main-content" id="mainContent">
 
-            <!-- Status Banner -->
-            <div class="status-banner" id="statusBanner">
-                <div class="status-icon">
+        <!-- ══ TAB VIEW: HOME ════════════════ -->
+        <div class="tab-view active" id="tabHome">
+            <div class="container">
+
+                <!-- Greeting Text -->
+                <div class="resident-greeting" style="padding: 1.2rem 0 1.5rem;">
+                    <h2 id="dynamicGreeting"
+                        style="font-size: 1.65rem; font-weight: 800; color: var(--color-text-primary); letter-spacing: -0.02em; line-height: 1.25; margin: 0;">
+                        Hello! We're here to keep you safe.
+                    </h2>
+                </div>
+
+                <!-- Section Label -->
+                <div class="section-label">Report an Emergency</div>
+
+                <!-- Emergency Types Grid -->
+                <div class="emergency-grid">
+
+                    <div class="emergency-card" data-type="fire">
+                        <div class="emergency-icon fire">🔥</div>
+                        <h3>Fire Emergency</h3>
+                        <p>Fire incidents and burning structures</p>
+                    </div>
+
+                    <div class="emergency-card" data-type="police">
+                        <div class="emergency-icon police">👮</div>
+                        <h3>Police Assistance</h3>
+                        <p>Crime, security threats, or police help</p>
+                    </div>
+
+                    <div class="emergency-card" data-type="medical">
+                        <div class="emergency-icon medical">🏥</div>
+                        <h3>Medical Emergency</h3>
+                        <p>Health emergencies requiring ambulance</p>
+                    </div>
+
+                    <div class="emergency-card" data-type="rescue">
+                        <div class="emergency-icon rescue">⛑️</div>
+                        <h3>Search &amp; Rescue</h3>
+                        <p>Missing persons, trapped individuals</p>
+                    </div>
+
+                    <div class="emergency-card" data-type="traffic">
+                        <div class="emergency-icon traffic">🚦</div>
+                        <h3>Road Accident</h3>
+                        <p>Vehicle accidents, road incidents</p>
+                    </div>
+
+                    <div class="emergency-card" data-type="other">
+                        <div class="emergency-icon other">⚠️</div>
+                        <h3>Other Emergency</h3>
+                        <p>Emergencies not listed above</p>
+                    </div>
+
+                </div>
+
+                <!-- My Reports Section -->
+                <div class="section-label">My Recent Reports</div>
+                <div class="my-reports-section">
+                    <div class="section-header">
+                        <h2>Recent Activity</h2>
+                        <button class="btn btn-secondary" id="refreshReportsBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10" />
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="myReportsList" class="reports-list"></div>
+                </div>
+
+            </div>
+        </div><!-- /tabHome -->
+
+        <!-- ══ TAB VIEW: NOTIFICATIONS ═══════ -->
+        <div class="tab-view" id="tabNotifications">
+            <div class="container">
+                <div class="notif-header">
+                    <h2>Notifications</h2>
+                    <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                </div>
+                <div id="notifList" class="notif-list">
+                    <div class="notif-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <p>No notifications yet</p>
+                        <span>Your report updates will appear here</span>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /tabNotifications -->
+
+        <!-- ══ TAB VIEW: MAP ══════════════════ -->
+        <div class="tab-view" id="tabMap">
+            <div class="map-view-header">
+                <h2>Nearby Map</h2>
+                <button class="btn btn-secondary" id="locateMeBtn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
+                        <path d="M12 2v20M2 12h20" />
                     </svg>
-                </div>
-                <div class="status-text">
-                    <h3>Ready to Report</h3>
-                    <p>Select an emergency type below to send an alert</p>
-                </div>
+                    My Location
+                </button>
             </div>
+            <div id="navMap" class="nav-map-container"></div>
+        </div><!-- /tabMap -->
 
-            <!-- Section Label -->
-            <div class="section-label">Report an Emergency</div>
-
-            <!-- Emergency Types Grid -->
-            <div class="emergency-grid">
-
-                <div class="emergency-card" data-type="fire">
-                    <div class="emergency-icon fire">🔥</div>
-                    <h3>Fire Emergency</h3>
-                    <p>Fire incidents and burning structures</p>
-                </div>
-
-                <div class="emergency-card" data-type="police">
-                    <div class="emergency-icon police">👮</div>
-                    <h3>Police Assistance</h3>
-                    <p>Crime, security threats, or police help</p>
-                </div>
-
-                <div class="emergency-card" data-type="medical">
-                    <div class="emergency-icon medical">🏥</div>
-                    <h3>Medical Emergency</h3>
-                    <p>Health emergencies requiring ambulance</p>
-                </div>
-
-                <div class="emergency-card" data-type="rescue">
-                    <div class="emergency-icon rescue">⛑️</div>
-                    <h3>Search &amp; Rescue</h3>
-                    <p>Missing persons, trapped individuals</p>
-                </div>
-
-                <div class="emergency-card" data-type="traffic">
-                    <div class="emergency-icon traffic">🚦</div>
-                    <h3>Road Accident</h3>
-                    <p>Vehicle accidents, road incidents</p>
-                </div>
-
-                <div class="emergency-card" data-type="other">
-                    <div class="emergency-icon other">⚠️</div>
-                    <h3>Other Emergency</h3>
-                    <p>Emergencies not listed above</p>
-                </div>
-
-            </div>
-
-            <!-- My Reports Section -->
-            <div class="section-label">My Recent Reports</div>
-            <div class="my-reports-section">
-                <div class="section-header">
-                    <h2>Recent Activity</h2>
-                    <button class="btn btn-secondary" id="refreshReportsBtn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 4 23 10 17 10" />
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                        </svg>
-                        Refresh
-                    </button>
-                </div>
-                <div id="myReportsList" class="reports-list"></div>
-            </div>
-
-        </div>
     </main>
+
+    <!-- ── Bottom Nav Bar ─────────────────── -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-btn active" id="navBtnHome" data-tab="tabHome">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <span>Home</span>
+        </button>
+
+        <button class="nav-btn" id="navBtnNotif" data-tab="tabNotifications">
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                <span class="nav-notif-dot" id="navNotifDot" style="display:none;"></span>
+            </div>
+            <span>Notifications</span>
+        </button>
+
+        <button class="nav-btn" id="navBtnMap" data-tab="tabMap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                <line x1="8" y1="2" x2="8" y2="18" />
+                <line x1="16" y1="6" x2="16" y2="22" />
+            </svg>
+            <span>Map</span>
+        </button>
+    </nav>
 
     <!-- ── Emergency Report Modal ─────────── -->
     <div id="emergencyModal" class="modal">
@@ -412,6 +478,168 @@
     <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/resident.js"></script>
+
+    <script>
+        // ══ BOTTOM NAV: Tab switching ══════════════
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const tabViews = document.querySelectorAll('.tab-view');
+        let navMapL = null, navMapInitialised = false;
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.tab;
+                navBtns.forEach(b => b.classList.remove('active'));
+                tabViews.forEach(v => v.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(id).classList.add('active');
+                if (id === 'tabNotifications') {
+                    document.getElementById('navNotifDot').style.display = 'none';
+                    document.getElementById('notifBadge').style.display = 'none';
+                    unreadCount = 0;
+                }
+                if (id === 'tabMap' && !navMapInitialised) initNavMap();
+            });
+        });
+
+        // ══ HIDE ON SCROLL DOWN / SHOW ON UP ═══════
+        const bottomNav = document.getElementById('bottomNav');
+        let lastScrollY = window.scrollY;
+        let scrollDelta = 0;
+        let ticking = false;
+
+        function showNav() {
+            bottomNav.classList.remove('nav-hidden');
+        }
+
+        function hideNav() {
+            bottomNav.classList.add('nav-hidden');
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const y = window.scrollY;
+                    scrollDelta += y - lastScrollY;
+
+                    if (y <= 10) {
+                        showNav();
+                        scrollDelta = 0;
+                    } else if (scrollDelta > 20) {
+                        hideNav();
+                        scrollDelta = 0;
+                    } else if (scrollDelta < -12) {
+                        showNav();
+                        scrollDelta = 0;
+                    }
+
+                    lastScrollY = y;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+
+        // ══ MAP TAB — Leaflet + GPS ═════════════════
+        function initNavMap() {
+            navMapInitialised = true;
+            const mapEl = document.getElementById('navMap');
+            const hdr1 = document.querySelector('.app-header').offsetHeight;
+            const hdr2 = document.querySelector('.map-view-header').offsetHeight;
+            mapEl.style.height = (window.innerHeight - hdr1 - hdr2 - 68) + 'px';
+            navMapL = L.map('navMap').setView([7.3072, 126.0148], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(navMapL);
+            document.getElementById('locateMeBtn').addEventListener('click', locateMe);
+            locateMe();
+        }
+
+        function locateMe() {
+            if (!navMapL || !navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude: lat, longitude: lng } = pos.coords;
+                navMapL.setView([lat, lng], 16);
+                const icon = L.divIcon({
+                    html: '<div style="width:18px;height:18px;background:#DC2626;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(220,38,38,.5);"></div>',
+                    iconSize: [18, 18], iconAnchor: [9, 9], className: ''
+                });
+                L.marker([lat, lng], { icon }).addTo(navMapL).bindPopup('<b>You are here</b>').openPopup();
+            });
+        }
+
+        // ══ NOTIFICATIONS — Real-time Firestore ════
+        let unreadCount = 0;
+        const ICONS = { fire: '🔥', police: '👮', medical: '🏥', rescue: '⛑️', traffic: '🚦', other: '⚠️' };
+        const LABELS = {
+            fire: 'Fire Emergency', police: 'Police Assistance', medical: 'Medical Emergency',
+            rescue: 'Search & Rescue', traffic: 'Road Accident', other: 'Other Emergency'
+        };
+        const notifStore = {};
+
+        function startNotifListener(userId) {
+            if (!window.db) return;
+            db.collection('emergencyReports').where('userId', '==', userId)
+                .orderBy('createdAt', 'desc').limit(30)
+                .onSnapshot(snap => {
+                    snap.docChanges().forEach(c => {
+                        if (c.type === 'added' || c.type === 'modified') {
+                            notifStore[c.doc.id] = { data: c.doc.data() };
+                            if (c.type === 'added' && !document.getElementById('tabNotifications').classList.contains('active')) {
+                                unreadCount++;
+                                document.getElementById('navNotifDot').style.display = 'block';
+                                document.getElementById('notifBadge').style.display = 'inline';
+                                document.getElementById('notifBadge').textContent = unreadCount;
+                            }
+                        }
+                    });
+                    renderNotif();
+                });
+        }
+
+        function renderNotif() {
+            const list = document.getElementById('notifList');
+            const entries = Object.values(notifStore)
+                .sort((a, b) => (b.data.createdAt?.toMillis?.() ?? 0) - (a.data.createdAt?.toMillis?.() ?? 0));
+            if (!entries.length) {
+                list.innerHTML = '<div class="notif-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>No notifications yet</p><span>Your report updates will appear here</span></div>';
+                return;
+            }
+            list.innerHTML = entries.map(({ data }) => {
+                const s = data.status ?? 'pending';
+                const t = data.type ?? 'other';
+                const ts = data.createdAt?.toDate?.();
+                const when = ts ? timeAgo(ts) : 'Just now';
+                const lbl = s.charAt(0).toUpperCase() + s.slice(1);
+                return `<div class="notif-item unread status-${s}">
+                <div class="notif-icon">${ICONS[t] ?? '⚠️'}</div>
+                <div class="notif-body">
+                    <div class="notif-title">${LABELS[t] ?? 'Emergency'} Report</div>
+                    <div class="notif-desc">${(data.description ?? '').slice(0, 80)}${(data.description ?? '').length > 80 ? '…' : ''}</div>
+                    <div class="notif-meta">
+                        <span class="notif-time">${when}</span>
+                        <span class="notif-status-pill pill-${s}">${lbl}</span>
+                    </div>
+                </div>
+            </div>`;
+            }).join('');
+        }
+
+        function timeAgo(d) {
+            const s = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (s < 60) return 'Just now';
+            if (s < 3600) return Math.floor(s / 60) + 'm ago';
+            if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+            return Math.floor(s / 86400) + 'd ago';
+        }
+
+        // Start once user data is in localStorage
+        (function poll() {
+            try {
+                const u = JSON.parse(localStorage.getItem('currentUser'));
+                if (u?.id) { startNotifListener(u.id); return; }
+            } catch (_) { }
+            setTimeout(poll, 800);
+        })();
+    </script>
 
 </body>
 
