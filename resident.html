@@ -472,11 +472,14 @@
     <!-- ── Settings Modal ─────────────────── -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2>
-                    <span>⚙️</span>
-                    <span>Settings</span>
-                </h2>
+            <div class="modal-header settings-header">
+                <div class="header-main">
+                    <div class="settings-avatar-large">⚙️</div>
+                    <div class="header-text">
+                        <h2>Settings</h2>
+                        <p>Customize your app experience</p>
+                    </div>
+                </div>
                 <button class="btn-close" id="closeSettingsModal" aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -485,32 +488,24 @@
                 </button>
             </div>
 
-            <div class="modal-body">
-                <div class="settings-group">
-                    <h3
-                        style="font-size: 0.9rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 1rem;">
-                        Appearance</h3>
+            <div class="modal-body settings-body">
+                <div class="settings-section">
+                    <h3 class="section-title">Appearance</h3>
 
-                    <div class="setting-item"
-                        style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--color-bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div class="setting-row">
                         <div class="setting-info">
-                            <h4
-                                style="margin: 0 0 2px 0; font-size: 0.95rem; font-weight: 600; color: var(--color-text-primary);">
-                                Dark Mode</h4>
-                            <p style="margin: 0; font-size: 0.8rem; color: var(--color-text-muted);">Toggle between dark
-                                and light themes</p>
+                            <h4>Dark Mode</h4>
+                            <p>Toggle between dark and light themes</p>
                         </div>
-                        <label class="switch"
-                            style="position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink:0; margin-left: 1rem;">
+                        <label class="switch">
                             <input type="checkbox" id="darkModeToggle" checked>
                             <span class="slider round"></span>
                         </label>
                     </div>
                 </div>
 
-                <div class="modal-actions" style="margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-secondary" id="closeSettingsBtn"
-                        style="width: 100%;">Close</button>
+                <div class="modal-actions settings-actions">
+                    <button type="button" class="btn btn-secondary" id="closeSettingsBtn">Close Settings</button>
                 </div>
             </div>
         </div>

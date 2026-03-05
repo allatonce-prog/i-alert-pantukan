@@ -1496,6 +1496,92 @@ body.dark-mode .profile-body textarea:focus {
     border-top: 1px solid var(--border-color);
 }
 
+/* ── Settings Specific Modal Enhancements ── */
+.settings-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: var(--sp-6);
+    border-bottom: 1px solid var(--border-color);
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+.settings-header .header-main {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    width: 100%;
+}
+
+.settings-header .btn-close {
+    position: absolute;
+    top: var(--sp-5);
+    right: var(--sp-5);
+}
+
+.settings-avatar-large {
+    width: 64px;
+    height: 64px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .settings-avatar-large {
+    background: var(--color-bg-secondary);
+}
+
+.settings-body {
+    padding-top: var(--sp-8);
+}
+
+.settings-section {
+    margin-bottom: var(--sp-8);
+}
+
+.section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--sp-4);
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--sp-4);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+.setting-info h4 {
+    margin: 0 0 2px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.setting-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.settings-actions {
+    margin-top: var(--sp-10);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--border-color);
+}
+
 /* Fire Theme: Intense Pulsing Glow */
 [data-type="fire"] .modal-content {
     background: linear-gradient(180deg, #fff 0%, #FFF5F5 100%);
@@ -2389,7 +2475,8 @@ body {
     position: fixed;
     bottom: calc(var(--nav-height, 68px) + var(--sp-6, 1.5rem));
     right: var(--sp-6, 1.5rem);
-    z-index: 9999;
+    z-index: 1001;
+    /* Above basic elements, below modals (2000) */
     display: block !important;
 }
 

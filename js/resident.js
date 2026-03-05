@@ -267,9 +267,10 @@ function openEmergencyModal() {
     document.getElementById('locationText').textContent = 'Click the button above to get your current location';
     currentLocation = null;
 
-    // Initialize map
+    // Initialize map and trigger GPS automatically
     setTimeout(() => {
         initMap();
+        triggerGPS(); // Auto-trigger GPS when modal opens
     }, 100);
 
     modal.classList.add('active');
@@ -345,16 +346,20 @@ document.getElementById('enableGPSBtn')?.addEventListener('click', () => {
     requestBackgroundLocation();
 });
 
-// Get Current Location via Button
-document.getElementById('getLocationBtn').addEventListener('click', () => {
+// Trigger GPS Acquisition Logic
+function triggerGPS() {
     if (!navigator.geolocation) {
         showToast('Geolocation is not supported by your browser', 'error');
         return;
     }
 
     const btn = document.getElementById('getLocationBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner"></div> Getting location...';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Getting location...';
+    }
+
+    const banner = document.getElementById('locationAlert');
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -366,9 +371,7 @@ document.getElementById('getLocationBtn').addEventListener('click', () => {
 
             // Update map
             if (map) {
-                if (marker) {
-                    map.removeLayer(marker);
-                }
+                if (marker) map.removeLayer(marker);
 
                 marker = L.marker([currentLocation.lat, currentLocation.lng]).addTo(map);
                 map.setView([currentLocation.lat, currentLocation.lng], 15);
@@ -382,32 +385,38 @@ document.getElementById('getLocationBtn').addEventListener('click', () => {
                 }).addTo(map);
             }
 
-            document.getElementById('locationText').textContent =
-                `Location acquired (±${Math.round(currentLocation.accuracy)}m accuracy)`;
+            const locText = document.getElementById('locationText');
+            if (locText) locText.textContent = `Location acquired (±${Math.round(currentLocation.accuracy)}m accuracy)`;
 
-            btn.disabled = false;
-            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Update Location';
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Update Location';
+            }
 
+            if (banner) banner.classList.remove('active');
             showToast('Location acquired successfully', 'success');
         },
         (error) => {
             console.error('Geolocation error:', error);
             let errorMessage = 'Unable to get your location';
 
-            if (error.code === 1) {
-                errorMessage = 'Location permission denied';
-            } else if (error.code === 2) {
-                errorMessage = 'Location unavailable';
-            } else if (error.code === 3) {
-                errorMessage = 'Location request timed out';
-            }
+            if (error.code === 1) errorMessage = 'Location permission denied';
+            else if (error.code === 2) errorMessage = 'Location unavailable';
+            else if (error.code === 3) errorMessage = 'Location request timed out';
 
             showToast(errorMessage, 'error');
-            btn.disabled = false;
-            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Get Current Location';
-        }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Get Current Location';
+            }
+            if (banner) banner.classList.add('active');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
-});
+}
+
+// Get Current Location via Button
+document.getElementById('getLocationBtn').addEventListener('click', triggerGPS);
 
 // Image & Camera Logic
 const imagePreview = document.getElementById('imagePreview');
