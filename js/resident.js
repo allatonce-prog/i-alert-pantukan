@@ -403,7 +403,6 @@ document.getElementById('getLocationBtn').addEventListener('click', () => {
 });
 
 // Image & Camera Logic
-const proofImageInput = document.getElementById('proofImage');
 const imagePreview = document.getElementById('imagePreview');
 const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 const removeImageBtn = document.getElementById('removeImageBtn');
@@ -417,14 +416,6 @@ const closeCameraBtn = document.getElementById('closeCameraBtn');
 let selectedImageFile = null;
 let stream = null;
 let currentFacingMode = 'environment'; // Default to back camera
-
-// Handle File Input
-proofImageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        setImage(file);
-    }
-});
 
 // Set Image Helper
 function setImage(file) {
@@ -444,7 +435,6 @@ removeImageBtn.addEventListener('click', () => {
     selectedImageFile = null;
     imagePreview.src = '';
     imagePreviewContainer.style.display = 'none';
-    proofImageInput.value = ''; // Reset input
 });
 
 // Start Camera
