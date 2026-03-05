@@ -600,7 +600,6 @@
         function startNotifListener(userId) {
             if (typeof db === 'undefined') return;
             db.collection('emergencyReports').where('userId', '==', userId)
-                .orderBy('createdAt', 'desc').limit(30)
                 .onSnapshot(snap => {
                     snap.docChanges().forEach(c => {
                         if (c.type === 'added' || c.type === 'modified') {
