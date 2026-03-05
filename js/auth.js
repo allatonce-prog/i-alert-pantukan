@@ -1,24 +1,34 @@
 // Authentication Logic
 
-// Tab switching
-const loginTab = document.querySelector('[data-tab="login"]');
-const registerTab = document.querySelector('[data-tab="register"]');
 const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
 
-if (loginTab && registerTab) {
-    loginTab.addEventListener('click', () => {
-        loginTab.classList.add('active');
-        registerTab.classList.remove('active');
-        loginForm.classList.add('active');
-        registerForm.classList.remove('active');
-    });
+// Toggle helpers
+function showLogin() {
+    loginForm.classList.add('active');
+    registerForm.classList.remove('active');
+}
 
-    registerTab.addEventListener('click', () => {
-        registerTab.classList.add('active');
-        loginTab.classList.remove('active');
-        registerForm.classList.add('active');
-        loginForm.classList.remove('active');
+function showRegister() {
+    registerForm.classList.add('active');
+    loginForm.classList.remove('active');
+}
+
+// "Register" link → show register form
+const goToRegisterBtn = document.getElementById('goToRegisterBtn');
+if (goToRegisterBtn) {
+    goToRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showRegister();
+    });
+}
+
+// "Sign In" link (inside register form) → show login form
+const goToLoginBtn = document.getElementById('goToLoginBtn');
+if (goToLoginBtn) {
+    goToLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showLogin();
     });
 }
 

@@ -4,23 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#DC2626">
+    <meta name="theme-color" content="#E8665A">
     <meta name="description" content="iAlert Pantukan - Emergency Response System for Pantukan">
 
     <title>iAlert Pantukan - Emergency Response</title>
 
-    <!-- Manifest -->
+    <!-- Manifest & Icons -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192x192.png">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/main.css">
@@ -28,129 +25,245 @@
 </head>
 
 <body>
+
     <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="logo-container">
-                    <div class="logo-icon logo-crossfade">
-                        <img src="assets/logo/logo.jpg" alt="iAlert Logo" class="logo-img logo-img-1">
-                        <img src="assets/logo/pantukan.jpg" alt="Pantukan Logo" class="logo-img logo-img-2">
+
+        <!-- Two screens sit side-by-side inside .auth-screens -->
+        <div class="auth-screens" id="authScreens">
+
+            <!-- ════════════════════════════════ -->
+            <!--  SCREEN 1 — WELCOME             -->
+            <!-- ════════════════════════════════ -->
+            <div class="auth-screen" id="welcomeScreen">
+
+                <!-- Coral wave top -->
+                <div class="wave-bg">
+                    <!-- Faded background slideshow -->
+                    <div class="wave-slideshow">
+                        <img src="PANTUKAN/fire.jpg" alt="" class="wave-slide active">
+                        <img src="PANTUKAN/firestation.jpg" alt="" class="wave-slide">
+                        <img src="PANTUKAN/gov.jpg" alt="" class="wave-slide">
                     </div>
-                    <h1>iAlert Pantukan</h1>
-                </div>
-                <p class="tagline">Emergency Response System</p>
-            </div>
 
-            <div class="auth-tabs">
-                <button class="auth-tab active" data-tab="login">Login</button>
-                <button class="auth-tab" data-tab="register">Register</button>
-            </div>
+                    <!-- Decorative sparkles -->
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
 
-            <!-- Login Form -->
-            <form id="loginForm" class="auth-form active">
-                <div class="form-group">
-                    <label for="loginEmail">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                            <polyline points="22,6 12,13 2,6" />
-                        </svg>
-                        Email
-                    </label>
-                    <input type="email" id="loginEmail" placeholder="your.email@example.com" required>
-                </div>
+                    <!-- Logo badge -->
+                    <div class="wave-logo">
+                        <div class="wave-logo-icon logo-crossfade">
+                            <img src="assets/logo/logo.jpg" alt="iAlert" class="logo-img logo-img-1">
+                            <img src="assets/logo/pantukan.jpg" alt="Pantukan" class="logo-img logo-img-2">
+                        </div>
+                        <span class="wave-logo-text">iAlert Pantukan</span>
+                    </div>
 
-                <div class="form-group">
-                    <label for="loginPassword">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        Password
-                    </label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    <span>Sign In</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
+                    <!-- Wave SVG divider -->
+                    <svg class="wave-svg" viewBox="0 0 390 80" preserveAspectRatio="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,40 C90,80 300,0 390,40 L390,80 L0,80 Z" fill="#ffffff" />
                     </svg>
-                </button>
-
-
-            </form>
-
-            <!-- Register Form -->
-            <form id="registerForm" class="auth-form">
-                <div class="form-group">
-                    <label for="registerName">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
-                        Full Name
-                    </label>
-                    <input type="text" id="registerName" placeholder="Juan Dela Cruz" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="registerEmail">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                            <polyline points="22,6 12,13 2,6" />
-                        </svg>
-                        Email
-                    </label>
-                    <input type="email" id="registerEmail" placeholder="your.email@example.com" required>
+                <!-- White panel -->
+                <div class="white-panel">
+                    <div class="welcome-body">
+                        <h1 class="welcome-title">Welcome<br>to iAlert</h1>
+                        <p class="welcome-subtitle">
+                            Your community emergency response system for Pantukan. Report incidents fast, get help
+                            immediately.
+                        </p>
+                    </div>
+
+                    <div class="welcome-footer">
+                        <button id="continueBtn">
+                            Continue
+                            <div class="continue-circle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="registerPhone">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path
-                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </svg>
-                        Phone Number
-                    </label>
-                    <input type="tel" id="registerPhone" placeholder="+63 912 345 6789" required>
-                </div>
+            </div><!-- /welcomeScreen -->
 
-                <div class="form-group">
-                    <label for="registerAddress">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                        </svg>
-                        Address
-                    </label>
-                    <input type="text" id="registerAddress" placeholder="Street, Barangay, Pantukan" required>
-                </div>
 
-                <div class="form-group">
-                    <label for="registerPassword">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        Password
-                    </label>
-                    <input type="password" id="registerPassword" placeholder="Create a strong password" required>
-                </div>
+            <!-- ════════════════════════════════ -->
+            <!--  SCREEN 2 — SIGN IN / REGISTER  -->
+            <!-- ════════════════════════════════ -->
+            <div class="auth-screen" id="loginScreen">
 
-                <button type="submit" class="btn btn-primary">
-                    <span>Create Account</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
+                <!-- Coral wave top (smaller) -->
+                <div class="wave-bg">
+                    <!-- Faded background slideshow -->
+                    <div class="wave-slideshow">
+                        <img src="PANTUKAN/fire.jpg" alt="" class="wave-slide active">
+                        <img src="PANTUKAN/firestation.jpg" alt="" class="wave-slide">
+                        <img src="PANTUKAN/gov.jpg" alt="" class="wave-slide">
+                    </div>
+
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+                    <div class="sparkle"></div>
+
+                    <!-- Back button -->
+                    <button id="backToWelcome" aria-label="Back to welcome">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="19" y1="12" x2="5" y2="12" />
+                            <polyline points="12 19 5 12 12 5" />
+                        </svg>
+                    </button>
+
+                    <svg class="wave-svg" viewBox="0 0 390 80" preserveAspectRatio="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,40 C90,80 300,0 390,40 L390,80 L0,80 Z" fill="#ffffff" />
                     </svg>
-                </button>
-            </form>
-        </div>
+                </div>
 
-        <!-- Alert Toast -->
+                <!-- White panel with the forms -->
+                <div class="white-panel login-panel" style="overflow-y: auto;">
+
+                    <!-- LOGIN FORM -->
+                    <form id="loginForm" class="auth-form active">
+                        <h2 class="login-title">Sign in</h2>
+
+                        <div class="form-group">
+                            <label for="loginEmail">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                </svg>
+                                Email
+                            </label>
+                            <div class="input-wrap">
+                                <input type="email" id="loginEmail" placeholder="demo@email.com" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="loginPassword">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                Password
+                            </label>
+                            <div class="input-wrap">
+                                <input type="password" id="loginPassword" placeholder="enter your password" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row-split">
+                            <label class="remember-label">
+                                <input type="checkbox" id="rememberMe">
+                                Remember Me
+                            </label>
+                            <a href="#" class="forgot-link">Forgot Password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span>Login</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                                <polyline points="12 5 19 12 12 19" />
+                            </svg>
+                        </button>
+
+                        <p class="auth-switch">
+                            Don't have an Account?
+                            <a href="#" id="goToRegisterBtn">Sign up</a>
+                        </p>
+                    </form>
+
+                    <!-- REGISTER FORM -->
+                    <form id="registerForm" class="auth-form">
+                        <h2 class="login-title">Create Account</h2>
+
+                        <div class="form-group">
+                            <label for="registerName">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                Full Name
+                            </label>
+                            <input type="text" id="registerName" placeholder="Juan Dela Cruz" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="registerEmail">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                </svg>
+                                Email
+                            </label>
+                            <input type="email" id="registerEmail" placeholder="your.email@example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="registerPhone">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                </svg>
+                                Phone Number
+                            </label>
+                            <input type="tel" id="registerPhone" placeholder="+63 912 345 6789" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="registerAddress">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                </svg>
+                                Address
+                            </label>
+                            <input type="text" id="registerAddress" placeholder="Street, Barangay, Pantukan" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="registerPassword">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                Password
+                            </label>
+                            <input type="password" id="registerPassword" placeholder="Create a strong password"
+                                required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span>Create Account</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                                <polyline points="12 5 19 12 12 19" />
+                            </svg>
+                        </button>
+
+                        <p class="auth-switch">
+                            Already have an account?
+                            <a href="#" id="goToLoginBtn">Sign in</a>
+                        </p>
+                    </form>
+
+                </div><!-- /white-panel -->
+            </div><!-- /loginScreen -->
+
+        </div><!-- /auth-screens -->
+
+        <!-- Toast -->
         <div id="toast" class="toast"></div>
-    </div>
+
+    </div><!-- /auth-container -->
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -162,13 +275,48 @@
     <script src="js/auth.js"></script>
 
     <script>
-        // Register service worker
+        // ── Screen navigation ─────────────────────────
+        const authScreens = document.getElementById('authScreens');
+        const continueBtn = document.getElementById('continueBtn');
+        const backBtn = document.getElementById('backToWelcome');
+
+        function goToLogin() {
+            authScreens.classList.add('show-login');
+        }
+
+        function goToWelcome() {
+            authScreens.classList.remove('show-login');
+        }
+
+        if (continueBtn) continueBtn.addEventListener('click', goToLogin);
+        if (backBtn) backBtn.addEventListener('click', goToWelcome);
+
+        // ── Wave image slideshow ──────────────────────
+        // Collect ALL .wave-slide images (both screens share the same index)
+        const slideshows = document.querySelectorAll('.wave-slideshow');
+        let currentSlide = 0;
+
+        function advanceSlides() {
+            slideshows.forEach(show => {
+                const slides = show.querySelectorAll('.wave-slide');
+                if (!slides.length) return;
+                slides[currentSlide].classList.remove('active');
+                const next = (currentSlide + 1) % slides.length;
+                slides[next].classList.add('active');
+            });
+            currentSlide = (currentSlide + 1) % 3;
+        }
+
+        setInterval(advanceSlides, 3500);   // change every 3.5s
+
+        // Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered', reg))
-                .catch(err => console.log('Service Worker registration failed', err));
+                .then(reg => console.log('SW registered', reg))
+                .catch(err => console.log('SW failed', err));
         }
     </script>
+
 </body>
 
 </html>
