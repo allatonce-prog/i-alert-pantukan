@@ -604,36 +604,7 @@ body.dark-mode .dashboard-hero {
     margin: 0;
 }
 
-.pulse-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 2px 10px;
-    border-radius: var(--radius-full);
-}
 
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: #10B981;
-    border-radius: 50%;
-    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-    animation: pulse 2s infinite;
-}
-
-.pulse-text {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #059669;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-body.dark-mode .pulse-text {
-    color: #34D399;
-}
 
 .hero-subtitle {
     font-size: 0.95rem;
@@ -663,22 +634,7 @@ body.dark-mode .pulse-text {
     height: 32px;
 }
 
-@keyframes pulse {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
 
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-    }
-
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-    }
-}
 
 @media (max-width: 480px) {
     .dashboard-hero {
