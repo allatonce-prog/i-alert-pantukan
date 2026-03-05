@@ -259,6 +259,9 @@ function openEmergencyModal() {
     modalIcon.textContent = emergency.icon;
     modalType.textContent = emergency.label;
 
+    // Set modal type for category-specific "effects"
+    modal.dataset.type = selectedEmergencyType;
+
     // Reset form
     document.getElementById('emergencyForm').reset();
     document.getElementById('locationText').textContent = 'Click the button above to get your current location';
@@ -277,7 +280,9 @@ document.getElementById('closeModal').addEventListener('click', closeModal);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 
 function closeModal() {
-    document.getElementById('emergencyModal').classList.remove('active');
+    const modal = document.getElementById('emergencyModal');
+    modal.classList.remove('active');
+    modal.dataset.type = ''; // Reset type
     if (map) {
         map.remove();
         map = null;

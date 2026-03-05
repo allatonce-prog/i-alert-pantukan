@@ -1304,6 +1304,104 @@ body.dark-mode .section-header {
     background: linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.01));
 }
 
+/* ── Modal Category Themes (Effects) ─────── */
+/* Base content adjustment for effects */
+.modal-content {
+    transition: background 0.5s ease, border-color 0.5s ease;
+}
+
+/* Fire Theme: Intense Pulsing Glow */
+[data-type="fire"] .modal-content {
+    background: linear-gradient(180deg, #fff 0%, #FFF5F5 100%);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+body.dark-mode [data-type="fire"] .modal-content {
+    background: linear-gradient(180deg, #161B22 0%, #2D0D0D 100%);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-type="fire"] .modal-header h2 {
+    color: #ef4444;
+    animation: fireGlow 2s infinite ease-in-out;
+}
+
+/* Police Theme: Subtle Alternating Siren */
+[data-type="police"] .modal-header {
+    border-bottom: 2px solid transparent;
+    animation: sirenBorder 1s infinite linear;
+}
+
+/* Medical Theme: Professional Clean Calm */
+[data-type="medical"] .modal-content {
+    background: linear-gradient(180deg, #fff 0%, #F0FDF4 100%);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+body.dark-mode [data-type="medical"] .modal-content {
+    background: linear-gradient(180deg, #161B22 0%, #061A14 100%);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+/* Rescue Theme: High Visibility Alert */
+[data-type="rescue"] .modal-content {
+    background: linear-gradient(180deg, #fff 0%, #FFFBEB 100%);
+    border-color: rgba(217, 119, 6, 0.4);
+}
+
+body.dark-mode [data-type="rescue"] .modal-content {
+    background: linear-gradient(180deg, #161B22 0%, #211909 100%);
+    border-color: rgba(217, 119, 6, 0.2);
+}
+
+/* Road Accident (Traffic) Theme: Alert Pink */
+[data-type="traffic"] .modal-content {
+    background: linear-gradient(180deg, #fff 0%, #FDF2F8 100%);
+    border-color: rgba(219, 39, 119, 0.3);
+}
+
+/* Specific Animations for Effects */
+@keyframes fireGlow {
+    0% {
+        filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.7));
+    }
+
+    100% {
+        filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.4));
+    }
+}
+
+@keyframes sirenBorder {
+    0% {
+        border-bottom-color: rgba(37, 99, 235, 0.4);
+    }
+
+    50% {
+        border-bottom-color: rgba(239, 68, 68, 0.4);
+    }
+
+    100% {
+        border-bottom-color: rgba(37, 99, 235, 0.4);
+    }
+}
+
+/* Themed modal-body scrollbar */
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
+[data-type="fire"] .modal-content::-webkit-scrollbar-thumb {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+[data-type="police"] .modal-content::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.3);
+}
+
 /* Location section inside modal */
 .location-section {
     margin-top: var(--sp-6);
