@@ -59,6 +59,9 @@ async function checkAuth() {
 
             // Load user's reports
             loadMyReports();
+
+            // Auto-request GPS Location when logged in / dashboard loaded
+            requestBackgroundLocation();
         } else {
             // User deleted or invalid
             localStorage.removeItem('currentUser');
@@ -307,7 +310,30 @@ function initMap() {
     }
 }
 
-// Get Current Location
+// Request location transparently on background
+function requestBackgroundLocation() {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            currentLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            };
+            console.log('Background GPS location acquired successfully.');
+            // Optionally, if the user opens the map quickly, the marker handles it.
+        },
+        (error) => {
+            console.error('Background GPS location failed or denied:', error);
+            // Don't show an intrusive toast here unless requested, 
+            // the user can manually click 'Get Location' in the form if needed.
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+// Get Current Location via Button
 document.getElementById('getLocationBtn').addEventListener('click', () => {
     if (!navigator.geolocation) {
         showToast('Geolocation is not supported by your browser', 'error');

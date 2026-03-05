@@ -88,3 +88,54 @@ const DEPARTMENT_CODES = {
 };
 
 console.log('Firebase initialized successfully');
+
+// ==========================================
+// VERSION MANAGER (Auto Cache Buster)
+// ==========================================
+(async function checkAppVersion() {
+    // Only check when online to prevent offline breakage
+    if (!navigator.onLine) return;
+
+    try {
+        // Fetch version.json bypassing cache
+        const response = await fetch('./version.json?t=' + new Date().getTime(), {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const currentVersion = localStorage.getItem('appVersion');
+
+        // If version is missing or outdated, update and force hard refresh
+        if (!currentVersion || currentVersion !== data.version) {
+            console.log(`[Version Manager] New update detected: v${data.version}. Clearing cache...`);
+
+            // Store new version instantly
+            localStorage.setItem('appVersion', data.version);
+
+            // Clear all Service Worker caches to enforce new assets
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+
+            // Unregister old Service Workers
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let reg of registrations) {
+                    await reg.unregister();
+                }
+            }
+
+            // Reload the page hard, bypassing browser cache
+            window.location.reload(true);
+        }
+    } catch (error) {
+        console.error('[Version Manager] Failed to check version:', error);
+    }
+})();

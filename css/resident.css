@@ -541,6 +541,251 @@ body.dark-mode .status-text p {
     color: #93C5FD;
 }
 
+/* ── Dashboard Hero Banner ───────────────────────── */
+.dashboard-hero {
+    position: relative;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(239, 68, 68, 0.03));
+    border: 1px solid rgba(220, 38, 38, 0.15);
+    border-radius: var(--radius-2xl);
+    padding: var(--sp-6);
+    margin: var(--sp-6) 0 var(--sp-8);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02), inset 0 2px 10px rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-6);
+    backdrop-filter: blur(10px);
+}
+
+body.dark-mode .dashboard-hero {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(0, 0, 0, 0.2));
+    border-color: rgba(220, 38, 38, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.hero-bg-pattern {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.hero-bg-pattern svg {
+    width: 100%;
+    height: 100%;
+    object-position: bottom;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.hero-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-2);
+}
+
+.hero-content h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--color-text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.pulse-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #10B981;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.pulse-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+body.dark-mode .pulse-text {
+    color: #34D399;
+}
+
+.hero-subtitle {
+    font-size: 0.95rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 90%;
+}
+
+.hero-icon {
+    position: relative;
+    z-index: 1;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+    flex-shrink: 0;
+}
+
+.hero-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-hero {
+        padding: var(--sp-5);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--sp-4);
+    }
+
+    .hero-icon {
+        position: absolute;
+        top: var(--sp-5);
+        right: var(--sp-5);
+        width: 48px;
+        height: 48px;
+        box-shadow: none;
+        background: rgba(220, 38, 38, 0.1);
+        color: var(--color-primary);
+    }
+
+    .hero-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .hero-content h2 {
+        max-width: 200px;
+        font-size: 1.4rem;
+    }
+
+    .hero-subtitle {
+        max-width: 100%;
+        font-size: 0.9rem;
+    }
+}
+
+/* ── Safety Actions Grid ────────────────────────── */
+.safety-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-8);
+}
+
+.safety-card {
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--sp-4);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.safety-card:hover {
+    background: var(--color-bg-tertiary);
+    border-color: var(--border-color-hover);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.safety-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.safety-icon-box.red {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.safety-icon-box.blue {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+.safety-icon-box svg {
+    width: 24px;
+    height: 24px;
+}
+
+.safety-card-content h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 2px 0;
+    color: var(--color-text-primary);
+}
+
+.safety-card-content p {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+@media (max-width: 480px) {
+    .safety-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ── Section Label ───────────────────────── */
 .section-label {
     font-size: 0.72rem;
@@ -564,51 +809,53 @@ body.dark-mode .status-text p {
 /* ── Emergency Grid ──────────────────────── */
 .emergency-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--sp-4);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--sp-5);
     margin-bottom: var(--sp-10);
 }
 
 /* Each card */
 .emergency-card {
     background: var(--color-surface);
-    border: 1.5px solid var(--border-color);
-    border-radius: var(--radius-xl);
-    padding: var(--sp-5);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-2xl);
+    padding: var(--sp-6);
     cursor: pointer;
-    transition: transform var(--transition-spring),
-        box-shadow var(--transition-normal),
-        border-color var(--transition-normal),
-        background var(--transition-normal);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     overflow: hidden;
-    animation: cardAppear 0.4s ease both;
+    animation: cardAppear 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .emergency-card::before {
     content: '';
     position: absolute;
     inset: 0;
-    opacity: 0;
-    transition: opacity var(--transition-normal);
+    opacity: 0.15;
+    transition: opacity 0.3s ease, transform 0.5s ease;
     border-radius: inherit;
+    z-index: 0;
 }
 
 .emergency-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     border-color: transparent;
 }
 
 .emergency-card:hover::before {
-    opacity: 1;
+    opacity: 0.5;
+    transform: scale(1.05);
 }
 
 .emergency-card:active {
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(0.98);
 }
 
 /* Per-type hover gradients */

@@ -86,16 +86,39 @@
         <div class="tab-view active" id="tabHome">
             <div class="container">
 
-                <!-- Greeting Text -->
-                <div class="resident-greeting" style="padding: 1.2rem 0 1.5rem;">
-                    <h2 id="dynamicGreeting"
-                        style="font-size: 1.65rem; font-weight: 800; color: var(--color-text-primary); letter-spacing: -0.02em; line-height: 1.25; margin: 0;">
-                        Hello! We're here to keep you safe.
-                    </h2>
+                <!-- Dashboard Hero Banner -->
+                <div class="dashboard-hero">
+                    <div class="hero-bg-pattern">
+                        <!-- Abstract soft waves for premium feel -->
+                        <svg viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg"
+                            preserveAspectRatio="none">
+                            <path d="M0 150V50C100 0 200 100 400 20v130H0z" fill="var(--color-primary)"
+                                fill-opacity="0.05" />
+                            <path d="M0 150v-40c150-100 250 50 400-20v60H0z" fill="currentColor" fill-opacity="0.03" />
+                        </svg>
+                    </div>
+                    <div class="hero-content">
+                        <div class="hero-header">
+                            <h2 id="dynamicGreeting">Hello! We're here for you.</h2>
+                            <div class="pulse-indicator">
+                                <span class="pulse-dot"></span>
+                                <span class="pulse-text">System Active</span>
+                            </div>
+                        </div>
+                        <p class="hero-subtitle">Tap an emergency type below to instantly alert Pantukan responders.
+                            Your location will be sent automatically.</p>
+                    </div>
+                    <div class="hero-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            <path d="M12 8v4" />
+                            <path d="M12 16h.01" />
+                        </svg>
+                    </div>
                 </div>
 
                 <!-- Section Label -->
-                <div class="section-label">Report an Emergency</div>
+                <div class="section-label">Emergency Categories</div>
 
                 <!-- Emergency Types Grid -->
                 <div class="emergency-grid">
@@ -136,6 +159,39 @@
                         <p>Emergencies not listed above</p>
                     </div>
 
+                </div>
+
+                <!-- Quick Safety Actions -->
+                <div class="section-label">Quick Safety Actions</div>
+                <div class="safety-actions-grid">
+                    <a href="tel:911" class="safety-card">
+                        <div class="safety-icon-box red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                            </svg>
+                        </div>
+                        <div class="safety-card-content">
+                            <h4>National Hotline</h4>
+                            <p>Call 911 for emergency assistance</p>
+                        </div>
+                    </a>
+
+                    <a href="#" class="safety-card">
+                        <div class="safety-icon-box blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                            </svg>
+                        </div>
+                        <div class="safety-card-content">
+                            <h4>Safety Protocols</h4>
+                            <p>Guides on what to do in emergencies</p>
+                        </div>
+                    </a>
                 </div>
 
                 <!-- My Reports Section -->
@@ -575,23 +631,36 @@
         };
         const notifStore = {};
 
+        let initialLoad = true;
+
         function startNotifListener(userId) {
-            if (!window.db) return;
+            if (typeof db === 'undefined') return;
             db.collection('emergencyReports').where('userId', '==', userId)
                 .orderBy('createdAt', 'desc').limit(30)
                 .onSnapshot(snap => {
                     snap.docChanges().forEach(c => {
                         if (c.type === 'added' || c.type === 'modified') {
                             notifStore[c.doc.id] = { data: c.doc.data() };
-                            if (c.type === 'added' && !document.getElementById('tabNotifications').classList.contains('active')) {
+
+                            // Triggers for new reports and updates, ignoring initial snapshot bulk load
+                            if (!initialLoad && !document.getElementById('tabNotifications').classList.contains('active')) {
                                 unreadCount++;
                                 document.getElementById('navNotifDot').style.display = 'block';
                                 document.getElementById('notifBadge').style.display = 'inline';
                                 document.getElementById('notifBadge').textContent = unreadCount;
                             }
+
+                            // Show toast ONLY when modified (e.g. status changes to responding or resolved)
+                            if (!initialLoad && c.type === 'modified') {
+                                const newStatus = c.doc.data().status;
+                                if (window.showToast && newStatus) {
+                                    window.showToast(`Report status updated to: ${newStatus.toUpperCase()}`, 'success');
+                                }
+                            }
                         }
                     });
                     renderNotif();
+                    initialLoad = false;
                 });
         }
 
@@ -635,7 +704,8 @@
         (function poll() {
             try {
                 const u = JSON.parse(localStorage.getItem('currentUser'));
-                if (u?.id) { startNotifListener(u.id); return; }
+                const userId = u?.id || u?.uid;
+                if (userId) { startNotifListener(userId); return; }
             } catch (_) { }
             setTimeout(poll, 800);
         })();
