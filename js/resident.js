@@ -531,6 +531,42 @@ async function generateSHA1(message) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Helper: Compress Image before upload
+async function compressImage(file, maxWidth = 1024, quality = 0.7) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate scales
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    }));
+                }, 'image/jpeg', quality);
+            };
+        };
+    });
+}
+
 // Upload Image to Cloudinary
 async function uploadImageToCloudinary(file) {
     const cloudName = 'djghkklph';
@@ -585,32 +621,30 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
     try {
         let imageUrl = null;
 
-        // Upload image if selected
+        // Compress and Upload image if selected
         if (selectedImageFile) {
-            submitBtn.innerHTML = '<div class="spinner"></div> <span>Uploading image...</span>';
+            submitBtn.innerHTML = '<div class="spinner"></div> <span>Optimizing image...</span>';
             try {
-                imageUrl = await uploadImageToCloudinary(selectedImageFile);
+                const compressedFile = await compressImage(selectedImageFile);
+                submitBtn.innerHTML = '<div class="spinner"></div> <span>Uploading...</span>';
+                imageUrl = await uploadImageToCloudinary(compressedFile);
             } catch (uploadError) {
-                console.error('Image upload failed, continuing without image:', uploadError);
+                console.error('Image upload failed:', uploadError);
                 showToast('Image upload failed, sending report without image', 'warning');
             }
         }
 
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Saving report...</span>';
 
-        // Get user data
-        const userDoc = await db.collection('USERS').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-
         // Create emergency report
         const reportData = {
             userId: currentUser.uid,
-            userName: userData.name,
-            userPhone: userData.phone,
-            userAddress: userData.address,
+            userName: currentUser.name,
+            userPhone: currentUser.phone,
+            userAddress: currentUser.address,
             type: selectedEmergencyType,
             description: description,
-            imageUrl: imageUrl, // Add image URL if exists
+            imageUrl: imageUrl,
             location: {
                 lat: currentLocation.lat,
                 lng: currentLocation.lng,
