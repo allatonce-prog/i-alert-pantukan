@@ -631,6 +631,53 @@ window.viewReportDetails = async function (reportId) {
     }
 };
 
+// Live GPS broadcasting state
+let _gpsWatchId = null;
+let _gpsReportId = null;
+let _gpsUpdateInterval = null;
+
+function startResponderGPS(reportId) {
+    stopResponderGPS(); // clear any previous
+    _gpsReportId = reportId;
+
+    if (!navigator.geolocation) {
+        showToast('GPS not available on this device', 'error');
+        return;
+    }
+
+    // Immediately get and push location, then every 5 seconds
+    _gpsWatchId = navigator.geolocation.watchPosition(
+        pos => {
+            db.collection('emergencyReports').doc(reportId).update({
+                responderLocation: {
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    accuracy: pos.coords.accuracy,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                },
+                responderName: currentAdmin?.name || 'Responder'
+            }).catch(e => console.warn('GPS update failed:', e));
+        },
+        err => console.warn('GPS error:', err),
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    );
+    showToast('📡 Broadcasting your live location to resident', 'success');
+}
+
+function stopResponderGPS() {
+    if (_gpsWatchId !== null) {
+        navigator.geolocation.clearWatch(_gpsWatchId);
+        _gpsWatchId = null;
+    }
+    if (_gpsReportId) {
+        // Clear responder location from report when resolved/stopped
+        db.collection('emergencyReports').doc(_gpsReportId).update({
+            responderLocation: firebase.firestore.FieldValue.delete()
+        }).catch(() => { });
+        _gpsReportId = null;
+    }
+}
+
 // Update Report Status
 window.updateReportStatus = async function (reportId, newStatus) {
     try {
@@ -640,6 +687,16 @@ window.updateReportStatus = async function (reportId, newStatus) {
         });
 
         showToast(`Report marked as ${STATUS_LABELS[newStatus]}`, 'success');
+
+        // Start GPS broadcasting when responding
+        if (newStatus === 'responding') {
+            startResponderGPS(reportId);
+        }
+
+        // Stop GPS when resolved
+        if (newStatus === 'resolved') {
+            stopResponderGPS();
+        }
 
         // Close modal and refresh
         document.getElementById('reportModal').classList.remove('active');
@@ -657,9 +714,11 @@ window.updateReportStatus = async function (reportId, newStatus) {
     }
 };
 
+
 // Close Report Modal
 document.getElementById('closeReportModal').addEventListener('click', () => {
     document.getElementById('reportModal').classList.remove('active');
+    stopResponderGPS(); // stop broadcasting if modal dismissed
 });
 
 // Load History

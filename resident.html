@@ -37,10 +37,8 @@
                 <div class="logo-small">
                     <img src="assets/logo/logo.jpg" alt="Logo">
                 </div>
-                <div>
-                    <h2>iAlert Pantukan</h2>
-                    <p id="userName">Welcome, Resident</p>
-                </div>
+                <img src="assets/logo/ialert.png" alt="iAlert Logo" class="header-logo-img">
+                <span id="userName" style="display:none;"></span>
             </div>
 
             <!-- User Menu -->
@@ -193,6 +191,7 @@
                     </button>
                 </div>
                 <div id="myReportsList" class="reports-list"></div>
+                <div id="myReportsPagination" class="pagination-container"></div>
             </div>
 
         </div><!-- /tabHome -->
@@ -229,6 +228,38 @@
                     My Location
                 </button>
             </div>
+
+            <!-- Floating Map Search Bar -->
+            <div class="map-search-wrap">
+                <div class="map-search-box">
+                    <svg class="map-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="M21 21l-4.35-4.35" />
+                    </svg>
+                    <input type="text" id="mapSearchInput" class="map-search-input" placeholder="Search a place…"
+                        autocomplete="off">
+                    <button id="mapSearchClearBtn" class="map-search-clear" style="display:none;">✕</button>
+                </div>
+                <ul id="mapSearchResults" class="map-search-results"></ul>
+            </div>
+
+            <!-- Directions info card (hidden by default) -->
+            <div id="directionsCard" class="directions-card" style="display:none;">
+                <div class="directions-card-info">
+                    <div class="directions-meta">
+                        <span class="dir-icon">🚶</span>
+                        <div>
+                            <div id="dirDistance" class="dir-distance">--</div>
+                            <div id="dirDuration" class="dir-eta">Computing route...</div>
+                        </div>
+                    </div>
+                    <div class="directions-actions">
+                        <button id="clearDirectionsBtn" class="btn-dir-clear">✕ Clear</button>
+                    </div>
+                </div>
+                <div id="dirSteps" class="dir-steps"></div>
+            </div>
+
             <div id="navMap" class="nav-map-container"></div>
         </div><!-- /tabMap -->
 
@@ -474,6 +505,73 @@
         </div>
     </div>
 
+    <!-- ── Report Details Modal ─────────── -->
+    <div id="reportDetailsModal" class="modal">
+        <div class="modal-content ios-modal">
+            <div class="modal-header d-island-header">
+                <div class="header-main">
+                    <div id="detailIcon" class="detail-type-icon">🔥</div>
+                    <div class="header-text">
+                        <h2 id="detailType">Emergency Report</h2>
+                        <p id="detailTime">Loading time...</p>
+                    </div>
+                </div>
+                <button class="btn-close-ios" id="closeDetailsModal" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body ios-body">
+                <div class="status-chip-container">
+                    <span id="detailStatus" class="status-chip pending">PENDING</span>
+                </div>
+
+                <div class="detail-section">
+                    <label>Situation Description</label>
+                    <div id="detailDescription" class="glass-box-text">---</div>
+                </div>
+
+                <div id="detailImageSection" class="detail-section" style="display: none;">
+                    <label>Attachment Image</label>
+                    <div class="glass-image-container">
+                        <img id="detailImage" src="" alt="Report Attachment" class="ios-rounded-img">
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <label>Response Information</label>
+                    <div id="detailResponseInfo" class="glass-box-text info">Our responders are currently reviewing your
+                        report. Please stay in a safe place.</div>
+                </div>
+
+                <!-- Live Responder Map — shown only when responding -->
+                <div id="liveResponderSection" class="detail-section" style="display:none;">
+                    <label>
+                        <span style="display:inline-flex;align-items:center;gap:6px;">
+                            <span
+                                style="width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;animation:statusPulse 1.5s infinite;"></span>
+                            Responder Live Location
+                        </span>
+                    </label>
+                    <div id="responderEtaBadge" class="glass-box-text"
+                        style="margin-bottom:10px;font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:8px;">
+                        <span>🚨</span> <span id="responderEtaText">Locating responder...</span>
+                    </div>
+                    <div id="liveResponderMap"
+                        style="width:100%;height:220px;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.12);">
+                    </div>
+                </div>
+
+                <div class="modal-actions ios-actions">
+                    <button type="button" class="btn btn-ios-full" id="closeDetailsBtn">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Settings Modal ─────────────────── -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
@@ -633,6 +731,228 @@
             });
         }
 
+        // ══ MAP SEARCH + DIRECTIONS — Nominatim + OSRM ══
+        (function initMapSearch() {
+            const searchInput = document.getElementById('mapSearchInput');
+            const resultsList = document.getElementById('mapSearchResults');
+            const clearBtn = document.getElementById('mapSearchClearBtn');
+            const dirCard = document.getElementById('directionsCard');
+            const dirDistance = document.getElementById('dirDistance');
+            const dirDuration = document.getElementById('dirDuration');
+            const dirSteps = document.getElementById('dirSteps');
+            const clearDirBtn = document.getElementById('clearDirectionsBtn');
+
+            let searchMarker = null;
+            let routeLayer = null;
+            let startMarker = null;
+            let endMarker = null;
+            let debounceTimer = null;
+            let userLatLng = null;   // stored from locateMe
+
+            // Capture user location whenever it's set
+            const _origLocate = window.locateMe;
+
+            function clearResults() { resultsList.innerHTML = ''; }
+            function showClear(show) { clearBtn.style.display = show ? 'flex' : 'none'; }
+
+            function clearRoute() {
+                if (routeLayer) { navMapL.removeLayer(routeLayer); routeLayer = null; }
+                if (startMarker) { navMapL.removeLayer(startMarker); startMarker = null; }
+                if (endMarker) { navMapL.removeLayer(endMarker); endMarker = null; }
+                dirCard.style.display = 'none';
+            }
+
+            clearDirBtn.addEventListener('click', () => {
+                clearRoute();
+                if (searchMarker) { navMapL.removeLayer(searchMarker); searchMarker = null; }
+                searchInput.value = '';
+                showClear(false);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                showClear(false);
+                clearResults();
+                searchInput.focus();
+            });
+
+            searchInput.addEventListener('input', () => {
+                const q = searchInput.value.trim();
+                showClear(q.length > 0);
+                clearResults();
+                if (q.length < 2) return;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => doSearch(q), 450);
+            });
+
+            async function doSearch(query) {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
+                    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+                    renderResults(await res.json());
+                } catch (e) { console.warn('Search failed:', e); }
+            }
+
+            function renderResults(places) {
+                resultsList.innerHTML = '';
+                if (!places.length) {
+                    resultsList.innerHTML = '<li style="padding:12px 16px;color:var(--color-text-muted);font-size:0.87rem;">No results found</li>';
+                    return;
+                }
+                places.forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = 'map-search-result-item';
+                    const name = p.name || p.display_name.split(',')[0];
+                    const addr = p.display_name;
+                    const lat = parseFloat(p.lat);
+                    const lon = parseFloat(p.lon);
+
+                    li.innerHTML = `
+                        <div class="map-search-result-pin">📍</div>
+                        <div style="min-width:0;flex:1;">
+                            <div class="map-search-result-name">${name}</div>
+                            <div class="map-search-result-addr">${addr}</div>
+                        </div>
+                        <button class="btn-get-directions" data-lat="${lat}" data-lon="${lon}" data-name="${name.replace(/"/g, '&quot;')}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+                            Directions
+                        </button>`;
+
+                    // Tap row → pan to place
+                    li.addEventListener('click', e => {
+                        if (e.target.closest('.btn-get-directions')) return; // handled separately
+                        clearResults();
+                        searchInput.value = name;
+                        if (!navMapL) initNavMap();
+                        navMapL.setView([lat, lon], 16);
+                        if (searchMarker) navMapL.removeLayer(searchMarker);
+                        const icon = L.divIcon({
+                            html: `<div style="background:#EE4444;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;box-shadow:0 4px 12px rgba(238,68,68,.4);white-space:nowrap;border:2px solid white;">📍 ${name}</div>`,
+                            className: '', iconAnchor: [40, 20]
+                        });
+                        searchMarker = L.marker([lat, lon], { icon })
+                            .addTo(navMapL)
+                            .bindPopup(`<b>${name}</b><br><small>${addr}</small>`).openPopup();
+                    });
+
+                    // "Directions" button → get route
+                    li.querySelector('.btn-get-directions').addEventListener('click', e => {
+                        e.stopPropagation();
+                        clearResults();
+                        searchInput.value = name;
+                        showClear(true);
+                        getDirections(lat, lon, name);
+                    });
+
+                    resultsList.appendChild(li);
+                });
+            }
+
+            // ── OSRM Routing ───────────────────────────────────
+            async function getDirections(destLat, destLon, destName) {
+                if (!navMapL) initNavMap();
+
+                // Get current user position
+                navigator.geolocation.getCurrentPosition(async pos => {
+                    const uLat = pos.coords.latitude;
+                    const uLon = pos.coords.longitude;
+                    userLatLng = [uLat, uLon];
+
+                    clearRoute();
+
+                    // Show a loading state
+                    dirCard.style.display = 'block';
+                    dirDistance.textContent = '…';
+                    dirDuration.textContent = 'Fetching route…';
+                    dirSteps.innerHTML = '';
+
+                    try {
+                        const url = `https://router.project-osrm.org/route/v1/driving/${uLon},${uLat};${destLon},${destLat}?overview=full&geometries=geojson&steps=true`;
+                        const res = await fetch(url);
+                        const data = await res.json();
+
+                        if (!data.routes || !data.routes.length) {
+                            dirDuration.textContent = 'Route not found.';
+                            return;
+                        }
+
+                        const route = data.routes[0];
+                        const distKm = (route.distance / 1000).toFixed(1);
+                        const mins = Math.round(route.duration / 60);
+                        const hrs = Math.floor(mins / 60);
+                        const minRem = mins % 60;
+                        const etaTxt = hrs ? `${hrs}h ${minRem}min` : `${mins} min`;
+
+                        dirDistance.textContent = `${distKm} km`;
+                        dirDuration.textContent = `🕒 Est. ${etaTxt} by car`;
+
+                        // Draw route polyline
+                        routeLayer = L.geoJSON(route.geometry, {
+                            style: { color: '#EE4444', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }
+                        }).addTo(navMapL);
+                        navMapL.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+                        // User origin marker
+                        const originIcon = L.divIcon({
+                            html: `<div style="width:14px;height:14px;background:#3B82F6;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(59,130,246,.5);"></div>`,
+                            className: '', iconSize: [14, 14], iconAnchor: [7, 7]
+                        });
+                        startMarker = L.marker([uLat, uLon], { icon: originIcon })
+                            .addTo(navMapL).bindPopup('<b>📍 Your Location</b>');
+
+                        // Destination marker
+                        const destIcon = L.divIcon({
+                            html: `<div style="background:#EE4444;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;box-shadow:0 4px 12px rgba(238,68,68,.4);white-space:nowrap;border:2px solid white;">🏁 ${destName}</div>`,
+                            className: '', iconAnchor: [50, 20]
+                        });
+                        endMarker = L.marker([destLat, destLon], { icon: destIcon })
+                            .addTo(navMapL).bindPopup(`<b>${destName}</b>`);
+
+                        // Render step-by-step instructions
+                        const steps = route.legs[0].steps;
+                        dirSteps.innerHTML = steps.map((s, i) => {
+                            const stepDist = s.distance >= 1000
+                                ? `${(s.distance / 1000).toFixed(1)} km`
+                                : `${Math.round(s.distance)} m`;
+                            const maneuver = s.maneuver.type;
+                            const icon = maneuverIcon(maneuver, s.maneuver.modifier);
+                            const instruction = s.name ? `${capitalise(maneuver)} onto <b>${s.name}</b>` : capitalise(maneuver);
+                            return `<div class="dir-step">
+                                <span class="dir-step-icon">${icon}</span>
+                                <div class="dir-step-text">
+                                    <span>${instruction}</span>
+                                    <span class="dir-step-dist">${stepDist}</span>
+                                </div>
+                            </div>`;
+                        }).join('');
+
+                    } catch (err) {
+                        dirDuration.textContent = 'Failed to fetch route.';
+                        console.error('OSRM error:', err);
+                    }
+                }, () => {
+                    alert('Enable GPS to get directions.');
+                });
+            }
+
+            function maneuverIcon(type, modifier) {
+                if (type === 'arrive') return '🏁';
+                if (type === 'depart') return '🚶';
+                if (!modifier) return '➡️';
+                if (modifier.includes('left')) return '↰';
+                if (modifier.includes('right')) return '↱';
+                if (modifier.includes('straight')) return '⬆️';
+                if (modifier.includes('uturn')) return '↩️';
+                return '➡️';
+            }
+
+            function capitalise(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
+
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.map-search-wrap')) clearResults();
+            });
+        })();
+
         // ══ NOTIFICATIONS — Real-time Firestore ════
         let unreadCount = 0;
         const ICONS = { fire: '🔥', police: '👮', medical: '🏥', rescue: '⛑️', traffic: '🚦', other: '⚠️' };
@@ -650,7 +970,8 @@
                 .onSnapshot(snap => {
                     snap.docChanges().forEach(c => {
                         if (c.type === 'added' || c.type === 'modified') {
-                            notifStore[c.doc.id] = { data: c.doc.data() };
+                            // Store ID and data together
+                            notifStore[c.doc.id] = { id: c.doc.id, ...c.doc.data() };
 
                             // Triggers for new reports and updates, ignoring initial snapshot bulk load
                             if (!initialLoad && !document.getElementById('tabNotifications').classList.contains('active')) {
@@ -674,32 +995,46 @@
                 });
         }
 
+        window._notifMap = {}; // Global store for notified reports
+
         function renderNotif() {
             const list = document.getElementById('notifList');
+            if (!list) return;
+
             const entries = Object.values(notifStore)
-                .sort((a, b) => (b.data.createdAt?.toMillis?.() ?? 0) - (a.data.createdAt?.toMillis?.() ?? 0));
+                .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+
             if (!entries.length) {
                 list.innerHTML = '<div class="notif-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>No notifications yet</p><span>Your report updates will appear here</span></div>';
                 return;
             }
-            list.innerHTML = entries.map(({ data }) => {
-                const s = data.status ?? 'pending';
-                const t = data.type ?? 'other';
-                const ts = data.createdAt?.toDate?.();
+
+            let html = '';
+            entries.forEach(report => {
+                const s = report.status ?? 'pending';
+                const t = report.type ?? 'other';
+                const ts = report.createdAt?.toDate?.();
                 const when = ts ? timeAgo(ts) : 'Just now';
                 const lbl = s.charAt(0).toUpperCase() + s.slice(1);
-                return `<div class="notif-item unread status-${s}">
-                <div class="notif-icon">${ICONS[t] ?? '⚠️'}</div>
-                <div class="notif-body">
-                    <div class="notif-title">${LABELS[t] ?? 'Emergency'} Report</div>
-                    <div class="notif-desc">${(data.description ?? '').slice(0, 80)}${(data.description ?? '').length > 80 ? '…' : ''}</div>
-                    <div class="notif-meta">
-                        <span class="notif-time">${when}</span>
-                        <span class="notif-status-pill pill-${s}">${lbl}</span>
+                const rid = report.id;
+
+                // Save to global map for retrieval on click
+                window._notifMap[rid] = { ...report, reportId: rid };
+
+                html += `
+                <div class="notif-item unread status-${s}" style="cursor: pointer;" onclick="viewReportDetails(window._notifMap['${rid}'])">
+                    <div class="notif-icon">${ICONS[t] || '⚠️'}</div>
+                    <div class="notif-body">
+                        <div class="notif-title">${LABELS[t] || 'Emergency'} Report</div>
+                        <div class="notif-desc">${(report.description || '').slice(0, 80)}${(report.description || '').length > 80 ? '…' : ''}</div>
+                        <div class="notif-meta">
+                            <span class="notif-time">${when}</span>
+                            <span class="notif-status-pill pill-${s}">${lbl}</span>
+                        </div>
                     </div>
-                </div>
-            </div>`;
-            }).join('');
+                </div>`;
+            });
+            list.innerHTML = html;
         }
 
         function timeAgo(d) {

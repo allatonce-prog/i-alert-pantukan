@@ -4,7 +4,9 @@ let currentUser = null;
 let currentLocation = null;
 let map = null;
 let marker = null;
-let selectedEmergencyType = null;
+window.selectedEmergencyType = null;
+let currentPage = 1;
+const itemsPerPage = 5;
 
 // Check authentication
 async function checkAuth() {
@@ -280,8 +282,16 @@ window.openEmergencyModal = openEmergencyModal;
 window.closeModal = closeModal;
 
 // Close Modal
-document.getElementById('closeModal').addEventListener('click', closeModal);
-document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('closeModal')?.addEventListener('click', closeModal);
+document.getElementById('cancelBtn')?.addEventListener('click', closeModal);
+function closeReportDetailsModal() {
+    document.getElementById('reportDetailsModal').classList.remove('active');
+    // Clean up live responder resources
+    if (_responderUnsubscribe) { _responderUnsubscribe(); _responderUnsubscribe = null; }
+    if (_responderMap) { _responderMap.remove(); _responderMap = null; }
+}
+document.getElementById('closeDetailsModal')?.addEventListener('click', closeReportDetailsModal);
+document.getElementById('closeDetailsBtn')?.addEventListener('click', closeReportDetailsModal);
 
 function closeModal() {
     const modal = document.getElementById('emergencyModal');
@@ -684,7 +694,7 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
             userName: currentUser.name,
             userPhone: currentUser.phone,
             userAddress: currentUser.address,
-            type: selectedEmergencyType,
+            type: window.selectedEmergencyType,
             description: description,
             imageUrl: imageUrl,
             location: {
@@ -703,6 +713,7 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
 
         setTimeout(() => {
             closeModal();
+            currentPage = 1;
             loadMyReports();
         }, 1000);
 
@@ -719,24 +730,23 @@ async function loadMyReports() {
     if (!currentUser) return;
 
     try {
-        // Fetch reports without ordering to avoid "Requires Index" error
         const reportsSnapshot = await db.collection('emergencyReports')
             .where('userId', '==', currentUser.uid)
             .get();
 
         const reportsList = document.getElementById('myReportsList');
+        const paginationContainer = document.getElementById('myReportsPagination');
 
         if (reportsSnapshot.empty) {
             reportsList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 2rem;">No reports yet</p>';
+            paginationContainer.innerHTML = '';
             return;
         }
-
-        reportsList.innerHTML = '';
 
         // Convert to array and sort client-side
         const reports = [];
         reportsSnapshot.forEach(doc => {
-            reports.push(doc.data());
+            reports.push({ id: doc.id, ...doc.data() });
         });
 
         // Sort by createdAt descending
@@ -746,30 +756,222 @@ async function loadMyReports() {
             return timeB - timeA;
         });
 
-        // Display top 10
-        reports.slice(0, 10).forEach(report => {
-            const emergency = EMERGENCY_TYPES[report.type];
-            const hasImage = report.imageUrl ? '<span style="font-size: 12px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">📷 Image</span>' : '';
+        const totalItems = reports.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Ensure currentPage is within bounds
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedReports = reports.slice(startIndex, endIndex);
+
+        reportsList.innerHTML = '';
+        // Display paginated items
+        paginatedReports.forEach(report => {
+            const emergency = EMERGENCY_TYPES[report.type] || { icon: '⚠️', label: 'Emergency' };
+            const hasImage = report.imageUrl ? '<span style="font-size: 11px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);">📷 Attached Image</span>' : '';
 
             const reportItem = document.createElement('div');
             reportItem.className = 'report-item';
+            reportItem.onclick = () => viewReportDetails({ ...report, reportId: report.id || report.reportId });
             reportItem.innerHTML = `
                 <div class="report-status ${report.status}"></div>
                 <div class="report-content">
-                    <div class="report-type">${emergency.icon} ${emergency.label} ${hasImage}</div>
+                    <div class="report-type">${emergency.icon} ${emergency.label} Report ${hasImage}</div>
                     <div class="report-desc">${report.description}</div>
-                    <div class="report-time">${formatTimestamp(report.createdAt)} • ${STATUS_LABELS[report.status]}</div>
+                    <div class="report-time">${formatTimestamp(report.createdAt)} • ${STATUS_LABELS[report.status] || report.status}</div>
                 </div>
             `;
 
             reportsList.appendChild(reportItem);
         });
 
+        renderPagination(totalPages);
+
     } catch (error) {
         console.error('Error loading reports:', error);
         showToast('Error loading reports', 'error');
     }
 }
+
+// Function to view report details in iOS 26 Modal
+let _responderUnsubscribe = null;  // Firestore listener cleanup
+let _responderMap = null;          // Leaflet map instance for responder
+
+window.viewReportDetails = function (report) {
+    const reportId = report.id || report.reportId;
+    const modal = document.getElementById('reportDetailsModal');
+    const typeLabel = EMERGENCY_TYPES[report.type]?.label || 'Emergency';
+    const typeIcon = EMERGENCY_TYPES[report.type]?.icon || '⚠️';
+
+    document.getElementById('detailType').textContent = `${typeLabel} Report`;
+    document.getElementById('detailIcon').textContent = typeIcon;
+    document.getElementById('detailTime').textContent = formatTimestamp(report.createdAt);
+    document.getElementById('detailDescription').textContent = report.description;
+
+    const statusChip = document.getElementById('detailStatus');
+    statusChip.textContent = (STATUS_LABELS[report.status] || report.status).toUpperCase();
+    statusChip.className = `status-chip ${report.status}`;
+
+    // Handle Image
+    const imgSection = document.getElementById('detailImageSection');
+    const imgElement = document.getElementById('detailImage');
+    if (report.imageUrl) {
+        imgElement.src = report.imageUrl;
+        imgSection.style.display = 'block';
+    } else {
+        imgSection.style.display = 'none';
+    }
+
+    // Handle Response Info text
+    const responseInfo = document.getElementById('detailResponseInfo');
+    if (report.status === 'pending') {
+        responseInfo.textContent = "Our responders are currently reviewing your report. Please stay in a safe place.";
+        responseInfo.className = "glass-box-text info pending";
+    } else if (report.status === 'responding') {
+        responseInfo.textContent = "🚨 Responders are on their way to your location. Keep your phone reachable.";
+        responseInfo.className = "glass-box-text info responding";
+    } else {
+        responseInfo.textContent = "This incident has been marked as resolved. Thank you for your cooperation.";
+        responseInfo.className = "glass-box-text info resolved";
+    }
+
+    // ── Live Responder Map ──────────────────────────
+    const liveSection = document.getElementById('liveResponderSection');
+    const etaText = document.getElementById('responderEtaText');
+
+    // Clean up previous listener & map
+    if (_responderUnsubscribe) { _responderUnsubscribe(); _responderUnsubscribe = null; }
+    if (_responderMap) { _responderMap.remove(); _responderMap = null; }
+    document.getElementById('liveResponderMap').innerHTML = '';
+
+    if (report.status === 'responding' && reportId) {
+        liveSection.style.display = 'block';
+        etaText.textContent = 'Locating responder...';
+
+        let responderMarker = null;
+        let victimMarker = null;
+        let routeLine = null;
+        let mapReady = false;
+
+        // Listen to real-time responder location on the Firestore doc
+        _responderUnsubscribe = db.collection('emergencyReports')
+            .doc(reportId)
+            .onSnapshot(snap => {
+                const data = snap.data();
+                const loc = data?.responderLocation;
+                if (!loc) { etaText.textContent = 'Waiting for responder GPS...'; return; }
+
+                const rLat = loc.lat, rLng = loc.lng;
+                const vLat = report.location?.lat, vLng = report.location?.lng;
+
+                if (!mapReady) {
+                    mapReady = true;
+                    setTimeout(() => {
+                        _responderMap = L.map('liveResponderMap').setView([rLat, rLng], 15);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            { attribution: '© OSM', maxZoom: 19 }).addTo(_responderMap);
+
+                        // Responder marker (animated pulse)
+                        const rIcon = L.divIcon({
+                            html: `<div style="position:relative;">
+                                <div style="width:16px;height:16px;background:#EE4444;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(238,68,68,0.6);"></div>
+                                <div style="position:absolute;top:-4px;left:-4px;width:24px;height:24px;border:2px solid #EE4444;border-radius:50%;animation:statusPulse 1.5s infinite;opacity:0.5;"></div>
+                            </div>`,
+                            className: '', iconSize: [16, 16], iconAnchor: [8, 8]
+                        });
+                        responderMarker = L.marker([rLat, rLng], { icon: rIcon })
+                            .addTo(_responderMap)
+                            .bindPopup('<b>🚨 Responder</b>');
+
+                        // Victim marker
+                        if (vLat && vLng) {
+                            const vIcon = L.divIcon({
+                                html: `<div style="background:#3B82F6;color:white;padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;white-space:nowrap;border:2px solid white;box-shadow:0 2px 8px rgba(59,130,246,0.5);">📍 You</div>`,
+                                className: '', iconAnchor: [30, 18]
+                            });
+                            victimMarker = L.marker([vLat, vLng], { icon: vIcon })
+                                .addTo(_responderMap)
+                                .bindPopup('<b>📍 Your Location</b>');
+                        }
+
+                        updateRoute(rLat, rLng, vLat, vLng);
+                    }, 150);
+
+                } else if (responderMarker) {
+                    // Smoothly move responder marker
+                    responderMarker.setLatLng([rLat, rLng]);
+                    updateRoute(rLat, rLng, vLat, vLng);
+                }
+            });
+
+        // Draw OSRM route + compute ETA
+        async function updateRoute(rLat, rLng, vLat, vLng) {
+            if (!vLat || !vLng || !_responderMap) return;
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${rLng},${rLat};${vLng},${vLat}?overview=full&geometries=geojson`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (!data.routes?.length) return;
+
+                const route = data.routes[0];
+                const distKm = (route.distance / 1000).toFixed(1);
+                const mins = Math.max(1, Math.round(route.duration / 60));
+                etaText.textContent = `Responder is ~${distKm} km away · ETA ${mins} min`;
+
+                if (routeLine) _responderMap.removeLayer(routeLine);
+                routeLine = L.geoJSON(route.geometry, {
+                    style: { color: '#EE4444', weight: 4, opacity: 0.8, dashArray: '8 4', lineCap: 'round' }
+                }).addTo(_responderMap);
+
+                _responderMap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+            } catch (_) { }
+        }
+
+    } else {
+        liveSection.style.display = 'none';
+    }
+
+    modal.classList.add('active');
+}
+
+// Render Pagination Controls
+function renderPagination(totalPages) {
+    const container = document.getElementById('myReportsPagination');
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+
+    // Previous Button
+    html += `<button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>`;
+
+    // Page Numbers
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+    }
+
+    // Next Button
+    html += `<button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><path d="M9 18l6-6-6-6"/></svg>
+    </button>`;
+
+    container.innerHTML = html;
+}
+
+// Global function to handle page change
+window.changePage = (page) => {
+    currentPage = page;
+    loadMyReports();
+};
 
 // Refresh Reports
 document.getElementById('refreshReportsBtn').addEventListener('click', loadMyReports);
