@@ -407,30 +407,48 @@
                                 style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
                         </label>
                     </div>
-                </div>
+                    <div class="settings-group" style="margin-top: var(--spacing-xl);">
+                        <h3
+                            style="margin-bottom: var(--spacing-md); font-size: 1.1rem; color: var(--color-text-primary);">
+                            System</h3>
 
-                <div class="modal-actions" style="margin-top: var(--spacing-xl);">
-                    <button type="button" class="btn btn-secondary" id="closeSettingsBtn"
-                        style="width: 100%;">Close</button>
+                        <div class="setting-item"
+                            style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); border-radius: var(--border-radius-md);">
+                            <div class="setting-info">
+                                <h4 style="margin: 0 0 4px 0; font-size: 1rem; color: var(--color-error);">Clear Cache &
+                                    Update</h4>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--color-text-secondary);">Force a
+                                    hard refresh to get the latest updates</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" id="forceUpdateBtn"
+                                style="border-color: var(--color-error); color: var(--color-error); background: transparent;">
+                                Refresh App
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions" style="margin-top: var(--spacing-xl);">
+                        <button type="button" class="btn btn-secondary" id="closeSettingsBtn"
+                            style="width: 100%;">Close</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Toast -->
-    <div id="toast" class="toast"></div>
+        <!-- Toast -->
+        <div id="toast" class="toast"></div>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+        <!-- Firebase -->
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <!-- Leaflet JS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Scripts -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/admin.js"></script>
+        <!-- Scripts -->
+        <script src="js/firebase-config.js"></script>
+        <script src="js/admin.js"></script>
 </body>
 
 </html>

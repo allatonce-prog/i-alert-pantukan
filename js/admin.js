@@ -818,3 +818,48 @@ document.getElementById('refreshDashboard').addEventListener('click', loadDashbo
 document.getElementById('viewAllReports').addEventListener('click', () => {
     document.querySelector('[data-page="reports"]').click();
 });
+// Force Update (Clear Cache & Hard Refresh)
+document.getElementById('forceUpdateBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('forceUpdateBtn');
+    const originalText = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Updating...';
+
+    try {
+        // 1. Clear Service Worker Caches
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+            console.log("Caches cleared");
+        }
+
+        // 2. Unregister Service Workers
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let reg of registrations) {
+                await reg.unregister();
+            }
+            console.log("Service workers unregistered");
+        }
+
+        // 3. Clear Local Storage (Except auth/version)
+        const currentUser = localStorage.getItem('currentUser');
+        const theme = localStorage.getItem('theme');
+        localStorage.clear();
+        if (currentUser) localStorage.setItem('currentUser', currentUser);
+        if (theme) localStorage.setItem('theme', theme);
+
+        showToast('Cache cleared! Refreshing...', 'success');
+
+        setTimeout(() => {
+            // Hard refresh
+            window.location.reload(true);
+        }, 1000);
+    } catch (error) {
+        console.error("Force update failed:", error);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast('Update failed. Try manually refreshing.', 'error');
+    }
+});
