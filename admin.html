@@ -434,21 +434,66 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Toast -->
-        <div id="toast" class="toast"></div>
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
 
-        <!-- Firebase -->
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-        <!-- Leaflet JS -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        <!-- Scripts -->
-        <script src="js/firebase-config.js"></script>
-        <script src="js/admin.js"></script>
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/admin.js"></script>
+    <!-- ── Chatbot Floating UI ─────────── -->
+    <div id="chatbot-container" class="chatbot-container">
+        <!-- Floating Button -->
+        <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Open emergency assistant">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <span class="pulse-ring"></span>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="chatbot-window" class="chatbot-window">
+            <div class="chatbot-header">
+                <div class="chatbot-header-info">
+                    <div class="chatbot-avatar">🤖</div>
+                    <div>
+                        <h3>iAlert Assistant</h3>
+                        <p>Always online</p>
+                    </div>
+                </div>
+                <button id="chatbot-close" class="chatbot-close-btn">&times;</button>
+            </div>
+
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="message bot">
+                    Hello Admin! I'm your iAlert Assistant. How can I help you today? You can ask me about system
+                    features, admin procedures, or troubleshooting.
+                </div>
+            </div>
+
+            <div class="chatbot-input-area">
+                <textarea id="chatbot-input" placeholder="Type your message..." rows="1"></textarea>
+                <button id="chatbot-send" class="chatbot-send-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Logic -->
+    <script src="js/chatbot.js"></script>
 </body>
 
 </html>

@@ -2325,6 +2325,7 @@ body {
     animation: fadeIn 0.35s ease both;
     position: relative;
     overflow: hidden;
+    touch-action: manipulation;
 }
 
 .notif-item:hover {
@@ -2474,9 +2475,12 @@ body {
     position: fixed;
     bottom: calc(var(--nav-height, 68px) + var(--sp-6, 1.5rem));
     right: var(--sp-6, 1.5rem);
-    z-index: 1001;
-    /* Above basic elements, below modals (2000) */
+    z-index: 99999;
+    /* Above everything including modals (2000) */
     display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    touch-action: manipulation;
 }
 
 @media (min-width: 1024px) {
@@ -2499,6 +2503,7 @@ body {
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
+    touch-action: manipulation;
 }
 
 .chatbot-toggle svg {
@@ -2553,6 +2558,7 @@ body {
     transform: translateY(20px) scale(0.95);
     transform-origin: bottom right;
     transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    touch-action: manipulation;
 }
 
 .chatbot-window.active {

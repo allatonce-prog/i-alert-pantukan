@@ -530,165 +530,166 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Toast -->
-        <div id="toast" class="toast"></div>
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
 
-        <!-- Firebase -->
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-        <!-- Leaflet JS -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        <!-- Scripts -->
-        <script src="js/firebase-config.js"></script>
-        <script src="js/resident.js"></script>
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/resident.js"></script>
 
-        <script>
-            // ══ BOTTOM NAV: Tab switching ══════════════
-            const navBtns = document.querySelectorAll('.nav-btn');
-            const tabViews = document.querySelectorAll('.tab-view');
-            let navMapL = null, navMapInitialised = false;
+    <script>
+        // ══ BOTTOM NAV: Tab switching ══════════════
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const tabViews = document.querySelectorAll('.tab-view');
+        let navMapL = null, navMapInitialised = false;
 
-            navBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.dataset.tab;
-                    navBtns.forEach(b => b.classList.remove('active'));
-                    tabViews.forEach(v => v.classList.remove('active'));
-                    btn.classList.add('active');
-                    document.getElementById(id).classList.add('active');
-                    if (id === 'tabNotifications') {
-                        document.getElementById('navNotifDot').style.display = 'none';
-                        document.getElementById('notifBadge').style.display = 'none';
-                        unreadCount = 0;
-                    }
-                    if (id === 'tabMap' && !navMapInitialised) initNavMap();
-                });
-            });
-
-            // ══ HIDE ON SCROLL DOWN / SHOW ON UP ═══════
-            const bottomNav = document.getElementById('bottomNav');
-            let lastScrollY = window.scrollY;
-            let scrollDelta = 0;
-            let ticking = false;
-
-            function showNav() {
-                bottomNav.classList.remove('nav-hidden');
-            }
-
-            function hideNav() {
-                bottomNav.classList.add('nav-hidden');
-            }
-
-            window.addEventListener('scroll', () => {
-                if (!ticking) {
-                    window.requestAnimationFrame(() => {
-                        const y = window.scrollY;
-                        scrollDelta += y - lastScrollY;
-
-                        if (y <= 10) {
-                            showNav();
-                            scrollDelta = 0;
-                        } else if (scrollDelta > 20) {
-                            hideNav();
-                            scrollDelta = 0;
-                        } else if (scrollDelta < -12) {
-                            showNav();
-                            scrollDelta = 0;
-                        }
-
-                        lastScrollY = y;
-                        ticking = false;
-                    });
-                    ticking = true;
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.tab;
+                navBtns.forEach(b => b.classList.remove('active'));
+                tabViews.forEach(v => v.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(id).classList.add('active');
+                if (id === 'tabNotifications') {
+                    document.getElementById('navNotifDot').style.display = 'none';
+                    document.getElementById('notifBadge').style.display = 'none';
+                    unreadCount = 0;
                 }
-            }, { passive: true });
+                if (id === 'tabMap' && !navMapInitialised) initNavMap();
+            });
+        });
 
-            // ══ MAP TAB — Leaflet + GPS ═════════════════
-            function initNavMap() {
-                navMapInitialised = true;
-                const mapEl = document.getElementById('navMap');
-                const hdr1 = document.querySelector('.app-header').offsetHeight;
-                const hdr2 = document.querySelector('.map-view-header').offsetHeight;
-                mapEl.style.height = (window.innerHeight - hdr1 - hdr2 - 68) + 'px';
-                navMapL = L.map('navMap').setView([7.3072, 126.0148], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(navMapL);
-                document.getElementById('locateMeBtn').addEventListener('click', locateMe);
-                locateMe();
-            }
+        // ══ HIDE ON SCROLL DOWN / SHOW ON UP ═══════
+        const bottomNav = document.getElementById('bottomNav');
+        let lastScrollY = window.scrollY;
+        let scrollDelta = 0;
+        let ticking = false;
 
-            function locateMe() {
-                if (!navMapL || !navigator.geolocation) return;
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const { latitude: lat, longitude: lng } = pos.coords;
-                    navMapL.setView([lat, lng], 16);
-                    const icon = L.divIcon({
-                        html: '<div style="width:18px;height:18px;background:#DC2626;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(220,38,38,.5);"></div>',
-                        iconSize: [18, 18], iconAnchor: [9, 9], className: ''
-                    });
-                    L.marker([lat, lng], { icon }).addTo(navMapL).bindPopup('<b>You are here</b>').openPopup();
+        function showNav() {
+            bottomNav.classList.remove('nav-hidden');
+        }
+
+        function hideNav() {
+            bottomNav.classList.add('nav-hidden');
+        }
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const y = window.scrollY;
+                    scrollDelta += y - lastScrollY;
+
+                    if (y <= 10) {
+                        showNav();
+                        scrollDelta = 0;
+                    } else if (scrollDelta > 20) {
+                        hideNav();
+                        scrollDelta = 0;
+                    } else if (scrollDelta < -12) {
+                        showNav();
+                        scrollDelta = 0;
+                    }
+
+                    lastScrollY = y;
+                    ticking = false;
                 });
+                ticking = true;
             }
+        }, { passive: true });
 
-            // ══ NOTIFICATIONS — Real-time Firestore ════
-            let unreadCount = 0;
-            const ICONS = { fire: '🔥', police: '👮', medical: '🏥', rescue: '⛑️', traffic: '🚦', other: '⚠️' };
-            const LABELS = {
-                fire: 'Fire Emergency', police: 'Police Assistance', medical: 'Medical Emergency',
-                rescue: 'Search & Rescue', traffic: 'Road Accident', other: 'Other Emergency'
-            };
-            const notifStore = {};
+        // ══ MAP TAB — Leaflet + GPS ═════════════════
+        function initNavMap() {
+            navMapInitialised = true;
+            const mapEl = document.getElementById('navMap');
+            const hdr1 = document.querySelector('.app-header').offsetHeight;
+            const hdr2 = document.querySelector('.map-view-header').offsetHeight;
+            mapEl.style.height = (window.innerHeight - hdr1 - hdr2 - 68) + 'px';
+            navMapL = L.map('navMap').setView([7.3072, 126.0148], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(navMapL);
+            document.getElementById('locateMeBtn').addEventListener('click', locateMe);
+            locateMe();
+        }
 
-            let initialLoad = true;
+        function locateMe() {
+            if (!navMapL || !navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude: lat, longitude: lng } = pos.coords;
+                navMapL.setView([lat, lng], 16);
+                const icon = L.divIcon({
+                    html: '<div style="width:18px;height:18px;background:#DC2626;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(220,38,38,.5);"></div>',
+                    iconSize: [18, 18], iconAnchor: [9, 9], className: ''
+                });
+                L.marker([lat, lng], { icon }).addTo(navMapL).bindPopup('<b>You are here</b>').openPopup();
+            });
+        }
 
-            function startNotifListener(userId) {
-                if (typeof db === 'undefined') return;
-                db.collection('emergencyReports').where('userId', '==', userId)
-                    .onSnapshot(snap => {
-                        snap.docChanges().forEach(c => {
-                            if (c.type === 'added' || c.type === 'modified') {
-                                notifStore[c.doc.id] = { data: c.doc.data() };
+        // ══ NOTIFICATIONS — Real-time Firestore ════
+        let unreadCount = 0;
+        const ICONS = { fire: '🔥', police: '👮', medical: '🏥', rescue: '⛑️', traffic: '🚦', other: '⚠️' };
+        const LABELS = {
+            fire: 'Fire Emergency', police: 'Police Assistance', medical: 'Medical Emergency',
+            rescue: 'Search & Rescue', traffic: 'Road Accident', other: 'Other Emergency'
+        };
+        const notifStore = {};
 
-                                // Triggers for new reports and updates, ignoring initial snapshot bulk load
-                                if (!initialLoad && !document.getElementById('tabNotifications').classList.contains('active')) {
-                                    unreadCount++;
-                                    document.getElementById('navNotifDot').style.display = 'block';
-                                    document.getElementById('notifBadge').style.display = 'inline';
-                                    document.getElementById('notifBadge').textContent = unreadCount;
-                                }
+        let initialLoad = true;
 
-                                // Show toast ONLY when modified (e.g. status changes to responding or resolved)
-                                if (!initialLoad && c.type === 'modified') {
-                                    const newStatus = c.doc.data().status;
-                                    if (window.showToast && newStatus) {
-                                        window.showToast(`Report status updated to: ${newStatus.toUpperCase()}`, 'success');
-                                    }
+        function startNotifListener(userId) {
+            if (typeof db === 'undefined') return;
+            db.collection('emergencyReports').where('userId', '==', userId)
+                .onSnapshot(snap => {
+                    snap.docChanges().forEach(c => {
+                        if (c.type === 'added' || c.type === 'modified') {
+                            notifStore[c.doc.id] = { data: c.doc.data() };
+
+                            // Triggers for new reports and updates, ignoring initial snapshot bulk load
+                            if (!initialLoad && !document.getElementById('tabNotifications').classList.contains('active')) {
+                                unreadCount++;
+                                document.getElementById('navNotifDot').style.display = 'block';
+                                document.getElementById('notifBadge').style.display = 'inline';
+                                document.getElementById('notifBadge').textContent = unreadCount;
+                            }
+
+                            // Show toast ONLY when modified (e.g. status changes to responding or resolved)
+                            if (!initialLoad && c.type === 'modified') {
+                                const newStatus = c.doc.data().status;
+                                if (window.showToast && newStatus) {
+                                    window.showToast(`Report status updated to: ${newStatus.toUpperCase()}`, 'success');
                                 }
                             }
-                        });
-                        renderNotif();
-                        initialLoad = false;
+                        }
                     });
-            }
+                    renderNotif();
+                    initialLoad = false;
+                });
+        }
 
-            function renderNotif() {
-                const list = document.getElementById('notifList');
-                const entries = Object.values(notifStore)
-                    .sort((a, b) => (b.data.createdAt?.toMillis?.() ?? 0) - (a.data.createdAt?.toMillis?.() ?? 0));
-                if (!entries.length) {
-                    list.innerHTML = '<div class="notif-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>No notifications yet</p><span>Your report updates will appear here</span></div>';
-                    return;
-                }
-                list.innerHTML = entries.map(({ data }) => {
-                    const s = data.status ?? 'pending';
-                    const t = data.type ?? 'other';
-                    const ts = data.createdAt?.toDate?.();
-                    const when = ts ? timeAgo(ts) : 'Just now';
-                    const lbl = s.charAt(0).toUpperCase() + s.slice(1);
-                    return `<div class="notif-item unread status-${s}">
+        function renderNotif() {
+            const list = document.getElementById('notifList');
+            const entries = Object.values(notifStore)
+                .sort((a, b) => (b.data.createdAt?.toMillis?.() ?? 0) - (a.data.createdAt?.toMillis?.() ?? 0));
+            if (!entries.length) {
+                list.innerHTML = '<div class="notif-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>No notifications yet</p><span>Your report updates will appear here</span></div>';
+                return;
+            }
+            list.innerHTML = entries.map(({ data }) => {
+                const s = data.status ?? 'pending';
+                const t = data.type ?? 'other';
+                const ts = data.createdAt?.toDate?.();
+                const when = ts ? timeAgo(ts) : 'Just now';
+                const lbl = s.charAt(0).toUpperCase() + s.slice(1);
+                return `<div class="notif-item unread status-${s}">
                 <div class="notif-icon">${ICONS[t] ?? '⚠️'}</div>
                 <div class="notif-body">
                     <div class="notif-title">${LABELS[t] ?? 'Emergency'} Report</div>
@@ -699,72 +700,72 @@
                     </div>
                 </div>
             </div>`;
-                }).join('');
-            }
+            }).join('');
+        }
 
-            function timeAgo(d) {
-                const s = Math.floor((Date.now() - d.getTime()) / 1000);
-                if (s < 60) return 'Just now';
-                if (s < 3600) return Math.floor(s / 60) + 'm ago';
-                if (s < 86400) return Math.floor(s / 3600) + 'h ago';
-                return Math.floor(s / 86400) + 'd ago';
-            }
+        function timeAgo(d) {
+            const s = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (s < 60) return 'Just now';
+            if (s < 3600) return Math.floor(s / 60) + 'm ago';
+            if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+            return Math.floor(s / 86400) + 'd ago';
+        }
 
-            // Start once user data is in localStorage
-            (function poll() {
-                try {
-                    const u = JSON.parse(localStorage.getItem('currentUser'));
-                    const userId = u?.id || u?.uid;
-                    if (userId) { startNotifListener(userId); return; }
-                } catch (_) { }
-                setTimeout(poll, 800);
-            })();
-        </script>
+        // Start once user data is in localStorage
+        (function poll() {
+            try {
+                const u = JSON.parse(localStorage.getItem('currentUser'));
+                const userId = u?.id || u?.uid;
+                if (userId) { startNotifListener(userId); return; }
+            } catch (_) { }
+            setTimeout(poll, 800);
+        })();
+    </script>
 
-        <!-- ── Chatbot Floating UI ─────────── -->
-        <div id="chatbot-container" class="chatbot-container">
-            <!-- Floating Button -->
-            <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Open emergency assistant">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <span class="pulse-ring"></span>
-            </button>
+    <!-- ── Chatbot Floating UI ─────────── -->
+    <div id="chatbot-container" class="chatbot-container">
+        <!-- Floating Button -->
+        <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Open emergency assistant">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <span class="pulse-ring"></span>
+        </button>
 
-            <!-- Chat Window -->
-            <div id="chatbot-window" class="chatbot-window">
-                <div class="chatbot-header">
-                    <div class="chatbot-header-info">
-                        <div class="chatbot-avatar">🤖</div>
-                        <div>
-                            <h3>iAlert Assistant</h3>
-                            <p>Always online</p>
-                        </div>
-                    </div>
-                    <button id="chatbot-close" class="chatbot-close-btn">&times;</button>
-                </div>
-
-                <div id="chatbot-messages" class="chatbot-messages">
-                    <div class="message bot">
-                        Hello! I'm your iAlert Assistant. How can I help you today? You can ask me about emergency
-                        procedures, safety tips, or how to use the system.
+        <!-- Chat Window -->
+        <div id="chatbot-window" class="chatbot-window">
+            <div class="chatbot-header">
+                <div class="chatbot-header-info">
+                    <div class="chatbot-avatar">🤖</div>
+                    <div>
+                        <h3>iAlert Assistant</h3>
+                        <p>Always online</p>
                     </div>
                 </div>
+                <button id="chatbot-close" class="chatbot-close-btn">&times;</button>
+            </div>
 
-                <div class="chatbot-input-area">
-                    <textarea id="chatbot-input" placeholder="Type your message..." rows="1"></textarea>
-                    <button id="chatbot-send" class="chatbot-send-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="22" y1="2" x2="11" y2="13" />
-                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                        </svg>
-                    </button>
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="message bot">
+                    Hello! I'm your iAlert Assistant. How can I help you today? You can ask me about emergency
+                    procedures, safety tips, or how to use the system.
                 </div>
             </div>
-        </div>
 
-        <!-- Chatbot Logic -->
-        <script src="js/chatbot.js"></script>
+            <div class="chatbot-input-area">
+                <textarea id="chatbot-input" placeholder="Type your message..." rows="1"></textarea>
+                <button id="chatbot-send" class="chatbot-send-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Logic -->
+    <script src="js/chatbot.js"></script>
 
 </body>
 
