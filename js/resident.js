@@ -320,10 +320,19 @@ function initMap() {
 }
 
 // Request location transparently in the background
-function requestBackgroundLocation() {
-    if (!navigator.geolocation) return;
+function requestBackgroundLocation(isUserTriggered = false) {
+    if (!navigator.geolocation) {
+        if (isUserTriggered) showToast('GPS not supported on this browser', 'error');
+        return;
+    }
 
     const banner = document.getElementById('locationAlert');
+    const btn = document.getElementById('enableGPSBtn');
+
+    if (isUserTriggered && btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:5px;"></div> Trying...';
+    }
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -334,19 +343,49 @@ function requestBackgroundLocation() {
             };
             console.log('Background GPS location acquired successfully.');
             if (banner) banner.classList.remove('active');
+
+            if (isUserTriggered) {
+                showToast('GPS Location enabled!', 'success');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Enable GPS';
+                }
+            }
         },
         (error) => {
             console.warn('Background GPS location failed or denied:', error);
             // On failure or denial, show the banner
             if (banner) banner.classList.add('active');
+
+            if (isUserTriggered) {
+                let msg = 'Unable to get location';
+                if (error.code === 1) msg = 'Location access denied. Please enable it in your phone settings.';
+                else if (error.code === 3) msg = 'Location request timed out. Try again in a more open area.';
+
+                showToast(msg, 'error');
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Enable GPS';
+                }
+
+                // Check for in-app browsers (Messenger/Facebook) which often block GPS
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                if ((ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1) || (ua.indexOf('Messenger') > -1)) {
+                    setTimeout(() => {
+                        showToast('Tip: If GPS still fails, tap the three dots (⋮) and chose "Open in Chrome/System Browser"', 'info');
+                    }, 3000);
+                }
+            }
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
 // Global listener for "Enable GPS" button
-document.getElementById('enableGPSBtn')?.addEventListener('click', () => {
-    requestBackgroundLocation();
+document.getElementById('enableGPSBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    requestBackgroundLocation(true);
 });
 
 // Trigger GPS Acquisition Logic

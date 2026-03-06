@@ -2891,7 +2891,8 @@ body.dark-mode .typing-indicator {
     top: var(--header-height);
     left: 0;
     right: 0;
-    z-index: 99;
+    z-index: 1001;
+    pointer-events: auto;
     padding: var(--sp-3) var(--sp-6);
     background: linear-gradient(90deg, #F59E0B, #D97706);
     color: white;
