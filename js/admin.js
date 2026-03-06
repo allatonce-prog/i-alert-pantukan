@@ -4,6 +4,27 @@ let currentAdmin = null;
 let adminDepartment = null;
 let reportsListener = null;
 let currentStatusFilter = 'pending';
+let isAudioEnabled = false;
+const alertSound = new Audio('sound/emergency-alert.mp3');
+
+// Helper: Unlock audio on mobile (triggered by first user click)
+function unlockAudio() {
+    if (isAudioEnabled) return;
+
+    // Play a silent or very short sound to unlock the audio context
+    alertSound.volume = 0;
+    alertSound.play().then(() => {
+        alertSound.pause();
+        alertSound.currentTime = 0;
+        alertSound.volume = 1; // Restore volume for future use
+        isAudioEnabled = true;
+        console.log("Audio unlocked for mobile");
+    }).catch(e => console.log("Audio unlock failed:", e));
+}
+
+// Global click listener for first-time audio activation
+document.addEventListener('click', unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
 
 // Check authentication
 async function checkAuth() {
@@ -770,13 +791,18 @@ function startRealtimeListener() {
 
                     // Play emergency alert sound
                     try {
-                        const alertSound = new Audio('sound/emergency-alert.mp3');
-                        alertSound.play().catch(err => {
-                            console.log("Audio playback blocked by browser or failed:", err);
-                        });
+                        if (isAudioEnabled) {
+                            alertSound.currentTime = 0; // Restart if already playing
+                            alertSound.play().catch(err => {
+                                console.log("Audio playback blocked by browser or failed:", err);
+                            });
+                        } else {
+                            console.log("Audio not yet unlocked by user interaction.");
+                        }
                     } catch (err) {
                         console.log("Audio not supported.");
                     }
+
                 }
             });
 
