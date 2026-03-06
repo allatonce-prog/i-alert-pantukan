@@ -752,28 +752,14 @@ function startRealtimeListener() {
                     const emergency = EMERGENCY_TYPES[reportData.type];
                     showToast(`🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`, 'error');
 
-                    // Play simple system beep/alert securely using Web Audio API
+                    // Play emergency alert sound
                     try {
-                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        if (audioCtx) {
-                            const oscillator = audioCtx.createOscillator();
-                            const gainNode = audioCtx.createGain();
-
-                            oscillator.type = 'square';
-                            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Frequency in Hz
-                            oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-
-                            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-
-                            oscillator.connect(gainNode);
-                            gainNode.connect(audioCtx.destination);
-
-                            oscillator.start();
-                            oscillator.stop(audioCtx.currentTime + 0.4);
-                        }
+                        const alertSound = new Audio('sound/emergency-alert.mp3');
+                        alertSound.play().catch(err => {
+                            console.log("Audio playback blocked by browser or failed:", err);
+                        });
                     } catch (err) {
-                        console.log("Audio not supported or played yet.");
+                        console.log("Audio not supported.");
                     }
                 }
             });
