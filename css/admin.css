@@ -925,3 +925,49 @@ input:checked+.slider:before {
         display: none;
     }
 }
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    background: var(--color-bg-tertiary);
+    padding: 6px;
+    border-radius: var(--border-radius-lg);
+    gap: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.filter-tab {
+    padding: 10px 20px;
+    border-radius: var(--border-radius-md);
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex: 1;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    color: var(--color-text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-tab.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+body.dark-mode .filter-tab.active {
+    background: var(--color-bg-secondary);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .filter-tabs {
+        width: 100%;
+    }
+}

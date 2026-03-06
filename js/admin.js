@@ -3,6 +3,7 @@
 let currentAdmin = null;
 let adminDepartment = null;
 let reportsListener = null;
+let currentStatusFilter = 'pending';
 
 // Check authentication
 async function checkAuth() {
@@ -380,7 +381,8 @@ function loadRecentAlerts(reports) {
 }
 
 // Load Reports Page
-async function loadReports(statusFilter = 'all') {
+async function loadReports(statusFilter = currentStatusFilter) {
+    currentStatusFilter = statusFilter;
     try {
         let query = db.collection('emergencyReports')
             .where('type', 'in', [adminDepartment, 'other']);
@@ -467,10 +469,18 @@ async function loadReports(statusFilter = 'all') {
     }
 }
 
-// Status Filter
-document.getElementById('statusFilter').addEventListener('change', (e) => {
-    loadReports(e.target.value);
-});
+// Status Filter Tabs Logic
+const statusFilterTabs = document.getElementById('statusFilterTabs');
+if (statusFilterTabs) {
+    const tabs = statusFilterTabs.querySelectorAll('.filter-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            loadReports(tab.dataset.status);
+        });
+    });
+}
 
 // View Report Details
 window.viewReportDetails = async function (reportId) {
@@ -613,6 +623,12 @@ window.updateReportStatus = async function (reportId, newStatus) {
         // Close modal and refresh
         document.getElementById('reportModal').classList.remove('active');
         loadDashboard();
+
+        // Refresh reports list if we are on the reports page
+        const reportsPage = document.getElementById('reportsPage');
+        if (reportsPage && reportsPage.classList.contains('active')) {
+            loadReports();
+        }
 
     } catch (error) {
         console.error('Error updating report status:', error);
