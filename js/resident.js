@@ -244,23 +244,22 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 // Emergency Card Click Handler
 document.querySelectorAll('.emergency-card').forEach(card => {
     card.addEventListener('click', () => {
-        selectedEmergencyType = card.dataset.type;
+        window.selectedEmergencyType = card.dataset.type;
         openEmergencyModal();
     });
 });
-
 // Open Emergency Modal
 function openEmergencyModal() {
     const modal = document.getElementById('emergencyModal');
     const modalIcon = document.getElementById('modalEmergencyIcon');
     const modalType = document.getElementById('modalEmergencyType');
 
-    const emergency = EMERGENCY_TYPES[selectedEmergencyType];
+    const emergency = EMERGENCY_TYPES[window.selectedEmergencyType];
     modalIcon.textContent = emergency.icon;
     modalType.textContent = emergency.label;
 
     // Set modal type for category-specific "effects"
-    modal.dataset.type = selectedEmergencyType;
+    modal.dataset.type = window.selectedEmergencyType;
 
     // Reset form
     document.getElementById('emergencyForm').reset();
@@ -275,6 +274,10 @@ function openEmergencyModal() {
 
     modal.classList.add('active');
 }
+
+// Expose to window for chatbot access
+window.openEmergencyModal = openEmergencyModal;
+window.closeModal = closeModal;
 
 // Close Modal
 document.getElementById('closeModal').addEventListener('click', closeModal);

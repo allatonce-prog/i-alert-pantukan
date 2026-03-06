@@ -20,7 +20,17 @@ Guidelines:
    - Road Accidents (securing the scene, calling for help)
 3. Be professional, empathetic, and always ready to help.
 4. Keep your responses relatively short (under 150 words) for better mobile readability.
-5. If you don't know something specific about Pantukan's local laws, advise checking with the local government office.`;
+5. If you don't know something specific about Pantukan's local laws, advise checking with the local government office.
+6. When the user mentions an emergency or asks for help with one, mention that they can use the "Quick Alert" buttons below to send an official report immediately.`;
+
+const EMERGENCY_ACTIONS = [
+    { type: 'fire', label: 'Fire', icon: '🔥' },
+    { type: 'police', label: 'Police', icon: '👮' },
+    { type: 'medical', label: 'Medical', icon: '🏥' },
+    { type: 'rescue', label: 'Rescue', icon: '⛑️' },
+    { type: 'traffic', label: 'Accident', icon: '🚦' },
+    { type: 'other', label: 'Other', icon: '⚠️' }
+];
 
 function initChatbot() {
     const toggleBtn = document.getElementById('chatbot-toggle');
@@ -69,6 +79,17 @@ function initChatbot() {
             removeTypingIndicator(typingId);
             addMessage(responseText, 'bot');
             chatHistory.push({ role: "assistant", content: responseText });
+
+            // Check if we should show quick alerts
+            const emergencyKeywords = ['emergency', 'fire', 'police', 'medical', 'rescue', 'accident', 'help', 'alert', 'situation', 'happening'];
+            const shouldShowAlerts = emergencyKeywords.some(kw =>
+                responseText.toLowerCase().includes(kw) ||
+                message.toLowerCase().includes(kw)
+            );
+
+            if (shouldShowAlerts) {
+                setTimeout(() => addQuickAlerts(), 500);
+            }
         } catch (error) {
             console.error("Chatbot Error:", error);
             removeTypingIndicator(typingId);
@@ -115,6 +136,60 @@ function initChatbot() {
     // Helper: Scroll to Bottom
     function scrollToBottom() {
         chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    // Helper: Add Quick Alert Buttons
+    function addQuickAlerts() {
+        // Check if last message already had alerts (prevent duplicates)
+        if (chatbotMessages.querySelector('.chatbot-quick-alerts:last-child')) return;
+
+        const alertsDiv = document.createElement('div');
+        alertsDiv.className = 'chatbot-quick-alerts';
+
+        // Add "Send Alert" header if desired, or just buttons
+        EMERGENCY_ACTIONS.forEach(action => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-alert-btn';
+            btn.innerHTML = `<span>${action.icon}</span> ${action.label}`;
+            btn.onclick = () => handleQuickAlert(action.type);
+            alertsDiv.appendChild(btn);
+        });
+
+        chatbotMessages.appendChild(alertsDiv);
+        scrollToBottom();
+    }
+
+    // Helper: Handle Quick Alert Trigger
+    function handleQuickAlert(type) {
+        // Close chatbot window first for better focus on alert progress
+        chatbotWindow.classList.remove('active');
+
+        // Check environment (Resident or Admin)
+        const isResidentPage = window.location.pathname.includes('resident') || document.getElementById('tabHome');
+
+        if (isResidentPage) {
+            // 1. Switch to Home Tab if not already there
+            const homeBtn = document.getElementById('navBtnHome');
+            if (homeBtn && !homeBtn.classList.contains('active')) {
+                homeBtn.click();
+            }
+
+            // 2. Trigger the global resident alert function
+            if (typeof window.openEmergencyModal === 'function') {
+                window.selectedEmergencyType = type;
+                window.openEmergencyModal();
+            } else {
+                console.error("openEmergencyModal not found. Ensure resident.js is loaded correctly.");
+                if (window.showToast) window.showToast("Opening emergency form...", "info");
+            }
+        } else {
+            // Admin environment or other - Notify that this is for residents
+            if (window.showToast) {
+                window.showToast(`Emergency alert (${type.toUpperCase()}) triggered. Only residents can send official reports.`, 'warning');
+            } else {
+                alert(`Note: Official emergency triggers are for residents. Admin is for monitoring.`);
+            }
+        }
     }
 
     // Helper: Show Typing Indicator
