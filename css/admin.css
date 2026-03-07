@@ -1573,3 +1573,128 @@ body.dark-mode .typing-indicator {
         transform: rotate(360deg);
     }
 }
+
+/* ── Live Map Styles ─────── */
+.map-container-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.map-legend {
+    position: absolute;
+    bottom: 25px;
+    left: 20px;
+    background: white;
+    padding: 10px 16px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: flex;
+    gap: 15px;
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .map-legend {
+    background: var(--color-bg-secondary);
+    border-color: var(--border-color);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.pending {
+    background: var(--color-warning);
+    box-shadow: 0 0 8px var(--color-warning);
+}
+
+.dot.responding {
+    background: var(--color-info);
+    box-shadow: 0 0 8px var(--color-info);
+}
+
+/* Custom DivIcon Markers */
+.custom-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.marker-container {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marker-pin {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.marker-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: marker-pulse-ani 1.5s ease-out infinite;
+    z-index: 1;
+}
+
+@keyframes marker-pulse-ani {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+/* Leaflet Popup Styling */
+.custom-map-popup .leaflet-popup-content-wrapper {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border-radius: var(--border-radius-lg);
+    padding: 2px;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border-color);
+}
+
+.custom-map-popup .leaflet-popup-tip {
+    background: var(--color-surface);
+    border: 1px solid var(--border-color);
+}
+
+/* ── Map Pulse Animation ─────── */
+.map-pulse {
+    animation: map-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes map-ping {
+
+    75%,
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}

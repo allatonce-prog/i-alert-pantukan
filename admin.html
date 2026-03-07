@@ -73,6 +73,15 @@
                 </svg>
                 <span>Analytics</span>
             </button>
+
+            <button class="nav-item" data-page="map">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                    <line x1="8" y1="2" x2="8" y2="18" />
+                    <line x1="16" y1="6" x2="16" y2="22" />
+                </svg>
+                <span>Map</span>
+            </button>
         </nav>
 
     </aside>
@@ -282,6 +291,25 @@
                     <div class="big-stat">
                         <span id="commonEmergency">--</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Page -->
+        <div id="mapPage" class="page">
+            <div class="page-header">
+                <div>
+                    <h1>Live Emergency Map</h1>
+                    <p>Real-time visualization of active reports</p>
+                </div>
+            </div>
+            <div class="map-container-wrapper">
+                <div id="adminLiveMap"
+                    style="height: calc(100vh - 200px); border-radius: var(--border-radius-lg); border: 2px solid var(--border-color); box-shadow: var(--shadow-md);">
+                </div>
+                <div class="map-legend">
+                    <div class="legend-item"><span class="dot pending"></span> Pending</div>
+                    <div class="legend-item"><span class="dot responding"></span> Responding</div>
                 </div>
             </div>
         </div>
