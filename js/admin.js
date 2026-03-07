@@ -4,6 +4,11 @@ let currentAdmin = null;
 let adminDepartment = null;
 let reportsListener = null;
 let currentStatusFilter = 'pending';
+
+// Live Map Variables
+let adminMap = null;
+let mapMarkers = {};
+let mapListener = null;
 let isAudioEnabled = false;
 const alertSound = new Audio('sound/emergency-alert.mp3');
 
@@ -283,6 +288,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
             loadHistory();
         } else if (page === 'analytics') {
             loadAnalytics();
+        } else if (page === 'map') {
+            initAdminMap();
         }
     });
 });
@@ -844,6 +851,123 @@ async function loadAnalytics() {
     } catch (error) {
         console.error('Error loading analytics:', error);
         showToast('Error loading analytics', 'error');
+    }
+}
+
+// Live Map Logic
+function initAdminMap() {
+    if (adminMap) {
+        adminMap.invalidateSize();
+        return;
+    }
+
+    // Initialize Map (Centering on Pantukan area)
+    adminMap = L.map('adminLiveMap').setView([7.1264, 125.8893], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(adminMap);
+
+    // Start listening for all active reports (pending & responding)
+    startMapListener();
+}
+
+function startMapListener() {
+    if (mapListener) mapListener(); // Unsubscribe if exists
+
+    mapListener = db.collection('emergencyReports')
+        .where('type', 'in', [adminDepartment, 'other'])
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                const report = change.doc.data();
+                const id = change.doc.id;
+
+                if (change.type === 'removed' || report.status === 'resolved' || report.status === 'cancelled') {
+                    // Explicitly remove markers for non-active reports
+                    if (mapMarkers[id]) {
+                        adminMap.removeLayer(mapMarkers[id]);
+                        delete mapMarkers[id];
+                    }
+                } else if (report.status === 'pending' || report.status === 'responding') {
+                    // Add or Update markers for active reports
+                    updateMapMarker(id, report);
+                }
+            });
+        }, (error) => {
+            console.error('Map listener error:', error);
+        });
+}
+
+function updateMapMarker(id, report) {
+    if (!report.location) return;
+
+    // Support both 'lat/lng' (resident app) and 'latitude/longitude' (GeoPoint)
+    const lat = report.location.lat !== undefined ? report.location.lat : report.location.latitude;
+    const lng = report.location.lng !== undefined ? report.location.lng : report.location.longitude;
+
+    if (lat === undefined || lng === undefined) return;
+
+    const emergency = EMERGENCY_TYPES[report.type] || { icon: '🚨', label: 'Other Emergency' };
+    const statusColor = report.status === 'pending' ? '#F59E0B' : '#3B82F6';
+
+    // Create marker content
+    const popupContent = `
+        <div style="min-width: 180px; font-family: var(--font-family); padding: 5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 800; color: ${statusColor}; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.8px; background: ${statusColor}15; padding: 2px 8px; border-radius: 10px;">
+                    ${report.status}
+                </span>
+                <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 600;">${formatTimestamp(report.createdAt)}</span>
+            </div>
+            <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 6px; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.4rem;">${emergency.icon}</span> ${emergency.label}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 12px; line-height: 1.5; font-weight: 500;">
+                "${report.description}"
+            </div>
+            <div style="background: var(--color-bg-tertiary); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 4px;">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--color-text-primary); display: flex; align-items: center; gap: 6px;">
+                    <svg style="width:14px; height:14px; opacity: 0.7;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    ${report.userName}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                    <svg style="width:14px; height:14px; opacity: 0.7;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    ${report.userPhone}
+                </div>
+            </div>
+        </div>
+    `;
+
+    const iconHtml = `
+        <div class="marker-container ${report.status}">
+            <div class="marker-pin" style="background-color: ${statusColor};"></div>
+            ${report.status === 'pending' ? '<div class="marker-pulse" style="background-color: ' + statusColor + ';"></div>' : ''}
+        </div>
+    `;
+
+    const customIcon = L.divIcon({
+        html: iconHtml,
+        className: 'custom-div-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
+    });
+
+    if (mapMarkers[id]) {
+        // Update existing marker
+        mapMarkers[id].setLatLng([lat, lng]);
+        mapMarkers[id].setIcon(customIcon);
+        mapMarkers[id].getPopup().setContent(popupContent);
+    } else {
+        // Create new marker
+        const marker = L.marker([lat, lng], { icon: customIcon })
+            .addTo(adminMap)
+            .bindPopup(popupContent, {
+                className: 'custom-map-popup',
+                closeButton: false
+            });
+
+        mapMarkers[id] = marker;
     }
 }
 
