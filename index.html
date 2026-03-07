@@ -173,7 +173,7 @@
                                 <input type="checkbox" id="rememberMe">
                                 Remember Me
                             </label>
-                            <a href="#" class="forgot-link">Forgot Password?</a>
+                            <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot Password?</a>
                         </div>
 
                         <button type="submit" class="btn btn-primary">
@@ -264,6 +264,61 @@
                             <a href="#" id="goToLoginBtn">Sign in</a>
                         </p>
                     </form>
+
+                    <!-- FORGOT PASSWORD FORM -->
+                    <form id="forgotForm" class="auth-form">
+                        <h2 class="login-title">Reset Access</h2>
+                        <p class="form-desc"
+                            style="margin-bottom: 25px; font-size: 0.9rem; color: var(--auth-muted); line-height: 1.5;">
+                            Enter your email and we'll send you a secure link to reset your password.</p>
+
+                        <div class="form-group">
+                            <label for="forgotEmail">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                </svg>
+                                Email Address
+                            </label>
+                            <input type="email" id="forgotEmail" placeholder="your.email@example.com" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="resetBtn">
+                            <span>Send Reset Link</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                            </svg>
+                        </button>
+
+                        <p class="auth-switch">
+                            Remembered it?
+                            <a href="#" id="backToLoginBtn">Back to Login</a>
+                        </p>
+                    </form>
+
+                    <!-- SUCCESS STATE CARD -->
+                    <div id="successState" class="auth-form success-container"
+                        style="display:none; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                        <div class="success-icon-wrap" style="margin-bottom: 20px;">
+                            <div class="success-checkmark">
+                                <svg viewBox="0 0 52 52" style="width: 80px; height: 80px;">
+                                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"
+                                        style="stroke: #22c55e; stroke-width: 2; stroke-miterlimit: 10;" />
+                                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"
+                                        style="stroke: #22c55e; stroke-width: 3; stroke-linecap: round; stroke-miterlimit: 10;" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h2 class="login-title text-center" style="margin-bottom: 10px;">Email Sent!</h2>
+                        <p class="text-center success-desc"
+                            style="color: var(--auth-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 25px;">
+                            We've sent a recovery link to your inbox. Please check your email to continue.</p>
+                        <button type="button" class="btn btn-primary" style="width: 100%;" onclick="location.reload()">
+                            <span>Got it</span>
+                        </button>
+                    </div>
 
                 </div><!-- /white-panel -->
             </div><!-- /loginScreen -->

@@ -351,13 +351,51 @@ body {
 @keyframes formSlideIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(15px);
     }
 
     to {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ── Success State Animations ──────────────── */
+.success-container.active {
+    display: flex !important;
+    animation: formSlideIn 0.5s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+
+.checkmark-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: #22c55e;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+.success-desc {
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+    color: var(--auth-muted);
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .form-group {

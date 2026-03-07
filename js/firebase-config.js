@@ -15,7 +15,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 // Initialize services
-// const auth = firebase.auth(); // Disabled: using Firestore-only auth
+const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Helper: Show toast notification

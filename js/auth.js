@@ -4,31 +4,119 @@ const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
 
 // Toggle helpers
+function hideAllForms() {
+    if (loginForm) loginForm.classList.remove('active');
+    if (registerForm) registerForm.classList.remove('active');
+    const forgotForm = document.getElementById('forgotForm');
+    const successState = document.getElementById('successState');
+    if (forgotForm) forgotForm.classList.remove('active');
+    if (successState) {
+        successState.classList.remove('active');
+        successState.style.display = 'none';
+    }
+}
+
 function showLogin() {
-    loginForm.classList.add('active');
-    registerForm.classList.remove('active');
+    hideAllForms();
+    if (loginForm) loginForm.classList.add('active');
 }
 
 function showRegister() {
-    registerForm.classList.add('active');
-    loginForm.classList.remove('active');
+    hideAllForms();
+    if (registerForm) registerForm.classList.add('active');
 }
 
-// "Register" link → show register form
+function showForgot() {
+    hideAllForms();
+    const forgotForm = document.getElementById('forgotForm');
+    if (forgotForm) forgotForm.classList.add('active');
+}
+
+function showSuccess() {
+    hideAllForms();
+    const successState = document.getElementById('successState');
+    if (successState) {
+        successState.style.display = 'flex';
+        successState.classList.add('active');
+    }
+}
+
+// ── Navigation Listeners ─────────────────────
 const goToRegisterBtn = document.getElementById('goToRegisterBtn');
 if (goToRegisterBtn) {
-    goToRegisterBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        showRegister();
-    });
+    goToRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 }
 
-// "Sign In" link (inside register form) → show login form
 const goToLoginBtn = document.getElementById('goToLoginBtn');
 if (goToLoginBtn) {
-    goToLoginBtn.addEventListener('click', (e) => {
+    goToLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+}
+
+const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); showForgot(); });
+}
+
+const backToLoginBtn = document.getElementById('backToLoginBtn');
+if (backToLoginBtn) {
+    backToLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+}
+
+// ── Forgot Password Logic ────────────────────
+const forgotForm = document.getElementById('forgotForm');
+if (forgotForm) {
+    forgotForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        showLogin();
+        const email = document.getElementById('forgotEmail').value;
+        const resetBtn = document.getElementById('resetBtn');
+        const originalBtnContent = resetBtn.innerHTML;
+
+        // 1. Cooldown Check (60 seconds)
+        const lastReset = localStorage.getItem(`lastReset_${email}`);
+        if (lastReset) {
+            const secondsPassed = (Date.now() - parseInt(lastReset)) / 1000;
+            if (secondsPassed < 60) {
+                const wait = Math.ceil(60 - secondsPassed);
+                showToast(`Please wait ${wait}s before requesting again.`, 'warning');
+                return;
+            }
+        }
+
+        resetBtn.disabled = true;
+        resetBtn.innerHTML = '<div class="spinner"></div> <span>Processing...</span>';
+
+        try {
+            // 2. Smart Validation: Check if email exists in Firestore
+            let userExists = false;
+
+            // Check USERS
+            const userCheck = await db.collection('USERS').where('email', '==', email).get();
+            if (!userCheck.empty) userExists = true;
+
+            if (!userExists) {
+                // Check ADMIN
+                const adminCheck = await db.collection('ADMIN').where('email', '==', email).get();
+                if (!adminCheck.empty) userExists = true;
+            }
+
+            if (!userExists) {
+                throw new Error('This email is not registered in our system.');
+            }
+
+            // 3. Firebase Native Reset
+            await auth.sendPasswordResetEmail(email);
+
+            // 4. Success State & Feedback
+            localStorage.setItem(`lastReset_${email}`, Date.now().toString());
+            showSuccess();
+            showToast('Reset email sent!', 'success');
+
+        } catch (error) {
+            console.error('Reset error:', error);
+            showToast(error.message || 'Failed to send reset email', 'error');
+            resetBtn.disabled = false;
+            resetBtn.innerHTML = originalBtnContent;
+        }
     });
 }
 
@@ -63,51 +151,51 @@ if (loginForm) {
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Signing in...</span>';
 
         try {
-            // Check USERS collection first
-            let querySnapshot = await db.collection('USERS')
-                .where('email', '==', email)
-                .where('password', '==', password)
-                .get();
+            // 1. Native Firebase Login
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const authUser = userCredential.user;
 
-            let user = null;
-            let collectionType = 'USERS';
+            // 2. Fetch Profile from Firestore (determine role)
+            let userDoc = await db.collection('USERS').doc(authUser.uid).get();
+            let userData = null;
 
-            if (!querySnapshot.empty) {
-                user = querySnapshot.docs[0].data();
-                user.id = querySnapshot.docs[0].id;
+            if (userDoc.exists) {
+                userData = { id: userDoc.id, ...userDoc.data() };
             } else {
-                // Check ADMIN collection
-                querySnapshot = await db.collection('ADMIN')
-                    .where('email', '==', email)
-                    .where('password', '==', password)
-                    .get();
-
-                if (!querySnapshot.empty) {
-                    user = querySnapshot.docs[0].data();
-                    user.id = querySnapshot.docs[0].id; // Ensure ID is captured
-                    collectionType = 'ADMIN';
+                // Check ADMIN collection if not in USERS
+                userDoc = await db.collection('ADMIN').doc(authUser.uid).get();
+                if (userDoc.exists) {
+                    userData = { id: userDoc.id, ...userDoc.data() };
                 }
             }
 
-            if (user) {
-                // Save to localStorage
-                localStorage.setItem('currentUser', JSON.stringify(user));
+            if (userData) {
+                // Save to localStorage for profile persistence
+                localStorage.setItem('currentUser', JSON.stringify(userData));
                 showToast('Login successful!', 'success');
 
                 setTimeout(() => {
-                    if (user.role === 'admin') {
+                    if (userData.role === 'admin') {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'resident.html';
                     }
                 }, 1000);
             } else {
-                throw new Error('Invalid email or password');
+                throw new Error('User profile not found.');
             }
 
         } catch (error) {
             console.error('Login error:', error);
-            showToast(error.message || 'Login failed', 'error');
+            // Handle specific Firebase errors
+            let msg = 'Login failed';
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                msg = 'Invalid email or password';
+            } else if (error.code === 'auth/too-many-requests') {
+                msg = 'Too many attempts. Try again later.';
+            }
+
+            showToast(msg, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span>Sign In</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
         }
@@ -127,7 +215,7 @@ if (registerForm) {
         const submitBtn = registerForm.querySelector('button[type="submit"]');
 
         if (password.length < 6) {
-            showToast('Password must be at least 6 characters long', 'error');
+            showToast('Password should be at least 6 characters', 'error');
             return;
         }
 
@@ -135,30 +223,25 @@ if (registerForm) {
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Creating account...</span>';
 
         try {
-            // Check if email already exists in USERS
-            const userCheck = await db.collection('USERS').where('email', '==', email).get();
-            if (!userCheck.empty) {
-                throw new Error('Email already registered');
-            }
+            // 1. Create Native Auth Account
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const authUser = userCredential.user;
 
             const userData = {
+                id: authUser.uid,
                 name: name,
                 email: email,
                 phone: phone,
                 address: address,
-                password: password, // Storing plain text password as requested
                 role: 'resident',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 status: 'active'
             };
 
-            // Add to USERS collection
-            const docRef = await db.collection('USERS').add(userData);
+            // 2. Save Profile in Firestore (UID as Document ID)
+            await db.collection('USERS').doc(authUser.uid).set(userData);
 
-            // Add ID to local object for storage
-            userData.id = docRef.id;
-
-            // Auto-login
+            // Auto-login locally
             localStorage.setItem('currentUser', JSON.stringify(userData));
 
             showToast('Account created successfully!', 'success');
@@ -169,7 +252,9 @@ if (registerForm) {
 
         } catch (error) {
             console.error('Registration error:', error);
-            showToast(error.message, 'error');
+            let msg = error.message;
+            if (error.code === 'auth/email-already-in-use') msg = 'Email is already being used.';
+            showToast(msg, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span>Create Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
         }
