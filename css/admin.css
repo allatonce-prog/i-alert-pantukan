@@ -108,7 +108,7 @@ body {
     left: 0;
     top: 0;
     height: 100vh;
-    z-index: 100;
+    z-index: 11000;
 }
 
 body.dark-mode .sidebar {
@@ -829,7 +829,7 @@ body.dark-mode .alert-item.alert-status-resolved {
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
-    z-index: 1000;
+    z-index: 20000;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-lg);
@@ -927,7 +927,7 @@ body.dark-mode .alert-item.alert-status-resolved {
     box-shadow: var(--shadow-md);
     position: sticky;
     top: 0;
-    z-index: 90;
+    z-index: 10000;
 }
 
 .account-circle-btn {
@@ -1027,7 +1027,7 @@ body.dark-mode .alert-item.alert-status-resolved {
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
-    z-index: 90;
+    z-index: 10999;
     opacity: 0;
     transition: opacity var(--transition-normal);
 }
