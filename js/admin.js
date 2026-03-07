@@ -309,45 +309,90 @@ if (sidebarOverlay) {
 // Load Dashboard
 async function loadDashboard() {
     try {
+        const filterVal = document.getElementById('dashboardDateFilter')?.value || 'month';
         const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        let startDate, endDate;
+
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (filterVal === 'today') {
+            startDate = startOfToday;
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        } else if (filterVal === 'yesterday') {
+            startDate = new Date(startOfToday);
+            startDate.setDate(startDate.getDate() - 1);
+            endDate = new Date(startDate);
+            endDate.setHours(23, 59, 59);
+        } else if (filterVal === 'week') {
+            startDate = new Date(startOfToday);
+            startDate.setDate(startDate.getDate() - now.getDay()); // Start of week (Sunday)
+            endDate = now;
+        } else if (filterVal === 'month') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = now;
+        } else if (filterVal === 'custom') {
+            const startStr = document.getElementById('startDate').value;
+            const endStr = document.getElementById('endDate').value;
+            if (!startStr || !endStr) return; // Wait for both dates
+
+            startDate = new Date(startStr);
+            endDate = new Date(endStr);
+            endDate.setHours(23, 59, 59);
+        }
 
         // Get reports for this department (and 'other' unclassified emergencies)
         const allReports = await db.collection('emergencyReports')
             .where('type', 'in', [adminDepartment, 'other'])
             .get();
 
-        const todayReports = [];
-        const monthReports = [];
         let pendingCount = 0;
         let respondingCount = 0;
-        let resolvedTodayCount = 0;
+        let resolvedCount = 0;
+        let totalCount = 0;
 
         allReports.forEach(doc => {
             const report = doc.data();
             const reportDate = report.createdAt ? report.createdAt.toDate() : new Date();
 
-            if (reportDate >= todayStart) {
-                todayReports.push({ id: doc.id, ...report });
+            const isWithinRange = reportDate >= startDate && reportDate <= endDate;
+
+            if (isWithinRange) {
+                totalCount++;
+                if (report.status === 'resolved') resolvedCount++;
             }
 
-            if (reportDate >= monthStart) {
-                monthReports.push({ id: doc.id, ...report });
-            }
-
+            // Always count active reports regardless of date for situational awareness
             if (report.status === 'pending') pendingCount++;
             if (report.status === 'responding') respondingCount++;
-            if (report.status === 'resolved' && reportDate >= todayStart) resolvedTodayCount++;
         });
 
         // Update stats
         document.getElementById('statPending').textContent = pendingCount;
         document.getElementById('statResponding').textContent = respondingCount;
-        document.getElementById('statResolved').textContent = resolvedTodayCount;
-        document.getElementById('statTotal').textContent = monthReports.length;
+        document.getElementById('statResolved').textContent = resolvedCount;
+        document.getElementById('statTotal').textContent = totalCount;
         document.getElementById('pendingBadge').textContent = pendingCount;
 
+        // Dynamic Labels
+        const resolvedLabel = document.querySelector('.stat-card.resolved p');
+        const totalLabel = document.querySelector('.stat-card.total p');
+
+        if (filterVal === 'today') {
+            resolvedLabel.textContent = 'Resolved Today';
+            totalLabel.textContent = 'Total Today';
+        } else if (filterVal === 'yesterday') {
+            resolvedLabel.textContent = 'Resolved Yesterday';
+            totalLabel.textContent = 'Total Yesterday';
+        } else if (filterVal === 'week') {
+            resolvedLabel.textContent = 'Resolved This Week';
+            totalLabel.textContent = 'Total This Week';
+        } else if (filterVal === 'month') {
+            resolvedLabel.textContent = 'Resolved This Month';
+            totalLabel.textContent = 'Total This Month';
+        } else {
+            resolvedLabel.textContent = 'Resolved (Selected Range)';
+            totalLabel.textContent = 'Total (Selected Range)';
+        }
 
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -355,6 +400,23 @@ async function loadDashboard() {
     }
 }
 
+// Dashboard Filter Event Listeners
+const dashboardDateFilter = document.getElementById('dashboardDateFilter');
+const customDateRange = document.getElementById('customDateRange');
+
+if (dashboardDateFilter) {
+    dashboardDateFilter.addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        } else {
+            customDateRange.style.display = 'none';
+            loadDashboard();
+        }
+    });
+}
+
+document.getElementById('startDate')?.addEventListener('change', loadDashboard);
+document.getElementById('endDate')?.addEventListener('change', loadDashboard);
 
 // Load Reports Page
 async function loadReports(statusFilter = currentStatusFilter) {
@@ -395,7 +457,7 @@ async function loadReports(statusFilter = currentStatusFilter) {
             const emergency = EMERGENCY_TYPES[report.type];
 
             const reportCard = document.createElement('div');
-            reportCard.className = 'alert-item';
+            reportCard.className = `alert-item alert-status-${report.status}`;
             reportCard.innerHTML = `
                 <div class="alert-icon ${report.type}">
                     ${emergency.icon}
@@ -834,7 +896,14 @@ async function performHardRefresh(btnId) {
 
     const originalContent = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:8px;"></div> Updating...';
+
+    // Check if it's the icon-only refresh button or a standard button
+    const icon = btn.querySelector('svg');
+    if (btn.classList.contains('btn-icon') && icon) {
+        icon.classList.add('spin');
+    } else {
+        btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:8px;"></div> Updating...';
+    }
 
     try {
         showToast('Clearing cache and updating...', 'info');
@@ -869,6 +938,8 @@ async function performHardRefresh(btnId) {
     } catch (error) {
         console.error("Refresh failed:", error);
         btn.disabled = false;
+        const icon = btn.querySelector('svg');
+        if (icon) icon.classList.remove('spin');
         btn.innerHTML = originalContent;
         showToast('Update failed. Try manually refreshing.', 'error');
     }

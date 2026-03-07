@@ -139,13 +139,28 @@
                     <h1>Dashboard</h1>
                     <p>Overview of emergency reports and response status</p>
                 </div>
-                <button class="btn btn-primary" id="refreshDashboard">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="23 4 23 10 17 10" />
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                    </svg>
-                    Refresh
-                </button>
+                <div class="header-actions">
+                    <div class="date-filter-group">
+                        <select id="dashboardDateFilter" class="filter-select">
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div id="customDateRange" class="custom-date-range" style="display: none;">
+                        <input type="date" id="startDate" class="date-input">
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button class="btn-icon" id="refreshDashboard" title="Refresh Dashboard"
+                        style="color: var(--color-primary);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10" />
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Grid -->
