@@ -4,6 +4,7 @@ let currentUser = null;
 let currentLocation = null;
 let map = null;
 let marker = null;
+let locationCircle = null;
 window.selectedEmergencyType = null;
 let currentPage = 1;
 const itemsPerPage = 5;
@@ -301,6 +302,7 @@ function closeModal() {
         map.remove();
         map = null;
         marker = null;
+        locationCircle = null;
     }
 }
 
@@ -324,9 +326,31 @@ function initMap() {
 
     // Add marker if location is already set
     if (currentLocation) {
+        if (marker) map.removeLayer(marker);
+        if (locationCircle) map.removeLayer(locationCircle);
         marker = L.marker([currentLocation.lat, currentLocation.lng]).addTo(map);
         map.setView([currentLocation.lat, currentLocation.lng], 15);
     }
+
+    // Add manual pinning support
+    map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+
+        currentLocation = {
+            lat: lat,
+            lng: lng,
+            accuracy: 10 // Manual pin is precise by definition
+        };
+
+        if (marker) map.removeLayer(marker);
+        if (locationCircle) map.removeLayer(locationCircle);
+        marker = L.marker([lat, lng]).addTo(map);
+
+        const locText = document.getElementById('locationText');
+        if (locText) locText.textContent = `Location pinned manually at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+        showToast('Location pinned manually', 'success');
+    });
 }
 
 // Request location transparently in the background
@@ -424,12 +448,13 @@ function triggerGPS() {
             // Update map
             if (map) {
                 if (marker) map.removeLayer(marker);
+                if (locationCircle) map.removeLayer(locationCircle);
 
                 marker = L.marker([currentLocation.lat, currentLocation.lng]).addTo(map);
                 map.setView([currentLocation.lat, currentLocation.lng], 15);
 
                 // Add circle to show accuracy
-                L.circle([currentLocation.lat, currentLocation.lng], {
+                locationCircle = L.circle([currentLocation.lat, currentLocation.lng], {
                     radius: currentLocation.accuracy,
                     color: '#DC2626',
                     fillColor: '#DC2626',
