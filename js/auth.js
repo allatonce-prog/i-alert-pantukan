@@ -122,7 +122,8 @@ if (forgotForm) {
 
 // Check if user is already logged in
 function checkAuth() {
-    const userJson = localStorage.getItem('currentUser');
+    // Check both Local and Session storage
+    const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (userJson) {
         const user = JSON.parse(userJson);
         if (user.role === 'super-admin') {
@@ -138,6 +139,14 @@ function checkAuth() {
 // Only run checkAuth on login/register pages
 if (document.querySelector('.auth-container')) {
     checkAuth();
+
+    // Pre-fill Remembered Email
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail && document.getElementById('loginEmail')) {
+        document.getElementById('loginEmail').value = rememberedEmail;
+        const rememberCheckbox = document.getElementById('rememberMe');
+        if (rememberCheckbox) rememberCheckbox.checked = true;
+    }
 }
 
 // Login Handler
@@ -149,10 +158,18 @@ if (loginForm) {
         const password = document.getElementById('loginPassword').value;
         const submitBtn = loginForm.querySelector('button[type="submit"]');
 
+        const rememberMe = document.getElementById('rememberMe')?.checked;
+
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Signing in...</span>';
 
         try {
+            // 0. Set Persistence
+            const persistence = rememberMe
+                ? firebase.auth.Auth.Persistence.LOCAL
+                : firebase.auth.Auth.Persistence.SESSION;
+            await auth.setPersistence(persistence);
+
             // 1. Native Firebase Login
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             const authUser = userCredential.user;
@@ -176,8 +193,16 @@ if (loginForm) {
             }
 
             if (userData) {
-                // Save to localStorage for profile persistence
-                localStorage.setItem('currentUser', JSON.stringify(userData));
+                // Save to storage (LocalStorage for Remember Me, otherwise SessionStorage)
+                if (rememberMe) {
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    localStorage.setItem('rememberedEmail', email);
+                } else {
+                    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                    localStorage.removeItem('rememberedEmail');
+                    localStorage.removeItem('currentUser'); // Clear any old persistent session
+                }
+
                 showToast('Logon successful!', 'success');
 
                 setTimeout(() => {
