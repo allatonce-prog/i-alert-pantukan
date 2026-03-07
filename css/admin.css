@@ -91,15 +91,16 @@ body {
     display: flex;
     height: 100vh;
     overflow: hidden;
-    background-color: var(--color-bg-primary);
+    background: radial-gradient(at 100% 0%, rgba(220, 38, 38, 0.06) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(220, 38, 38, 0.04) 0px, transparent 50%),
+        var(--color-bg-primary);
     color: var(--color-text-primary);
 }
 
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: var(--color-surface);
-    /* Updated to use variable */
+    background: linear-gradient(180deg, #FFFFFF 0%, #FEF4F4 100%);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -337,9 +338,13 @@ input:checked+.slider:before {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-xl);
-    background-color: var(--color-bg-primary);
-    /* Use variable */
+    background: radial-gradient(at 0% 0%, rgba(220, 38, 38, 0.03) 0px, transparent 50%),
+        transparent;
     color: var(--color-text-primary);
+}
+
+body.dark-mode .admin-main {
+    background: var(--color-bg-primary);
 }
 
 /* Page */
