@@ -1149,6 +1149,26 @@ body.dark-mode .filter-tab.active {
 @media (max-width: 768px) {
     .filter-tabs {
         width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        /* Room for scrollbar if visible */
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .filter-tabs::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+
+    .filter-tab {
+        flex: 0 0 auto;
+        padding: 8px 16px;
+        font-size: 0.8rem;
     }
 }
 
