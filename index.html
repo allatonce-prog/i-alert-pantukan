@@ -275,6 +275,12 @@
     <!-- Toast — outside .auth-container so overflow:hidden can't clip it -->
     <div id="toast" class="toast"></div>
 
+    <!-- Page Transition Overlay -->
+    <div id="pageTransition" class="page-transition-overlay">
+        <div class="transition-loader"></div>
+        <div class="transition-text">Syncing</div>
+    </div>
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -318,6 +324,25 @@
         }
 
         setInterval(advanceSlides, 3500);   // change every 3.5s
+
+        // ── Page Transition Logic ──────────────────────
+        const openAboutBtn = document.getElementById('openAboutBtn');
+        const transitionOverlay = document.getElementById('pageTransition');
+
+        if (openAboutBtn) {
+            openAboutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetUrl = openAboutBtn.href;
+
+                // Show ultra-smooth transition
+                transitionOverlay.classList.add('active');
+
+                // Navigate after brief cinematic delay
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 800);
+            });
+        }
 
         // Service Worker
         if ('serviceWorker' in navigator) {

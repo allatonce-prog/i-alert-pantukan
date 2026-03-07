@@ -588,6 +588,57 @@ body {
     color: white;
 }
 
+/* ── Page Transition Loader ──────────────── */
+.page-transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.4);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.page-transition-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.transition-loader {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(255, 255, 255, 0.05);
+    border-top-color: var(--auth-coral);
+    border-radius: 50%;
+    animation: ios-spin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+.transition-text {
+    margin-top: 20px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    opacity: 0.6;
+}
+
+@keyframes ios-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 /* ── Toast ─────────────────────────────────── */
 .toast {
     position: fixed;
