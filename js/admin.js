@@ -857,12 +857,13 @@ async function loadAnalytics() {
 // Live Map Logic
 function initAdminMap() {
     if (adminMap) {
-        adminMap.invalidateSize();
+        // Small delay to ensure the container is fully visible before invalidating size
+        setTimeout(() => adminMap.invalidateSize(), 100);
         return;
     }
 
     // Initialize Map (Centering on Pantukan area)
-    adminMap = L.map('adminLiveMap').setView([7.1264, 125.8893], 13);
+    adminMap = L.map('adminLiveMap').setView([7.1264, 125.8893], 15);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
