@@ -239,13 +239,28 @@ if (loginForm) {
 
 // Register Handler (Residents)
 if (registerForm) {
+    // Dynamic Address UI
+    const regBarangay = document.getElementById('registerAddress');
+    const streetGroup = document.getElementById('streetAddressGroup');
+    if (regBarangay && streetGroup) {
+        regBarangay.addEventListener('change', () => {
+            if (regBarangay.value) {
+                streetGroup.style.display = 'block';
+            } else {
+                streetGroup.style.display = 'none';
+            }
+        });
+    }
+
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const name = document.getElementById('registerName').value;
         const email = document.getElementById('registerEmail').value.trim();
         const phone = document.getElementById('registerPhone').value;
-        const address = document.getElementById('registerAddress').value;
+        const barangay = document.getElementById('registerAddress').value;
+        const street = document.getElementById('registerStreet')?.value.trim();
+        const fullAddress = street ? `${street}, ${barangay}` : barangay;
         const password = document.getElementById('registerPassword').value.trim();
         const submitBtn = registerForm.querySelector('button[type="submit"]');
 
@@ -267,7 +282,7 @@ if (registerForm) {
                 name: name,
                 email: email,
                 phone: phone,
-                address: address,
+                address: fullAddress,
                 role: 'resident',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 status: 'active'
