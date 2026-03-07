@@ -92,6 +92,7 @@ async function checkAuth() {
         } else {
             // User document doesn't exist (deleted?)
             localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         }
     } catch (error) {
@@ -279,6 +280,7 @@ if (logoutBtn) {
                 reportsListener(); // Unsubscribe from listener
             }
             localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         } catch (error) {
             console.error('Logout error:', error);

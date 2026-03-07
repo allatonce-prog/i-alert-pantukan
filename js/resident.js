@@ -68,6 +68,7 @@ async function checkAuth() {
         } else {
             // User deleted or invalid
             localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         }
     } catch (error) {
@@ -237,6 +238,7 @@ document.addEventListener('DOMContentLoaded', initTheme);
 document.getElementById('logoutBtn').addEventListener('click', () => {
     try {
         localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
         window.location.href = 'index.html';
     } catch (error) {
         console.error('Logout error:', error);

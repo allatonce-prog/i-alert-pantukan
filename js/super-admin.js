@@ -307,6 +307,7 @@ logoutTriggers.forEach(btn => {
     if (btn) btn.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('currentUser');
+        sessionStorage.removeItem('currentUser');
         window.location.href = 'index.html';
     });
 });
