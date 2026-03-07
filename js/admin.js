@@ -12,6 +12,11 @@ let mapListener = null;
 let isAudioEnabled = false;
 const alertSound = new Audio('sound/emergency-alert.mp3');
 
+// Pagination Variables
+let currentHistoryPage = 1;
+const historyPageSize = 4;
+let allHistoryData = []; // Store fetched data locally for client-side pagination
+
 // Helper: Unlock audio on mobile (triggered by first user click)
 function unlockAudio() {
     if (isAudioEnabled) return;
@@ -746,43 +751,52 @@ document.getElementById('closeReportModal').addEventListener('click', () => {
 });
 
 // Load History
-async function loadHistory() {
+async function loadHistory(page = 1) {
+    currentHistoryPage = page;
     try {
-        const historySnapshot = await db.collection('emergencyReports')
-            .where('type', 'in', [adminDepartment, 'other'])
-            .where('status', '==', 'resolved')
-            .get();
-
-        // Client-side sort and limit
-        let history = [];
-        historySnapshot.forEach(doc => {
-            history.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Sort by updatedAt desc
-        history.sort((a, b) => {
-            const dateA = a.updatedAt ? a.updatedAt.toDate() : new Date(0);
-            const dateB = b.updatedAt ? b.updatedAt.toDate() : new Date(0);
-            return dateB - dateA;
-        });
-
-        // Limit to 50
-        history = history.slice(0, 50);
-
         const historyList = document.getElementById('historyList');
+        const paginationContainer = document.getElementById('historyPagination');
 
-        if (history.length === 0) {
+        // Only fetch from DB if we don't have it or need a refresh
+        if (allHistoryData.length === 0 || page === 1) {
+            historyList.innerHTML = '<div class="loader-container"><div class="loader"></div><p>Loading history...</p></div>';
+
+            const historySnapshot = await db.collection('emergencyReports')
+                .where('type', 'in', [adminDepartment, 'other'])
+                .where('status', '==', 'resolved')
+                .get();
+
+            allHistoryData = [];
+            historySnapshot.forEach(doc => {
+                allHistoryData.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Sort by updatedAt desc
+            allHistoryData.sort((a, b) => {
+                const dateA = a.updatedAt ? a.updatedAt.toDate() : new Date(0);
+                const dateB = b.updatedAt ? b.updatedAt.toDate() : new Date(0);
+                return dateB - dateA;
+            });
+        }
+
+        if (allHistoryData.length === 0) {
             historyList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 2rem;">No history yet</p>';
+            paginationContainer.innerHTML = '';
             return;
         }
 
+        // Calculate pagination
+        const totalPages = Math.ceil(allHistoryData.length / historyPageSize);
+        const startIndex = (currentHistoryPage - 1) * historyPageSize;
+        const endIndex = startIndex + historyPageSize;
+        const paginatedHistory = allHistoryData.slice(startIndex, endIndex);
+
         historyList.innerHTML = '';
 
-        history.forEach(report => {
+        paginatedHistory.forEach(report => {
             const emergency = EMERGENCY_TYPES[report.type];
-
             const historyItem = document.createElement('div');
-            historyItem.className = 'alert-item';
+            historyItem.className = 'alert-item alert-status-resolved';
             historyItem.innerHTML = `
                 <div class="alert-icon ${report.type}">${emergency.icon}</div>
                 <div class="alert-content">
@@ -792,22 +806,76 @@ async function loadHistory() {
                     </div>
                     <div class="alert-desc">${report.description}</div>
                     <div class="alert-meta">
-                        <span>${report.userName}</span>
-                        <span>Resolved ${formatTimestamp(report.updatedAt)}</span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            ${report.userName}
+                        </span>
+                        <span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Resolved ${formatTimestamp(report.updatedAt)}
+                        </span>
                     </div>
                 </div>
                 <div class="alert-actions">
                     <button class="btn btn-secondary btn-sm" onclick="viewReportDetails('${report.id}')">View</button>
                 </div>
             `;
-
             historyList.appendChild(historyItem);
         });
+
+        // Render Pagination Controls
+        renderPagination(totalPages);
 
     } catch (error) {
         console.error('Error loading history:', error);
         showToast('Error loading history', 'error');
     }
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('historyPagination');
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `
+        <div class="pagination">
+            <button class="page-btn ${currentHistoryPage === 1 ? 'disabled' : ''}" 
+                onclick="${currentHistoryPage === 1 ? '' : `loadHistory(${currentHistoryPage - 1})`}"
+                ${currentHistoryPage === 1 ? 'disabled' : ''}>
+                &laquo; Prev
+            </button>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        // Show all pages if totalPages is small, otherwise implement ellipsis logic if needed
+        // For now, simple numbering
+        html += `
+            <button class="page-btn ${i === currentHistoryPage ? 'active' : ''}" 
+                onclick="loadHistory(${i})">${i}</button>
+        `;
+    }
+
+    html += `
+            <button class="page-btn ${currentHistoryPage === totalPages ? 'disabled' : ''}" 
+                onclick="${currentHistoryPage === totalPages ? '' : `loadHistory(${currentHistoryPage + 1})`}"
+                ${currentHistoryPage === totalPages ? 'disabled' : ''}>
+                Next &raquo;
+            </button>
+        </div>
+        <div class="pagination-info">Page ${currentHistoryPage} of ${totalPages}</div>
+    `;
+
+    container.innerHTML = html;
 }
 
 // Load Analytics
