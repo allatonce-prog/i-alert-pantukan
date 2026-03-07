@@ -774,16 +774,56 @@ input:checked+.slider:before {
     }
 }
 
-/* Mobile Header */
+/* Mobile Header (Now Permanent Admin Navbar) */
 .mobile-header {
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--spacing-lg);
     background: var(--color-surface);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: var(--border-radius-lg);
     border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.account-circle-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    transition: all var(--transition-normal);
+    padding: 0;
+    overflow: hidden;
+}
+
+.account-circle-btn:hover {
+    background: var(--color-bg-primary);
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.account-circle-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Fix dropdown for Top Navbar */
+.mobile-header .user-menu .dropdown-menu {
+    top: calc(100% + 10px);
+    bottom: auto;
+    right: 0;
+    margin-top: 0;
 }
 
 .mobile-brand {

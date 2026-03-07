@@ -59,7 +59,17 @@ async function checkAuth() {
 
             // Update UI
             const deptInfo = EMERGENCY_TYPES[adminDepartment];
-            document.getElementById('departmentName').textContent = deptInfo ? deptInfo.label : 'Admin Panel';
+            if (document.getElementById('departmentName')) {
+                document.getElementById('departmentName').textContent = deptInfo ? deptInfo.label : 'Admin Panel';
+            }
+
+            // Update Navbar Info
+            if (document.getElementById('adminNameDisplay')) {
+                document.getElementById('adminNameDisplay').textContent = userData.name || 'Administrator';
+            }
+            if (document.getElementById('adminEmailDisplay')) {
+                document.getElementById('adminEmailDisplay').textContent = userData.email || '';
+            }
 
             // Load dashboard
             loadDashboard();
@@ -99,15 +109,15 @@ document.addEventListener('click', (e) => {
 });
 
 // Profile Management
-const profileLink = document.querySelector('a[href="#"][class="dropdown-item"]:first-child');
+const profileBtn = document.getElementById('openProfileBtn');
 const profileModal = document.getElementById('profileModal');
 const profileForm = document.getElementById('profileForm');
 const closeProfileModalBtn = document.getElementById('closeProfileModal');
 const cancelProfileBtn = document.getElementById('cancelProfileBtn');
 
 // Open Profile Modal
-if (profileLink) {
-    profileLink.addEventListener('click', (e) => {
+if (profileBtn) {
+    profileBtn.addEventListener('click', (e) => {
         e.preventDefault();
         userDropdown.classList.remove('active');
 
@@ -177,15 +187,15 @@ if (profileForm) {
 }
 
 // Settings Management
-const settingsLink = document.querySelector('a[href="#"][class="dropdown-item"]:nth-child(2)');
+const settingsBtn = document.getElementById('openSettingsBtn');
 const settingsModal = document.getElementById('settingsModal');
 const closeSettingsModalBtn = document.getElementById('closeSettingsModal');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const darkModeToggle = document.getElementById('darkModeToggle');
 
 // Open Settings
-if (settingsLink) {
-    settingsLink.addEventListener('click', (e) => {
+if (settingsBtn) {
+    settingsBtn.addEventListener('click', (e) => {
         e.preventDefault();
         userDropdown.classList.remove('active');
         settingsModal.classList.add('active');
