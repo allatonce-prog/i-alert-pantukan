@@ -479,16 +479,18 @@ function triggerGPS() {
 
             if (error.code === 1) errorMessage = 'Location permission denied';
             else if (error.code === 2) errorMessage = 'Location unavailable';
-            else if (error.code === 3) errorMessage = 'Location request timed out';
+            else if (error.code === 3) {
+                errorMessage = 'Location request timed out. Please try tapping the map to pin your location manually.';
+            }
 
-            showToast(errorMessage, 'error');
+            showToast(errorMessage, 'error', 6000);
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Get Current Location';
             }
             if (banner) banner.classList.add('active');
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 }
 
