@@ -43,7 +43,7 @@ document.addEventListener('touchstart', unlockAudio, { once: true });
 
 // Check authentication
 async function checkAuth() {
-    const userJson = localStorage.getItem('currentUser');
+    const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (!userJson) {
         window.location.href = 'index.html';
         return;
@@ -1253,10 +1253,17 @@ async function performHardRefresh(btnId) {
         }
 
         // 3. Clear Local Storage (Keeping Auth & Theme)
-        const currentUser = localStorage.getItem('currentUser');
+        const currentLocalUser = localStorage.getItem('currentUser');
+        const currentSessionUser = sessionStorage.getItem('currentUser');
+        const rememberedEmail = localStorage.getItem('rememberedEmail');
         const theme = localStorage.getItem('theme');
+
         localStorage.clear();
-        if (currentUser) localStorage.setItem('currentUser', currentUser);
+        sessionStorage.clear();
+
+        if (currentLocalUser) localStorage.setItem('currentUser', currentLocalUser);
+        if (currentSessionUser) sessionStorage.setItem('currentUser', currentSessionUser);
+        if (rememberedEmail) localStorage.setItem('rememberedEmail', rememberedEmail);
         if (theme) localStorage.setItem('theme', theme);
 
         showToast('Updating data...', 'success');

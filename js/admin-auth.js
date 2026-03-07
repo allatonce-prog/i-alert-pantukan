@@ -4,7 +4,7 @@ const adminRegisterForm = document.getElementById('adminRegisterForm');
 
 // Check if user is already logged in
 function checkAuth() {
-    const userJson = localStorage.getItem('currentUser');
+    const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (userJson) {
         const user = JSON.parse(userJson);
         if (user.role === 'super-admin') {
@@ -24,7 +24,7 @@ if (document.querySelector('.auth-container')) {
 
 // Update "Back to Login" link if Super Admin is logged in
 window.addEventListener('DOMContentLoaded', () => {
-    const userJson = localStorage.getItem('currentUser');
+    const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (userJson) {
         const user = JSON.parse(userJson);
         const backLink = document.querySelector('.auth-footer a');
@@ -84,7 +84,7 @@ if (adminRegisterForm) {
             await db.collection('ADMIN').doc(authUser.uid).set(adminData);
 
             // Register Logic Refresh
-            const currentUserJson = localStorage.getItem('currentUser');
+            const currentUserJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
             const currentUser = currentUserJson ? JSON.parse(currentUserJson) : {};
             const isSuperAdmin = currentUser.role === 'super-admin';
 

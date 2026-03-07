@@ -5,7 +5,7 @@ const MASTER_AUTHORIZATION_CODE = 'SUPER2026'; // System Master Key
 
 // Check if user is already logged in
 function checkAuth() {
-    const userJson = localStorage.getItem('currentUser');
+    const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (userJson) {
         const user = JSON.parse(userJson);
         if (user.role === 'super-admin') {

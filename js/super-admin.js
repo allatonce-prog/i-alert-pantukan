@@ -22,7 +22,7 @@ let deleteQueue = null;
 
 // 🛡️ 1. Global Security & Session
 function masterVerify() {
-    const userJson = localStorage.getItem('currentUser');
+    const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
     if (!userJson) {
         window.location.href = 'index.html';
         return;
