@@ -324,12 +324,12 @@ body {
 
 /* ── SIGN IN / REGISTER SCREEN ─────────────── */
 #loginScreen .wave-bg {
-    flex: 0 0 28%;
-    /* Reduced header height on login/register screen */
+    flex: 0 0 35%;
+    /* Increased header height to push content lower */
 }
 
 .login-panel {
-    padding-top: 14px;
+    padding-top: 50px;
     height: auto;
     min-height: 0;
 }
