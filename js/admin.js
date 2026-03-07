@@ -338,8 +338,6 @@ async function loadDashboard() {
         document.getElementById('statTotal').textContent = monthReports.length;
         document.getElementById('pendingBadge').textContent = pendingCount;
 
-        // Load recent alerts
-        loadRecentAlerts(todayReports.slice(0, 5));
 
     } catch (error) {
         console.error('Error loading dashboard:', error);
@@ -347,59 +345,6 @@ async function loadDashboard() {
     }
 }
 
-// Load Recent Alerts
-function loadRecentAlerts(reports) {
-    const alertsList = document.getElementById('recentAlertsList');
-
-    if (!reports || reports.length === 0) {
-        alertsList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 2rem;">No recent alerts</p>';
-        return;
-    }
-
-    alertsList.innerHTML = '';
-
-    reports.forEach(report => {
-        const emergency = EMERGENCY_TYPES[report.type];
-
-        const alertItem = document.createElement('div');
-        alertItem.className = 'alert-item';
-        alertItem.innerHTML = `
-            <div class="alert-icon ${report.type}">
-                ${emergency.icon}
-            </div>
-            <div class="alert-content">
-                <div class="alert-header">
-                    <span class="alert-type">${emergency.label}</span>
-                    <span class="alert-status ${report.status}">${STATUS_LABELS[report.status]}</span>
-                </div>
-                <div class="alert-desc">${report.description}</div>
-                <div class="alert-meta">
-                    <span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        ${report.userName}
-                    </span>
-                    <span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        ${formatTimestamp(report.createdAt)}
-                    </span>
-                </div>
-            </div>
-            <div class="alert-actions">
-                <button class="btn btn-primary btn-sm" onclick="viewReportDetails('${report.id}')">
-                    <span class="desktop-only">View </span>Details
-                </button>
-            </div>
-        `;
-
-        alertsList.appendChild(alertItem);
-    });
-}
 
 // Load Reports Page
 async function loadReports(statusFilter = currentStatusFilter) {
@@ -872,25 +817,22 @@ function startRealtimeListener() {
         });
 }
 
-// Refresh Dashboard
-document.getElementById('refreshDashboard').addEventListener('click', loadDashboard);
-document.getElementById('viewAllReports').addEventListener('click', () => {
-    document.querySelector('[data-page="reports"]').click();
-});
-// Force Update (Clear Cache & Hard Refresh)
-document.getElementById('forceUpdateBtn')?.addEventListener('click', async () => {
-    const btn = document.getElementById('forceUpdateBtn');
-    const originalText = btn.innerHTML;
+// Helper: Hard Refresh (Clear Cache & Reload)
+async function performHardRefresh(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
 
+    const originalContent = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner"></div> Updating...';
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:8px;"></div> Updating...';
 
     try {
+        showToast('Clearing cache and updating...', 'info');
+
         // 1. Clear Service Worker Caches
         if ('caches' in window) {
             const keys = await caches.keys();
             await Promise.all(keys.map(key => caches.delete(key)));
-            console.log("Caches cleared");
         }
 
         // 2. Unregister Service Workers
@@ -899,26 +841,32 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
             for (let reg of registrations) {
                 await reg.unregister();
             }
-            console.log("Service workers unregistered");
         }
 
-        // 3. Clear Local Storage (Except auth/version)
+        // 3. Clear Local Storage (Keeping Auth & Theme)
         const currentUser = localStorage.getItem('currentUser');
         const theme = localStorage.getItem('theme');
         localStorage.clear();
         if (currentUser) localStorage.setItem('currentUser', currentUser);
         if (theme) localStorage.setItem('theme', theme);
 
-        showToast('Cache cleared! Refreshing...', 'success');
+        showToast('Updating data...', 'success');
 
         setTimeout(() => {
-            // Hard refresh
             window.location.reload(true);
-        }, 1000);
+        }, 800);
+
     } catch (error) {
-        console.error("Force update failed:", error);
+        console.error("Refresh failed:", error);
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.innerHTML = originalContent;
         showToast('Update failed. Try manually refreshing.', 'error');
     }
-});
+}
+
+// Refresh Dashboard
+document.getElementById('refreshDashboard').addEventListener('click', () => performHardRefresh('refreshDashboard'));
+
+
+// Force Update (Settings Modal)
+document.getElementById('forceUpdateBtn')?.addEventListener('click', () => performHardRefresh('forceUpdateBtn'));
