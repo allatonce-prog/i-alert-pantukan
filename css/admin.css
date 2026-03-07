@@ -1760,3 +1760,135 @@ body.dark-mode .map-legend {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* ── Analytics Styles ─────── */
+.analytics-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card.premium {
+    background: var(--color-surface);
+    padding: var(--spacing-xl);
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card.premium:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+.stat-icon.reports {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--color-primary);
+}
+
+.stat-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.stat-icon.time {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+.stat-info h3 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.stat-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+/* Charts Layout */
+.charts-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.chart-box {
+    background: var(--color-surface);
+    padding: 30px;
+    border-radius: 28px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-header {
+    margin-bottom: 30px;
+}
+
+.chart-header h3 {
+    font-size: 1.25rem;
+    margin: 0 0 4px 0;
+    color: var(--color-text-primary);
+}
+
+.chart-header p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 350px;
+    width: 100%;
+}
+
+@media (max-width: 1200px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card.premium {
+        padding: var(--spacing-lg);
+    }
+
+    .chart-box {
+        padding: 20px;
+    }
+
+    .chart-wrapper {
+        height: 300px;
+    }
+}

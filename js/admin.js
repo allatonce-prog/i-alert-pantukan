@@ -17,6 +17,11 @@ let currentHistoryPage = 1;
 const historyPageSize = 4;
 let allHistoryData = []; // Store fetched data locally for client-side pagination
 
+// Analytics Charts
+let trendsChart = null;
+let distributionChart = null;
+let analyticsReports = [];
+
 // Helper: Unlock audio on mobile (triggered by first user click)
 function unlockAudio() {
     if (isAudioEnabled) return;
@@ -297,6 +302,20 @@ document.querySelectorAll('.nav-item').forEach(item => {
             initAdminMap();
         }
     });
+});
+
+// Analytics Filter Listeners
+document.getElementById('analyticsTimeFilter')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-tab');
+    if (!btn) return;
+
+    // UI Toggle
+    const tabs = e.currentTarget.querySelectorAll('.filter-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Update Data
+    loadAnalytics();
 });
 
 // Mobile Menu Toggle
@@ -881,44 +900,140 @@ function renderPagination(totalPages) {
 // Load Analytics
 async function loadAnalytics() {
     try {
+        const range = document.querySelector('#analyticsTimeFilter .filter-tab.active')?.dataset.range || 'all';
+
+        // Fetch all relevant reports once, then filter client-side for better UX
+        // You could also optimize this with indexed Firestore queries if data is massive
         const reportsSnapshot = await db.collection('emergencyReports')
             .where('type', 'in', [adminDepartment, 'other'])
             .get();
 
-        let totalResponse = 0;
-        let responseCount = 0;
-        let successCount = 0;
-        let totalCount = 0;
+        const allReports = [];
+        reportsSnapshot.forEach(doc => allReports.push({ id: doc.id, ...doc.data() }));
 
-        reportsSnapshot.forEach(doc => {
-            const report = doc.data();
-            totalCount++;
+        // Filter by Time Range
+        const now = new Date();
+        const filteredReports = allReports.filter(report => {
+            if (!report.createdAt) return false;
+            const reportDate = report.createdAt.toDate();
 
-            if (report.status === 'resolved') {
-                successCount++;
-
-                if (report.createdAt && report.updatedAt) {
-                    const created = report.createdAt.toDate();
-                    const updated = report.updatedAt.toDate();
-                    const responseTime = (updated - created) / (1000 * 60); // minutes
-                    totalResponse += responseTime;
-                    responseCount++;
-                }
+            if (range === 'today') {
+                return reportDate.toDateString() === now.toDateString();
+            } else if (range === 'week') {
+                const weekAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+                return reportDate >= weekAgo;
+            } else if (range === 'month') {
+                const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                return reportDate >= monthAgo;
             }
+            return true; // all
         });
 
-        const avgResponseTime = responseCount > 0 ? Math.round(totalResponse / responseCount) : 0;
-        const successRate = totalCount > 0 ? Math.round((successCount / totalCount) * 100) : 0;
-
-        document.getElementById('avgResponseTime').textContent = avgResponseTime;
-        document.getElementById('successRate').textContent = successRate + '%';
-
-        const deptInfo = EMERGENCY_TYPES[adminDepartment];
-        document.getElementById('commonEmergency').textContent = deptInfo ? deptInfo.label : 'N/A';
+        updateAnalyticsStats(filteredReports);
+        updateAnalyticsCharts(filteredReports);
 
     } catch (error) {
         console.error('Error loading analytics:', error);
         showToast('Error loading analytics', 'error');
+    }
+}
+
+function updateAnalyticsStats(reports) {
+    let totalResponse = 0;
+    let responseCount = 0;
+    let resolvedCount = 0;
+
+    reports.forEach(report => {
+        if (report.status === 'resolved') {
+            resolvedCount++;
+            if (report.createdAt && report.updatedAt) {
+                const created = report.createdAt.toDate();
+                const updated = report.updatedAt.toDate();
+                totalResponse += (updated - created) / (1000 * 60);
+                responseCount++;
+            }
+        }
+    });
+
+    document.getElementById('totalReportsCount').textContent = reports.length;
+    document.getElementById('successRateVal').textContent = reports.length > 0 ? Math.round((resolvedCount / reports.length) * 100) + '%' : '0%';
+    document.getElementById('avgResponseTimeVal').textContent = responseCount > 0 ? Math.round(totalResponse / responseCount) + 'm' : '--';
+}
+
+function updateAnalyticsCharts(reports) {
+    // 1. Distribution Chart Data
+    const distribution = {};
+    reports.forEach(r => {
+        const label = EMERGENCY_TYPES[r.type]?.label || 'Other';
+        distribution[label] = (distribution[label] || 0) + 1;
+    });
+
+    // 2. Trends Chart Data (Last 7 days or points if 'all')
+    const sorted = [...reports].sort((a, b) => a.createdAt.toDate() - b.createdAt.toDate());
+    const trends = {};
+    sorted.forEach(r => {
+        const date = r.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        trends[date] = (trends[date] || 0) + 1;
+    });
+
+    // --- Render Distribution ---
+    if (distributionChart) distributionChart.destroy();
+    const distCtx = document.getElementById('distributionChart')?.getContext('2d');
+    if (distCtx) {
+        distributionChart = new Chart(distCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(distribution),
+                datasets: [{
+                    data: Object.values(distribution),
+                    backgroundColor: ['#DC2626', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, padding: 20 } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // --- Render Trends ---
+    if (trendsChart) trendsChart.destroy();
+    const trendsCtx = document.getElementById('trendsChart')?.getContext('2d');
+    if (trendsCtx) {
+        trendsChart = new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(trends),
+                datasets: [{
+                    label: 'Reports',
+                    data: Object.values(trends),
+                    borderColor: '#DC2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#DC2626',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 }
 
