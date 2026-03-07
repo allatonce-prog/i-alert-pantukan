@@ -237,10 +237,12 @@ body {
     background: var(--auth-white);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     padding: 0 32px 36px;
     position: relative;
     z-index: 2;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* ── WELCOME SCREEN ────────────────────────── */
@@ -322,11 +324,14 @@ body {
 
 /* ── SIGN IN / REGISTER SCREEN ─────────────── */
 #loginScreen .wave-bg {
-    flex: 0 0 34%;
+    flex: 0 0 28%;
+    /* Reduced header height on login/register screen */
 }
 
 .login-panel {
     padding-top: 14px;
+    height: auto;
+    min-height: 0;
 }
 
 .login-title {
@@ -341,6 +346,26 @@ body {
 /* ── FORMS ─────────────────────────────────── */
 .auth-form {
     display: none;
+    padding-bottom: 150px;
+    /* Extra large space so users can scroll the bottom fields to the top */
+}
+
+/* Custom scrollbar for premium feel */
+.white-panel::-webkit-scrollbar {
+    width: 5px;
+}
+
+.white-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.white-panel::-webkit-scrollbar-thumb {
+    background: rgba(220, 38, 38, 0.15);
+    border-radius: 10px;
+}
+
+.white-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(220, 38, 38, 0.3);
 }
 
 .auth-form.active {
@@ -439,6 +464,7 @@ body {
     transition: border-color .2s;
     outline: none;
     box-shadow: none;
+    cursor: pointer;
 }
 
 .form-group input:focus,
