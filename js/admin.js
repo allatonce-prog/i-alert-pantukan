@@ -157,6 +157,13 @@ function closeProfileModal() {
 if (closeProfileModalBtn) closeProfileModalBtn.addEventListener('click', closeProfileModal);
 if (cancelProfileBtn) cancelProfileBtn.addEventListener('click', closeProfileModal);
 
+// Close Profile Modal on Backdrop Click
+if (profileModal) {
+    profileModal.addEventListener('click', (e) => {
+        if (e.target === profileModal) closeProfileModal();
+    });
+}
+
 // Handle Profile Update
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
@@ -224,6 +231,13 @@ function closeSettings() {
 
 if (closeSettingsModalBtn) closeSettingsModalBtn.addEventListener('click', closeSettings);
 if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+
+// Close Settings Modal on Backdrop Click
+if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) closeSettings();
+    });
+}
 
 // Dark Mode Logic
 function initTheme() {
@@ -767,6 +781,14 @@ window.updateReportStatus = async function (reportId, newStatus) {
 document.getElementById('closeReportModal').addEventListener('click', () => {
     document.getElementById('reportModal').classList.remove('active');
     stopResponderGPS(); // stop broadcasting if modal dismissed
+});
+
+// Close Report Modal on Backdrop Click
+document.getElementById('reportModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'reportModal') {
+        document.getElementById('reportModal').classList.remove('active');
+        stopResponderGPS();
+    }
 });
 
 // Load History
