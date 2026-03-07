@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About iAlert - Pantukan Emergency System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #DC2626;
+            --color-bg: #030712;
+            --color-text: #f8fafc;
+            --color-text-dim: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --ios-blur: blur(25px) saturate(180%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            overflow: hidden;
+        }
+
+        /* ── Scroll Snap Container ─────── */
+        .reveal-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .reveal-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            scroll-snap-align: start;
+            position: relative;
+        }
+
+        /* ── Focal Point Logic ─────── */
+        .section-content {
+            max-width: 900px;
+            width: 100%;
+            opacity: 0;
+            transform: scale(0.85) translateY(60px);
+            filter: blur(20px);
+            transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            pointer-events: none;
+        }
+
+        .section.active .section-content {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            filter: blur(0);
+            pointer-events: auto;
+        }
+
+        /* ── iOS 26 Glass Cards ─────── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-top: 3.5rem;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--ios-blur);
+            -webkit-backdrop-filter: var(--ios-blur);
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem 1.5rem;
+            border-radius: 32px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .feature-card:hover {
+            background: rgba(220, 38, 38, 0.05);
+            border-color: rgba(220, 38, 38, 0.4);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon-svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 1.5rem;
+            color: var(--color-primary);
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card:hover .feature-icon-svg {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-card h4 {
+            color: white;
+            margin-bottom: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--color-text-dim);
+            line-height: 1.5;
+        }
+
+        h1 {
+            font-size: 5.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.5) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            letter-spacing: -3px;
+        }
+
+        h2 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .welcome-text {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: var(--color-text-dim);
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* ── Back Button ─────── */
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .back-btn:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            transform: rotate(-10deg) scale(1.1);
+        }
+
+        /* ── Fixed Scroll Hint ─────── */
+        .scroll-hint {
+            position: absolute;
+            bottom: 3.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: var(--color-text-dim);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .section:not(:first-child) .scroll-hint {
+            display: none;
+        }
+
+        .scroll-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0.6;
+        }
+
+        .scroll-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            animation: ios-scroll 2s infinite cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        @keyframes ios-scroll {
+            0% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translateY(15px);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 3.5rem;
+        }
+
+        .stat-item h3 {
+            font-size: 3.5rem;
+            color: white;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            letter-spacing: -2px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3.5rem;
+                letter-spacing: -1.5px;
+            }
+
+            h2 {
+                font-size: 2.2rem;
+            }
+
+            .welcome-text {
+                font-size: 1.1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="index.html" class="back-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+    </a>
+
+    <div class="reveal-container" id="revealContainer">
+
+        <!-- Section 1: Hero -->
+        <section class="section active">
+            <div class="section-content">
+                <h1>Heart of<br>Pantukan</h1>
+                <p class="welcome-text">More than just technology—this is our promise to look out for one another. A
+                    smarter way to keep our families and neighbors safe.</p>
+            </div>
+            <!-- Move hint outside content to prevent overlap -->
+            <div class="scroll-hint">
+                <span class="scroll-text">Our Story</span>
+                <div class="scroll-dot"></div>
+            </div>
+        </section>
+
+        <!-- Section 2: How We Help -->
+        <section class="section">
+            <div class="section-content">
+                <h2>Your Safety Net</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <h4>Finding You Fast</h4>
+                        <p>We'll know exactly where to send help the moment you call.</p>
+                    </div>
+                    <div class="feature-card">
+                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                            </path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                        <h4>Seeing the Scene</h4>
+                        <p>Your photos help our heroes prepare before they arrive.</p>
+                    </div>
+                    <div class="feature-card">
+                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <h4>Always by Your Side</h4>
+                        <p>Our system works even when the signal is weak.</p>
+                    </div>
+                    <div class="feature-card">
+                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <h4>Quick Response</h4>
+                        <p>Alerts reach our responders in the blink of an eye.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Humanized Commitment -->
+        <section class="section">
+            <div class="section-content">
+                <h2>Always There for You</h2>
+                <p class="welcome-text">Because behind every alert is a neighbor in need, we've built a system that
+                    never sleeps. We are committed to bringing help to your side when it matters most.</p>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <h3>99.9%</h3>
+                        <p>Always Ready</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>
+                            < 3s</h3>
+                                <p>Instant Action</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Mission -->
+        <section class="section">
+            <div class="section-content">
+                <h2>Built with Care</h2>
+                <p class="welcome-text">A unified effort between your local government and modern innovation, creating a
+                    safer, more connected future for every Pantukanon.</p>
+                <p
+                    style="margin-top: 3rem; font-size: 0.8rem; color: #4b5563; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
+                    Version 2.0 • Dedication to Life</p>
+            </div>
+        </section>
+
+        <!-- Section 5: Minimalist Credits -->
+        <section class="section">
+            <div class="section-content" style="max-width: 400px;">
+                <p
+                    style="text-transform: uppercase; letter-spacing: 6px; font-size: 0.7rem; opacity: 0.4; margin-bottom: 0.5rem; font-weight: 700;">
+                    Developer</p>
+                <h2 style="font-size: 2rem; color: white; font-weight: 400; letter-spacing: 2px;">Jhianne Khara</h2>
+                <div
+                    style="margin-top: 5rem; width: 30px; height: 1.5px; background: var(--color-primary); margin-left: auto; margin-right: auto; opacity: 0.6;">
+                </div>
+                <p style="margin-top: 2rem; font-size: 0.65rem; opacity: 0.3; letter-spacing: 3px; font-weight: 700;">
+                    iAlert • 2026</p>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const sections = document.querySelectorAll('.section');
+        const container = document.getElementById('revealContainer');
+
+        const observerOptions = {
+            root: container,
+            threshold: 0.6
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                } else {
+                    entry.target.classList.remove('active');
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+    </script>
+</body>
+
+</html>
