@@ -694,7 +694,12 @@ body {
     opacity: 0;
     transition: opacity .3s ease, transform .3s ease;
     z-index: 9999;
-    white-space: nowrap;
+    max-width: 90vw;
+    width: max-content;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.4;
+    word-wrap: break-word;
     pointer-events: none;
 }
 

@@ -125,7 +125,9 @@ function checkAuth() {
     const userJson = localStorage.getItem('currentUser');
     if (userJson) {
         const user = JSON.parse(userJson);
-        if (user.role === 'admin') {
+        if (user.role === 'super-admin') {
+            window.location.href = 'super-admin.html';
+        } else if (user.role === 'admin') {
             window.location.href = 'admin.html';
         } else {
             window.location.href = 'resident.html';
@@ -143,7 +145,7 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         const submitBtn = loginForm.querySelector('button[type="submit"]');
 
@@ -155,44 +157,52 @@ if (loginForm) {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             const authUser = userCredential.user;
 
-            // 2. Fetch Profile from Firestore (determine role)
-            let userDoc = await db.collection('USERS').doc(authUser.uid).get();
+            // 2. FETCH PROFILE (Smart Scan by Email)
+            // We search by email instead of just Doc ID to support accounts with random IDs
             let userData = null;
 
-            if (userDoc.exists) {
-                userData = { id: userDoc.id, ...userDoc.data() };
+            // Search USERS
+            const userQuery = await db.collection('USERS').where('email', '==', email).limit(1).get();
+            if (!userQuery.empty) {
+                const doc = userQuery.docs[0];
+                userData = { id: doc.id, ...doc.data() };
             } else {
-                // Check ADMIN collection if not in USERS
-                userDoc = await db.collection('ADMIN').doc(authUser.uid).get();
-                if (userDoc.exists) {
-                    userData = { id: userDoc.id, ...userDoc.data() };
+                // Search ADMIN
+                const adminQuery = await db.collection('ADMIN').where('email', '==', email).limit(1).get();
+                if (!adminQuery.empty) {
+                    const doc = adminQuery.docs[0];
+                    userData = { id: doc.id, ...doc.data() };
                 }
             }
 
             if (userData) {
                 // Save to localStorage for profile persistence
                 localStorage.setItem('currentUser', JSON.stringify(userData));
-                showToast('Login successful!', 'success');
+                showToast('Logon successful!', 'success');
 
                 setTimeout(() => {
-                    if (userData.role === 'admin') {
+                    const role = userData.role;
+                    if (role === 'super-admin') {
+                        window.location.href = 'super-admin.html';
+                    } else if (role === 'admin') {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'resident.html';
                     }
                 }, 1000);
             } else {
-                throw new Error('User profile not found.');
+                // profile missing in DB
+                throw new Error('Authenticated, but system profile not found.');
             }
 
         } catch (error) {
             console.error('Login error:', error);
-            // Handle specific Firebase errors
-            let msg = 'Login failed';
-            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                msg = 'Invalid email or password';
-            } else if (error.code === 'auth/too-many-requests') {
-                msg = 'Too many attempts. Try again later.';
+            let msg = 'Invalid email or password';
+
+            if (error.code === 'auth/too-many-requests') {
+                msg = 'Account temporarily blocked due to many attempts. Try again in a few minutes.';
+            } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                msg = 'Incorrect email or password.';
             }
 
             showToast(msg, 'error');
@@ -208,10 +218,10 @@ if (registerForm) {
         e.preventDefault();
 
         const name = document.getElementById('registerName').value;
-        const email = document.getElementById('registerEmail').value;
+        const email = document.getElementById('registerEmail').value.trim();
         const phone = document.getElementById('registerPhone').value;
         const address = document.getElementById('registerAddress').value;
-        const password = document.getElementById('registerPassword').value;
+        const password = document.getElementById('registerPassword').value.trim();
         const submitBtn = registerForm.querySelector('button[type="submit"]');
 
         if (password.length < 6) {

@@ -7,7 +7,9 @@ function checkAuth() {
     const userJson = localStorage.getItem('currentUser');
     if (userJson) {
         const user = JSON.parse(userJson);
-        if (user.role === 'admin') {
+        if (user.role === 'super-admin') {
+            window.location.href = 'super-admin.html';
+        } else if (user.role === 'admin') {
             window.location.href = 'admin.html';
         } else {
             window.location.href = 'resident.html';
@@ -20,17 +22,30 @@ if (document.querySelector('.auth-container')) {
     checkAuth();
 }
 
+// Update "Back to Login" link if Super Admin is logged in
+window.addEventListener('DOMContentLoaded', () => {
+    const userJson = localStorage.getItem('currentUser');
+    if (userJson) {
+        const user = JSON.parse(userJson);
+        const backLink = document.querySelector('.auth-footer a');
+        if (user.role === 'super-admin' && backLink) {
+            backLink.textContent = '← Back to Dashboard';
+            backLink.href = 'super-admin.html';
+        }
+    }
+});
+
 // Admin Registration Handler
 if (adminRegisterForm) {
     adminRegisterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const name = document.getElementById('adminName').value;
-        const email = document.getElementById('adminEmail').value;
+        const email = document.getElementById('adminEmail').value.trim();
         const phone = document.getElementById('adminPhone').value;
         const department = document.getElementById('adminDepartment').value;
         const station = document.getElementById('adminStation').value;
-        const password = document.getElementById('adminPassword').value;
+        const password = document.getElementById('adminPassword').value.trim();
         const submitBtn = adminRegisterForm.querySelector('button[type="submit"]');
 
         // Validate password length
@@ -40,40 +55,52 @@ if (adminRegisterForm) {
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<div class="spinner"></div> <span>Registering...</span>';
+        submitBtn.innerHTML = '<div class="spinner"></div> <span>Registering Sys-Account...</span>';
 
         try {
-            // Check if email already exists in ADMIN
+            // Check if email already exists in ADMIN collection
             const userCheck = await db.collection('ADMIN').where('email', '==', email).get();
             if (!userCheck.empty) {
-                throw new Error('Email already registered');
+                throw new Error('This email is already registered as an admin.');
             }
 
+            // 1. Create Native Auth Account
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const authUser = userCredential.user;
+
             const adminData = {
+                id: authUser.uid,
                 name: name,
                 email: email,
                 phone: phone,
                 department: department,
                 station: station,
-                password: password, // Storing plain text password as requested
                 role: 'admin',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 status: 'active'
             };
 
-            // Add to ADMIN collection
-            const docRef = await db.collection('ADMIN').add(adminData);
+            // 2. Save Profile in Firestore (UID as Document ID)
+            await db.collection('ADMIN').doc(authUser.uid).set(adminData);
 
-            // Add ID to local object
-            adminData.id = docRef.id;
+            // Register Logic Refresh
+            const currentUserJson = localStorage.getItem('currentUser');
+            const currentUser = currentUserJson ? JSON.parse(currentUserJson) : {};
+            const isSuperAdmin = currentUser.role === 'super-admin';
 
-            // Auto-login
-            localStorage.setItem('currentUser', JSON.stringify(adminData));
+            if (!isSuperAdmin) {
+                // Auto-login locally only if NOT registered by Super Admin
+                localStorage.setItem('currentUser', JSON.stringify(adminData));
+            }
 
             showToast('Admin account created successfully!', 'success');
 
             setTimeout(() => {
-                window.location.href = 'admin.html';
+                if (isSuperAdmin) {
+                    window.location.href = 'super-admin.html';
+                } else {
+                    window.location.href = 'admin.html';
+                }
             }, 1000);
 
         } catch (error) {
