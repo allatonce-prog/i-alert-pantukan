@@ -646,6 +646,33 @@
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
+    <!-- Full-screen Image Viewer -->
+    <div id="imageViewerModal" class="image-viewer-modal">
+        <button class="viewer-close" id="closeViewer" aria-label="Close viewer">&times;</button>
+        <div class="zoom-level-badge" id="zoomBadge">100%</div>
+        <div class="image-viewer-content" id="viewerContent">
+            <img id="viewerImage" src="" alt="Fullscreen view">
+        </div>
+        <div class="image-viewer-controls">
+            <button class="viewer-btn" id="zoomOutBtn" title="Zoom Out">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <button class="viewer-btn" id="resetZoomBtn" title="Reset Zoom">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                </svg>
+            </button>
+            <button class="viewer-btn" id="zoomInBtn" title="Zoom In">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>

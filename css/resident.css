@@ -404,6 +404,7 @@ body.dark-mode .app-header {
     overflow: hidden;
     white-space: nowrap;
     letter-spacing: -0.01em;
+    touch-action: manipulation;
 }
 
 .btn svg {
@@ -493,6 +494,7 @@ textarea {
     color: var(--color-text-primary);
     transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
     outline: none;
+    touch-action: manipulation;
 }
 
 input:focus,
@@ -878,6 +880,7 @@ body.dark-mode .hero-content h2 {
     overflow: hidden;
     animation: cardAppear 0.6s var(--transition-spring) both;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    touch-action: manipulation;
 }
 
 body.dark-mode .emergency-card {
@@ -1049,6 +1052,7 @@ body.dark-mode .section-header {
     gap: var(--sp-4);
     transition: background var(--transition-fast), border-color var(--transition-fast);
     cursor: default;
+    touch-action: manipulation;
 }
 
 .report-item:hover {
@@ -1212,6 +1216,7 @@ body.dark-mode .section-header {
     justify-content: center;
     padding: 0;
     transition: all 0.3s ease-in-out;
+    touch-action: manipulation;
 }
 
 @media (min-width: 640px) {
@@ -2106,6 +2111,7 @@ body {
     transition: color var(--transition-fast), background var(--transition-fast);
     position: relative;
     min-height: 52px;
+    touch-action: manipulation;
 }
 
 .nav-btn svg {
@@ -3169,6 +3175,7 @@ body.dark-mode .glass-box-text {
 body.dark-mode .header-logo-img {
     filter: brightness(1.1);
 }
+
 /* -- Map Search Bar ---------------------------- */
 .map-search-wrap {
     position: relative;
@@ -3183,22 +3190,22 @@ body.dark-mode .header-logo-img {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1.5px solid rgba(255,255,255,0.6);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
     border-radius: 18px;
     padding: 10px 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     transition: all 0.25s ease;
 }
 
 body.dark-mode .map-search-box {
     background: rgba(28, 28, 30, 0.88);
-    border-color: rgba(255,255,255,0.1);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .map-search-box:focus-within {
     border-color: var(--color-primary);
-    box-shadow: 0 8px 24px rgba(238,68,68,0.18);
+    box-shadow: 0 8px 24px rgba(238, 68, 68, 0.18);
 }
 
 .map-search-icon {
@@ -3225,7 +3232,7 @@ body.dark-mode .map-search-box {
 }
 
 .map-search-clear {
-    background: rgba(0,0,0,0.06);
+    background: rgba(0, 0, 0, 0.06);
     border: none;
     border-radius: 50%;
     width: 22px;
@@ -3240,7 +3247,7 @@ body.dark-mode .map-search-box {
 }
 
 body.dark-mode .map-search-clear {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .map-search-results {
@@ -3251,16 +3258,16 @@ body.dark-mode .map-search-clear {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     overflow: hidden;
     max-height: 220px;
     overflow-y: auto;
 }
 
 body.dark-mode .map-search-results {
-    background: rgba(28,28,30,0.96);
-    border-color: rgba(255,255,255,0.08);
+    background: rgba(28, 28, 30, 0.96);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .map-search-results:empty {
@@ -3285,13 +3292,13 @@ body.dark-mode .map-search-results {
 }
 
 .map-search-result-item:hover {
-    background: rgba(238,68,68,0.06);
+    background: rgba(238, 68, 68, 0.06);
 }
 
 .map-search-result-pin {
     width: 30px;
     height: 30px;
-    background: rgba(238,68,68,0.1);
+    background: rgba(238, 68, 68, 0.1);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -3323,7 +3330,7 @@ body.dark-mode .map-search-results {
     border: 1.5px solid rgba(238, 68, 68, 0.25);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 body.dark-mode .directions-card {
@@ -3366,7 +3373,7 @@ body.dark-mode .directions-card {
 }
 
 .btn-dir-clear {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
     border: none;
     border-radius: 20px;
     padding: 6px 14px;
@@ -3378,12 +3385,12 @@ body.dark-mode .directions-card {
 }
 
 .btn-dir-clear:hover {
-    background: rgba(238,68,68,0.1);
+    background: rgba(238, 68, 68, 0.1);
     color: var(--color-primary);
 }
 
 body.dark-mode .btn-dir-clear {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .dir-steps {
@@ -3391,7 +3398,7 @@ body.dark-mode .btn-dir-clear {
     overflow-y: auto;
     padding: 8px 0;
     scrollbar-width: thin;
-    scrollbar-color: rgba(0,0,0,0.1) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
 .dir-step {
@@ -3403,7 +3410,9 @@ body.dark-mode .btn-dir-clear {
     font-size: 0.83rem;
 }
 
-.dir-step:last-child { border-bottom: none; }
+.dir-step:last-child {
+    border-bottom: none;
+}
 
 .dir-step-icon {
     width: 28px;
@@ -3446,7 +3455,7 @@ body.dark-mode .btn-dir-clear {
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
-    box-shadow: 0 4px 10px rgba(238,68,68,0.25);
+    box-shadow: 0 4px 10px rgba(238, 68, 68, 0.25);
     transition: all 0.2s;
 }
 
@@ -3454,4 +3463,3 @@ body.dark-mode .btn-dir-clear {
     transform: scale(1.05);
     background: var(--color-primary-dark);
 }
-

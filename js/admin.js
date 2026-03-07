@@ -628,7 +628,7 @@ window.viewReportDetails = async function (reportId) {
                 ${report.imageUrl ? `
                 <div style="margin-bottom: var(--spacing-xl);">
                     <h4 style="color: var(--color-text-primary); margin-bottom: var(--spacing-md);">Proof Image</h4>
-                    <div style="border-radius: var(--border-radius-md); overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="border-radius: var(--border-radius-md); overflow: hidden; border: 1px solid rgba(255,255,255,0.1); cursor: zoom-in;" onclick="window.openFullscreenImage('${report.imageUrl}')">
                         <img src="${report.imageUrl}" alt="Emergency Proof" style="width: 100%; max-height: 400px; object-fit: contain; background: black; display: block;">
                     </div>
                 </div>
@@ -1289,4 +1289,108 @@ document.getElementById('refreshDashboard').addEventListener('click', () => perf
 
 
 // Force Update (Settings Modal)
-document.getElementById('forceUpdateBtn')?.addEventListener('click', () => performHardRefresh('forceUpdateBtn'));
+document.getElementById('forceUpdateBtn')?.addEventListener('click', () => {
+    performHardRefresh('forceUpdateBtn');
+});
+
+
+// ── Full-screen Image Viewer Logic ─────────────────────
+(function initImageViewer() {
+    let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY;
+    let translateX = 0;
+    let translateY = 0;
+
+    const modal = document.getElementById('imageViewerModal');
+    const viewerImg = document.getElementById('viewerImage');
+    const viewerContent = document.getElementById('viewerContent');
+    const zoomBadge = document.getElementById('zoomBadge');
+
+    if (!modal || !viewerImg) return;
+
+    window.openFullscreenImage = function (src) {
+        viewerImg.src = src;
+        currentZoom = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+
+    function closeFullscreenImage() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function updateTransform() {
+        requestAnimationFrame(() => {
+            viewerImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            if (zoomBadge) zoomBadge.textContent = `${Math.round(currentZoom * 100)}%`;
+        });
+    }
+
+    document.getElementById('closeViewer')?.addEventListener('click', closeFullscreenImage);
+
+    document.getElementById('zoomInBtn')?.addEventListener('click', () => {
+        if (currentZoom < 4) {
+            currentZoom += 0.5;
+            updateTransform();
+        }
+    });
+
+    document.getElementById('zoomOutBtn')?.addEventListener('click', () => {
+        if (currentZoom > 0.5) {
+            currentZoom -= 0.5;
+            updateTransform();
+        }
+    });
+
+    document.getElementById('resetZoomBtn')?.addEventListener('click', () => {
+        currentZoom = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target === viewerContent) closeFullscreenImage();
+    });
+
+    // Drag / Pan Logic
+    const handleStart = (e) => {
+        if (currentZoom <= 1.05) return;
+        isDragging = true;
+        const clientX = e.clientX || e.touches[0].clientX;
+        const clientY = e.clientY || e.touches[0].clientY;
+        startX = clientX - translateX;
+        startY = clientY - translateY;
+        viewerImg.style.transition = 'none';
+    };
+
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        const clientX = e.clientX || e.touches?.[0].clientX;
+        const clientY = e.clientY || e.touches?.[0].clientY;
+        if (clientX === undefined) return;
+
+        translateX = clientX - startX;
+        translateY = clientY - startY;
+        updateTransform();
+    };
+
+    const handleEnd = () => {
+        isDragging = false;
+        viewerImg.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
+    };
+
+    viewerContent.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+
+    viewerContent.addEventListener('touchstart', handleStart, { passive: true });
+    viewerContent.addEventListener('touchmove', handleMove, { passive: true });
+    viewerContent.addEventListener('touchend', handleEnd);
+})();
