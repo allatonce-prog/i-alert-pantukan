@@ -3,9 +3,27 @@
  * Powered by Groq AI
  */
 
-const GROQ_API_KEY = "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";
+// Fallback key (Replaced by Firestore config)
+let GROQ_API_KEY = "GSK_KEY_STORED_IN_FIRESTORE";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; // High-speed, high-quality model
+
+// Centralized Configuration Loader
+async function syncGroqConfig() {
+    try {
+        const doc = await db.collection('config').doc('chatbot').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.apiKey) {
+                GROQ_API_KEY = data.apiKey;
+                console.log("[Chatbot] API Key synced from Firestore");
+            }
+        }
+    } catch (e) {
+        console.warn("[Chatbot] Firestore sync failed:", e);
+    }
+}
+syncGroqConfig();
 
 const SYSTEM_PROMPT = `You are the iAlert Pantukan Assistant, an emergency response AI for the Municipality of Pantukan.
 Your goal is to provide safety tips, emergency procedures, and guide residents on how to use the iAlert system.
