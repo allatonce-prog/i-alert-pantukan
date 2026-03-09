@@ -708,6 +708,11 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
 
     const description = document.getElementById('description').value;
 
+    if (!selectedImageFile) {
+        showToast('Please provide an image as proof of the emergency', 'warning');
+        return;
+    }
+
     if (!currentLocation) {
         showToast('Please provide your location first', 'warning');
         return;
@@ -720,17 +725,18 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
     try {
         let imageUrl = null;
 
-        // Compress and Upload image if selected
-        if (selectedImageFile) {
-            submitBtn.innerHTML = '<div class="spinner"></div> <span>Optimizing image...</span>';
-            try {
-                const compressedFile = await compressImage(selectedImageFile);
-                submitBtn.innerHTML = '<div class="spinner"></div> <span>Uploading...</span>';
-                imageUrl = await uploadImageToCloudinary(compressedFile);
-            } catch (uploadError) {
-                console.error('Image upload failed:', uploadError);
-                showToast('Image upload failed, sending report without image', 'warning');
-            }
+        // Compress and Upload image - Required
+        submitBtn.innerHTML = '<div class="spinner"></div> <span>Optimizing image...</span>';
+        try {
+            const compressedFile = await compressImage(selectedImageFile);
+            submitBtn.innerHTML = '<div class="spinner"></div> <span>Uploading...</span>';
+            imageUrl = await uploadImageToCloudinary(compressedFile);
+        } catch (uploadError) {
+            console.error('Image upload failed:', uploadError);
+            showToast('Image upload failed. Please try again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Send Alert</span>';
+            return;
         }
 
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Saving report...</span>';
