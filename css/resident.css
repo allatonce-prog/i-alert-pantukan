@@ -95,16 +95,89 @@ body.dark-mode {
 
 body {
     font-family: var(--font-body);
-    background: radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.08) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
-        var(--color-bg-primary);
-    background-attachment: fixed;
+    background-color: var(--color-bg-primary);
     color: var(--color-text-primary);
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+/* ── Aurora Mesh Background ──────────── */
+.aurora-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10;
+    overflow: hidden;
+    background: var(--color-bg-primary);
+    pointer-events: none;
+}
+
+.aurora-blob {
+    position: absolute;
+    width: 60vh;
+    height: 60vh;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.12;
+    mix-blend-mode: multiply;
+    animation: aurora-drift 25s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+body.dark-mode .aurora-blob {
+    opacity: 0.08;
+    mix-blend-mode: screen;
+}
+
+.aurora-blob-1 {
+    top: -10%;
+    left: -10%;
+    background: #FF3B30;
+    /* iOS Red */
+    animation-delay: 0s;
+}
+
+.aurora-blob-2 {
+    bottom: -10%;
+    right: -10%;
+    background: #007AFF;
+    /* iOS Blue */
+    animation-delay: -7s;
+    width: 80vh;
+    height: 80vh;
+}
+
+.aurora-blob-3 {
+    top: 40%;
+    left: 40%;
+    background: #5856D6;
+    /* iOS Purple */
+    width: 50vh;
+    height: 50vh;
+    animation-delay: -14s;
+    opacity: 0.08;
+}
+
+@keyframes aurora-drift {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+
+    33% {
+        transform: translate(10vw, 10vh) scale(1.1) rotate(40deg);
+    }
+
+    66% {
+        transform: translate(-5vw, 15vh) scale(0.9) rotate(80deg);
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
 }
 
 body::before {
@@ -1347,19 +1420,23 @@ body.dark-mode .section-header {
     }
 }
 
-/* Drag handle (visual only) */
-.modal-content::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: var(--border-color);
-    border-radius: var(--radius-full);
-    margin: var(--sp-3) auto 0;
+/* Bottom Sheet Grabber Handle */
+.modal-grabber {
+    width: 42px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin: 12px auto 0;
+    flex-shrink: 0;
+    transition: background 0.3s ease;
+}
+
+body.dark-mode .modal-grabber {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 @media (min-width: 640px) {
-    .modal-content::before {
+    .modal-grabber {
         display: none;
     }
 }

@@ -1404,3 +1404,69 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
         }
     }, { passive: true });
 })();
+
+// ── Bottom Sheet Swipe-to-Dismiss ──────────────────
+(function initBottomSheetGestures() {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    const modals = document.querySelectorAll('.modal');
+
+    modals.forEach(modal => {
+        const content = modal.querySelector('.modal-content');
+        if (!content) return;
+
+        content.addEventListener('touchstart', (e) => {
+            // Only allow swipe from the top or grabber area, or if at the top of scroll
+            if (content.scrollTop <= 0) {
+                startY = e.touches[0].clientY;
+                isDragging = true;
+                content.style.transition = 'none';
+            }
+        }, { passive: true });
+
+        content.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+
+            currentY = e.touches[0].clientY;
+            const deltaY = currentY - startY;
+
+            if (deltaY > 0) {
+                e.preventDefault();
+                content.style.transform = `translateY(${deltaY}px)`;
+                // Dim overlay as we swipe down
+                const opacity = 1 - (deltaY / window.innerHeight);
+                modal.style.backgroundColor = `rgba(15, 23, 42, ${0.45 * opacity})`;
+            }
+        }, { passive: false });
+
+        content.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const deltaY = currentY - startY;
+            content.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+            if (deltaY > 150) {
+                // Dismiss if swiped down far enough
+                const closeBtn = modal.querySelector('.btn-close, .btn-close-ios, #closeModal, #closeDetailsModal');
+                if (closeBtn) {
+                    closeBtn.click();
+                } else {
+                    // Fallback dismissal
+                    modal.classList.remove('active');
+                }
+                // Reset styles after animation
+                setTimeout(() => {
+                    content.style.transform = '';
+                    modal.style.backgroundColor = '';
+                }, 300);
+            } else {
+                // Snap back
+                content.style.transform = '';
+                modal.style.backgroundColor = '';
+            }
+        });
+    });
+})();
