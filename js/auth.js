@@ -82,6 +82,9 @@ if (forgotForm) {
             }
         }
 
+        const panel = forgotForm.closest('.white-panel');
+        if (panel) panel.classList.add('scan-active');
+
         resetBtn.disabled = true;
         resetBtn.innerHTML = '<div class="spinner"></div> <span>Processing...</span>';
 
@@ -116,6 +119,7 @@ if (forgotForm) {
             showToast(error.message || 'Failed to send reset email', 'error');
             resetBtn.disabled = false;
             resetBtn.innerHTML = originalBtnContent;
+            if (panel) panel.classList.remove('scan-active');
         }
     });
 }
@@ -159,6 +163,9 @@ if (loginForm) {
         const submitBtn = loginForm.querySelector('button[type="submit"]');
 
         const rememberMe = document.getElementById('rememberMe')?.checked;
+
+        const panel = loginForm.closest('.white-panel');
+        if (panel) panel.classList.add('scan-active');
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Signing in...</span>';
@@ -233,6 +240,7 @@ if (loginForm) {
             showToast(msg, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span>Sign In</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+            if (panel) panel.classList.remove('scan-active');
         }
     });
 }
@@ -268,6 +276,9 @@ if (registerForm) {
             showToast('Password should be at least 6 characters', 'error');
             return;
         }
+
+        const panel = registerForm.closest('.white-panel');
+        if (panel) panel.classList.add('scan-active');
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Creating account...</span>';
@@ -307,6 +318,7 @@ if (registerForm) {
             showToast(msg, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<span>Create Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+            if (panel) panel.classList.remove('scan-active');
         }
     });
 }
