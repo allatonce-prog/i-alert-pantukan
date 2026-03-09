@@ -1045,6 +1045,12 @@
 
         function startNotifListener(userId) {
             if (typeof db === 'undefined') return;
+
+            // Show Skeletons on initial load
+            if (initialLoad && typeof showSkeletons === 'function') {
+                showSkeletons('notifList', 4, 'notif');
+            }
+
             db.collection('emergencyReports').where('userId', '==', userId)
                 .onSnapshot(snap => {
                     snap.docChanges().forEach(c => {

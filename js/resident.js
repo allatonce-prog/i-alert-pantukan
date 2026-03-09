@@ -949,9 +949,45 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
     }
 });
 
+// ── Skeleton Loader Helper ────────────────
+function showSkeletons(containerId, count = 3, type = 'report') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    let html = '<div class="skeleton-loading">';
+    for (let i = 0; i < count; i++) {
+        if (type === 'report') {
+            html += `
+                <div class="skeleton-card">
+                    <div class="skeleton-status skeleton-shimmer"></div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line h-title skeleton-shimmer"></div>
+                        <div class="skeleton-line h-desc skeleton-shimmer"></div>
+                        <div class="skeleton-line h-meta skeleton-shimmer"></div>
+                    </div>
+                </div>`;
+        } else {
+            html += `
+                <div class="notif-item skeleton-card">
+                    <div class="skeleton-icon skeleton-shimmer"></div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line h-title skeleton-shimmer" style="width: 50%;"></div>
+                        <div class="skeleton-line h-desc skeleton-shimmer"></div>
+                        <div class="skeleton-line h-meta skeleton-shimmer" style="width: 25%;"></div>
+                    </div>
+                </div>`;
+        }
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
 // Load My Reports
 async function loadMyReports() {
     if (!currentUser) return;
+
+    // Show Skeletons instantly
+    showSkeletons('myReportsList', 3, 'report');
 
     try {
         const reportsSnapshot = await db.collection('emergencyReports')
