@@ -328,19 +328,24 @@ function closeModal() {
     }
 }
 
+let isManualPinMode = false;
+
 // Initialize Map
 function initMap() {
     const mapElement = document.getElementById('map');
 
     // Default to Pantukan coordinates
-    const defaultLat = 7.1881;
+    const defaultLat = 7.1472;
     const defaultLng = 126.0633;
 
     if (map) {
         map.remove();
     }
 
-    map = L.map('map').setView([defaultLat, defaultLng], 13);
+    map = L.map('map', {
+        zoomControl: true,
+        scrollWheelZoom: true
+    }).setView([defaultLat, defaultLng], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -351,26 +356,15 @@ function initMap() {
         if (marker) map.removeLayer(marker);
         if (locationCircle) map.removeLayer(locationCircle);
         marker = L.marker([currentLocation.lat, currentLocation.lng]).addTo(map);
-        map.setView([currentLocation.lat, currentLocation.lng], 15);
+        map.setView([currentLocation.lat, currentLocation.lng], 16);
     }
 
-    // Add manual pinning support
+    // Add manual pinning support (Only works if mode is enabled)
     map.on('click', (e) => {
+        if (!isManualPinMode) return;
+
         const { lat, lng } = e.latlng;
-
-        currentLocation = {
-            lat: lat,
-            lng: lng,
-            accuracy: 10 // Manual pin is precise by definition
-        };
-
-        if (marker) map.removeLayer(marker);
-        if (locationCircle) map.removeLayer(locationCircle);
-        marker = L.marker([lat, lng]).addTo(map);
-
-        const locText = document.getElementById('locationText');
-        if (locText) locText.textContent = `Location pinned manually at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
+        setIncidentLocation(lat, lng, 10, true);
         showToast('Location pinned manually', 'success');
     });
 }
@@ -451,49 +445,26 @@ function triggerGPS() {
         return;
     }
 
-    const btn = document.getElementById('getLocationBtn');
+    const btn = document.getElementById('btnLiveLocation');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<div class="spinner"></div> Getting location...';
+        btn.innerHTML = '<div class="spinner"></div> <span>Getting GPS...</span>';
     }
 
     const banner = document.getElementById('locationAlert');
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            currentLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-                accuracy: position.coords.accuracy
-            };
-
-            // Update map
-            if (map) {
-                if (marker) map.removeLayer(marker);
-                if (locationCircle) map.removeLayer(locationCircle);
-
-                marker = L.marker([currentLocation.lat, currentLocation.lng]).addTo(map);
-                map.setView([currentLocation.lat, currentLocation.lng], 15);
-
-                // Add circle to show accuracy
-                locationCircle = L.circle([currentLocation.lat, currentLocation.lng], {
-                    radius: currentLocation.accuracy,
-                    color: '#DC2626',
-                    fillColor: '#DC2626',
-                    fillOpacity: 0.1
-                }).addTo(map);
-            }
-
-            const locText = document.getElementById('locationText');
-            if (locText) locText.textContent = `Location acquired (±${Math.round(currentLocation.accuracy)}m accuracy)`;
+            const { latitude, longitude, accuracy } = position.coords;
+            setIncidentLocation(latitude, longitude, accuracy, false);
 
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Update Location';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> <span>Get Live GPS</span>';
             }
 
             if (banner) banner.classList.remove('active');
-            showToast('Location acquired successfully', 'success');
+            showToast('Live location acquired', 'success');
         },
         (error) => {
             console.error('Geolocation error:', error);
@@ -502,13 +473,13 @@ function triggerGPS() {
             if (error.code === 1) errorMessage = 'Location permission denied';
             else if (error.code === 2) errorMessage = 'Location unavailable';
             else if (error.code === 3) {
-                errorMessage = 'Location request timed out. Please try tapping the map to pin your location manually.';
+                errorMessage = 'Location request timed out. Please try Manual Pin mode.';
             }
 
             showToast(errorMessage, 'error', 6000);
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> Get Current Location';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> <span>Get Live GPS</span>';
             }
             if (banner) banner.classList.add('active');
         },
@@ -516,8 +487,208 @@ function triggerGPS() {
     );
 }
 
-// Get Current Location via Button
-document.getElementById('getLocationBtn').addEventListener('click', triggerGPS);
+// ── Incident Location Logic ───────────────────
+
+// Set and Update Incident Location
+async function setIncidentLocation(lat, lng, accuracy, isManual = false) {
+    currentLocation = { lat, lng, accuracy };
+
+    // Update map UI
+    if (map) {
+        if (marker) map.removeLayer(marker);
+        if (locationCircle) map.removeLayer(locationCircle);
+
+        marker = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 16);
+
+        if (!isManual) {
+            locationCircle = L.circle([lat, lng], {
+                radius: accuracy,
+                color: '#DC2626',
+                fillColor: '#DC2626',
+                fillOpacity: 0.1
+            }).addTo(map);
+        }
+    }
+
+    const locText = document.getElementById('locationText');
+    if (locText) {
+        locText.textContent = isManual
+            ? `Manually pinned at ${lat.toFixed(5)}, ${lng.toFixed(5)}`
+            : `Live location acquired (±${Math.round(accuracy)}m accuracy)`;
+    }
+
+    // Trigger Nearby Place (Establishment) Finder
+    findNearbyEstablishments(lat, lng);
+}
+
+// Location Mode Handlers
+document.getElementById('btnLiveLocation')?.addEventListener('click', () => {
+    isManualPinMode = false;
+    document.getElementById('btnLiveLocation').classList.add('active');
+    document.getElementById('btnManualPin').classList.remove('active');
+    document.getElementById('map').classList.remove('manual-pin-active');
+    triggerGPS();
+});
+
+document.getElementById('btnManualPin')?.addEventListener('click', () => {
+    isManualPinMode = true;
+    document.getElementById('btnManualPin').classList.add('active');
+    document.getElementById('btnLiveLocation').classList.remove('active');
+    document.getElementById('map').classList.add('manual-pin-active');
+    showToast('Mode: Tap on map to set pin', 'info');
+});
+
+// ── Establishment Suggestion Engine ─────────────────
+
+let activeEstablishmentController = null;
+const nearbyCache = new Map(); // Simple session cache for speed
+
+async function findNearbyEstablishments(lat, lng) {
+    const listEl = document.getElementById('establishmentList');
+    const container = document.getElementById('nearbySuggestions');
+    const locationNameEl = document.getElementById('detectedLocationName');
+    const addressEl = document.getElementById('detectedAddress');
+
+    // 1. Proximity Caching: Check if we already have data for this ~10m area
+    const cacheKey = `${lat.toFixed(4)}_${lng.toFixed(4)}`;
+    if (nearbyCache.has(cacheKey)) {
+        const cached = nearbyCache.get(cacheKey);
+        renderLandmarks(cached.elements, lat, lng, cached.revData);
+        return;
+    }
+
+    // 2. Cancel previous pending request
+    if (activeEstablishmentController) {
+        activeEstablishmentController.abort();
+    }
+    activeEstablishmentController = new AbortController();
+    const { signal } = activeEstablishmentController;
+
+    // 3. Show loading state
+    container.classList.add('active');
+    if (locationNameEl) locationNameEl.textContent = "Locating nearby landmarks...";
+    if (listEl) listEl.innerHTML = `<div class="loading-shimmer-card"></div><div class="loading-shimmer-card"></div>`;
+
+    try {
+        // Run both Geocode and Landmark fetch in parallel for max speed
+        const geocodePromise = fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { signal })
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null);
+
+        const landmarkPromise = (async () => {
+            const radius = 250;
+            const query = `[out:json][timeout:15];(node["amenity"](around:${radius},${lat},${lng});node["shop"](around:${radius},${lat},${lng});way["building"](around:${radius},${lat},${lng}););out center 8;`;
+
+            const mirrors = [
+                'https://overpass.kumi.systems/api/interpreter',
+                'https://lz4.overpass-api.de/api/interpreter',
+                'https://z.overpass-api.de/api/interpreter',
+                'https://overpass-api.de/api/interpreter'
+            ].sort(() => Math.random() - 0.5); // Randomize to bypass throttled mirrors
+
+            for (const mirror of mirrors) {
+                if (signal.aborted) return null;
+                try {
+                    const res = await fetch(`${mirror}?data=${encodeURIComponent(query)}`, {
+                        signal: AbortSignal.timeout(6000)
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data?.elements?.length) return data.elements;
+                    }
+                } catch (e) { continue; }
+            }
+            return [];
+        })();
+
+        const [revData, elements] = await Promise.all([geocodePromise, landmarkPromise]);
+
+        if (signal.aborted) return;
+
+        // Update Header UI immediately
+        if (revData) {
+            const addr = revData.address;
+            const placeName = revData.name || addr.suburb || addr.village || addr.neighbourhood || "Incident Site";
+            if (locationNameEl) locationNameEl.textContent = `Pinned: ${placeName}`;
+            if (addressEl) addressEl.textContent = revData.display_name;
+        }
+
+        // 4. Cache and Render
+        nearbyCache.set(cacheKey, { elements, revData });
+        renderLandmarks(elements, lat, lng, revData);
+
+    } catch (e) {
+        if (e.name === 'AbortError') return;
+        console.warn("Nearby search failed:", e);
+        renderLandmarks([], lat, lng, null, true);
+    }
+}
+
+function renderLandmarks(elements, lat, lng, revData, isError = false) {
+    const listEl = document.getElementById('establishmentList');
+    const locationNameEl = document.getElementById('detectedLocationName');
+    const addressEl = document.getElementById('detectedAddress');
+
+    // Always show current point as top option
+    const fallbackUI = `
+        <div class="suggestion-card" onclick="setIncidentLocation(${lat}, ${lng}, 5, true)">
+            <i>🎯</i>
+            <div class="details">
+                <span class="name">Current Pinned Point</span>
+                <span class="type">High Precision Selection</span>
+            </div>
+        </div>
+    `;
+
+    if (elements && elements.length > 0) {
+        listEl.innerHTML = elements.map(el => {
+            const tags = el.tags || {};
+            let name = tags.name || tags.operator || tags.brand || tags["addr:housename"];
+            let type = tags.amenity || tags.shop || tags.building || "Establishment";
+
+            if (!name) {
+                if (tags.amenity) name = tags.amenity.charAt(0).toUpperCase() + tags.amenity.slice(1).replace(/_/g, ' ');
+                else if (tags.shop) name = tags.shop.charAt(0).toUpperCase() + tags.shop.slice(1).replace(/_/g, ' ');
+                else if (tags["addr:street"]) name = (tags["addr:housenumber"] ? tags["addr:housenumber"] + " " : "") + tags["addr:street"];
+                else if (tags.building && tags.building !== 'yes') name = tags.building.charAt(0).toUpperCase() + tags.building.slice(1).replace(/_/g, ' ') + " Building";
+                else name = "Nearby Building";
+            }
+
+            const eLat = el.lat || (el.center ? el.center.lat : lat);
+            const eLng = el.lon || (el.center ? el.center.lon : lng);
+
+            let icon = '🏢';
+            if (tags.shop) icon = '🛒';
+            else if (['restaurant', 'cafe', 'fast_food'].includes(tags.amenity)) icon = '🍴';
+            else if (['hospital', 'clinic', 'pharmacy'].includes(tags.amenity)) icon = '🏥';
+
+            return `
+                <div class="suggestion-card" onclick="redirectToEstablishment('${name.replace(/'/g, "\\'")}', ${eLat}, ${eLng})">
+                    <i>${icon}</i>
+                    <div class="details">
+                        <span class="name">${name}</span>
+                        <span class="type">${type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ')}</span>
+                    </div>
+                </div>
+            `;
+        }).join('') + fallbackUI;
+    } else {
+        listEl.innerHTML = fallbackUI + (isError ? `
+            <div style="font-size:0.65rem; color:var(--color-text-muted); padding:10px; font-style:italic; display: flex; flex-direction: column; gap: 8px;">
+                <span>Server busy. Real-time landmarks temporarily unavailable.</span>
+                <button type="button" onclick="findNearbyEstablishments(${lat}, ${lng})" style="background: none; border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 8px; font-size: 0.65rem; color: var(--color-primary); cursor: pointer; width: fit-content;">
+                    Try Refreshing Landmarks
+                </button>
+            </div>
+        ` : '');
+    }
+}
+
+window.redirectToEstablishment = function (name, lat, lng) {
+    setIncidentLocation(lat, lng, 5, true);
+    showToast(`Redirected to ${name} `, 'success');
+};
 
 // Image & Camera Logic
 const imagePreview = document.getElementById('imagePreview');
@@ -675,7 +846,7 @@ async function uploadImageToCloudinary(file) {
 
     // Generate signature
     // Parameters to sign: timestamp (sorted alphabetically)
-    const paramsToSign = `timestamp=${timestamp}${apiSecret}`;
+    const paramsToSign = `timestamp = ${timestamp}${apiSecret} `;
     const signature = await generateSHA1(paramsToSign);
 
     const formData = new FormData();

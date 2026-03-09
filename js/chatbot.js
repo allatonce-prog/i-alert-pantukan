@@ -1,29 +1,35 @@
 /**
  * iAlert Pantukan - Chatbot Assistant
- * Powered by Groq AI
+ * Powered by Groq AI (with Voice Support)
  */
 
 // Fallback key (Replaced by Firestore config)
-let GROQ_API_KEY = "GSK_KEY_STORED_IN_FIRESTORE";
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile"; // High-speed, high-quality model
+let CHAT_API_KEY = "";
+const CHAT_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const CHAT_MODEL = "llama-3.3-70b-versatile";
 
 // Centralized Configuration Loader
-async function syncGroqConfig() {
+async function syncGrokConfig() {
     try {
         const doc = await db.collection('config').doc('chatbot').get();
         if (doc.exists) {
             const data = doc.data();
-            if (data.apiKey) {
-                GROQ_API_KEY = data.apiKey;
-                console.log("[Chatbot] API Key synced from Firestore");
+            // Check multiple potential field names for the Grok key
+            const key = data.apiKey || data.groqApiKey;
+            if (key) {
+                CHAT_API_KEY = key.trim();
+                console.log("[Chatbot] API Key successfully synced");
+            } else {
+                console.warn("[Chatbot] Document exists but no API key field found");
             }
+        } else {
+            console.warn("[Chatbot] No config/chatbot document found in Firestore");
         }
     } catch (e) {
-        console.warn("[Chatbot] Firestore sync failed:", e);
+        console.error("[Chatbot] Firestore sync failed:", e);
     }
 }
-syncGroqConfig();
+syncGrokConfig();
 
 const SYSTEM_PROMPT = `You are the iAlert Pantukan Assistant, an emergency response AI for the Municipality of Pantukan.
 Your goal is to provide safety tips, emergency procedures, and guide residents on how to use the iAlert system.
@@ -57,8 +63,56 @@ function initChatbot() {
     const chatbotMessages = document.getElementById('chatbot-messages');
     const chatbotInput = document.getElementById('chatbot-input');
     const chatbotSend = document.getElementById('chatbot-send');
+    const chatbotMic = document.getElementById('chatbot-mic');
+    const voiceOverlay = document.getElementById('chatbot-voice-overlay');
+    const stopMicBtn = document.getElementById('chatbot-mic-stop');
 
     let chatHistory = [];
+    let isRecording = false;
+    let recognition = null;
+
+    // Initialize Speech Recognition (Voice Input)
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            isRecording = true;
+            if (chatbotMic) chatbotMic.classList.add('recording');
+            if (voiceOverlay) voiceOverlay.classList.add('active');
+            chatbotInput.placeholder = "Listening...";
+        };
+
+        recognition.onend = () => {
+            isRecording = false;
+            if (chatbotMic) chatbotMic.classList.remove('recording');
+            if (voiceOverlay) voiceOverlay.classList.remove('active');
+            chatbotInput.placeholder = "Type or talk to me...";
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatbotInput.value = transcript;
+            sendMessage();
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech Recognition Error:", event.error);
+            isRecording = false;
+            if (chatbotMic) chatbotMic.classList.remove('recording');
+            if (voiceOverlay) voiceOverlay.classList.remove('active');
+        };
+    }
+
+    // Handle Mic Stop Button
+    if (stopMicBtn) {
+        stopMicBtn.addEventListener('click', () => {
+            if (recognition) recognition.stop();
+        });
+    }
 
     // Toggle Chat Window
     if (toggleBtn) {
@@ -73,6 +127,22 @@ function initChatbot() {
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
             chatbotWindow.classList.remove('active');
+            if (window.speechSynthesis) window.speechSynthesis.cancel(); // Stop talking on close
+        });
+    }
+
+    // Handle Mic Button
+    if (chatbotMic) {
+        chatbotMic.addEventListener('click', () => {
+            if (!recognition) {
+                showToast("Voice recognition not supported in this browser.", "error");
+                return;
+            }
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
         });
     }
 
@@ -93,10 +163,13 @@ function initChatbot() {
         const typingId = showTypingIndicator();
 
         try {
-            const responseText = await callGroqAPI();
+            const responseText = await callChatAPI();
             removeTypingIndicator(typingId);
             addMessage(responseText, 'bot');
             chatHistory.push({ role: "assistant", content: responseText });
+
+            // Grok Voice Support: Speak the response
+            speakResponse(responseText);
 
             // Check if we should show quick alerts
             const emergencyKeywords = ['emergency', 'fire', 'police', 'medical', 'rescue', 'accident', 'help', 'alert', 'situation', 'happening'];
@@ -147,8 +220,50 @@ function initChatbot() {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${side}`;
         msgDiv.textContent = text;
+
+        // Add "Listen" button to bot messages
+        if (side === 'bot') {
+            const listenBtn = document.createElement('button');
+            listenBtn.className = 'message-listen-btn';
+            listenBtn.innerHTML = `📢`;
+            listenBtn.onclick = () => speakResponse(text);
+            msgDiv.appendChild(listenBtn);
+        }
+
         chatbotMessages.appendChild(msgDiv);
         scrollToBottom();
+    }
+
+    // Helper: Speak Response (Grok Voice Output)
+    // Helper: Speak Response (Grok Voice Output)
+    function speakResponse(text) {
+        if (!window.speechSynthesis) return;
+
+        // Cancel any current speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        const setVoice = () => {
+            const voices = window.speechSynthesis.getVoices();
+            // Prioritize high-quality English voices
+            const preferredVoice = voices.find(v => v.name.toLocaleLowerCase().includes('premium') && v.lang.startsWith('en')) ||
+                voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) ||
+                voices.find(v => v.lang.startsWith('en')) ||
+                voices[0];
+
+            if (preferredVoice) utterance.voice = preferredVoice;
+            utterance.rate = 1.05; // Slightly faster for modern feel
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        };
+
+        if (window.speechSynthesis.getVoices().length > 0) {
+            setVoice();
+        } else {
+            // Voices might load asynchronously
+            window.speechSynthesis.onvoiceschanged = setVoice;
+        }
     }
 
     // Helper: Scroll to Bottom
@@ -231,35 +346,44 @@ function initChatbot() {
         if (el) el.remove();
     }
 
-    // Groq API Call
-    async function callGroqAPI() {
-        // Construct the full prompt with system instructions
-        const messages = [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...chatHistory.slice(-8) // Keep last 4 exchanges for context
-        ];
-
-        const response = await fetch(GROQ_API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: GROQ_MODEL,
-                messages: messages,
-                max_tokens: 500,
-                temperature: 0.7
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error?.message || "Groq API error");
+    // AI API Call
+    async function callChatAPI() {
+        if (!CHAT_API_KEY) {
+            throw new Error("api_key_missing: AI API key not configured in Firestore.");
         }
 
-        return data.choices[0].message.content;
+        const messages = [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...chatHistory.slice(-10)
+        ];
+
+        try {
+            const response = await fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${CHAT_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: CHAT_MODEL,
+                    messages: messages,
+                    temperature: 0.7,
+                    max_tokens: 500
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error("[Chatbot API Error]", data);
+                throw new Error(data.error?.message || `API error: ${response.status}`);
+            }
+
+            return data.choices[0].message.content;
+        } catch (err) {
+            console.error("[Chatbot Network Error]", err);
+            throw err;
+        }
     }
 }
 

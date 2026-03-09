@@ -382,24 +382,62 @@
 
                     <!-- Location -->
                     <div class="location-section">
-                        <div class="location-header">
+                        <div class="location-header" style="margin-bottom: 12px;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                 <circle cx="12" cy="10" r="3" />
                             </svg>
-                            <span>Your Location</span>
-                            <button type="button" class="btn btn-secondary" id="getLocationBtn"
-                                style="margin-left: auto; padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+                            <span>Incident Location</span>
+                        </div>
+
+                        <!-- Mode Selector -->
+                        <div class="location-modes">
+                            <button type="button" class="mode-btn active" id="btnLiveLocation">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10" />
                                     <path d="M12 2v20M2 12h20" />
                                 </svg>
-                                Get Location
+                                <span>Get Live GPS</span>
+                            </button>
+                            <button type="button" class="mode-btn" id="btnManualPin">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                </svg>
+                                <span>Manual Pin</span>
                             </button>
                         </div>
-                        <div id="map" class="location-map"></div>
-                        <p id="locationText" class="location-text">Tap on the map to pin your location or click "Get
-                            Location" above.</p>
+
+                        <div style="position: relative;">
+                            <div id="map" class="location-map"></div>
+                            <div class="pin-hint-overlay">Tap onto the map to set pin</div>
+                        </div>
+
+                        <p id="locationText" class="location-text">Select a method above to provide incident location.
+                        </p>
+
+                        <!-- Nearby Suggestions -->
+                        <div id="nearbySuggestions" class="nearby-suggestions-container">
+                            <div class="location-details-header" style="margin-bottom: 8px;">
+                                <div id="detectedLocationName"
+                                    style="font-size: 0.9rem; font-weight: 700; color: var(--color-primary);">Pinned:
+                                    Searching...</div>
+                                <div id="detectedAddress" style="font-size: 0.72rem; color: var(--color-text-muted);">
+                                    Fetching address details...</div>
+                            </div>
+
+                            <div class="suggestions-header"
+                                style="border-top: 1px solid var(--border-color); padding-top: 8px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="3">
+                                    <path d="M3 21h18M3 7v14M8 21V7m0-4h8m0 18V7m5 14V3" />
+                                </svg>
+                                Nearby Establishments & Landmarks
+                            </div>
+                            <div class="suggestions-scroll" id="establishmentList">
+                                <!-- suggestions injected here -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Actions -->
@@ -1109,6 +1147,19 @@
 
         <!-- Chat Window -->
         <div id="chatbot-window" class="chatbot-window">
+            <!-- Voice Listening Overlay -->
+            <div id="chatbot-voice-overlay" class="chatbot-voice-overlay">
+                <div class="voice-wave-container">
+                    <div class="voice-wave-bar"></div>
+                    <div class="voice-wave-bar"></div>
+                    <div class="voice-wave-bar"></div>
+                    <div class="voice-wave-bar"></div>
+                    <div class="voice-wave-bar"></div>
+                </div>
+                <p>Listening</p>
+                <button type="button" id="chatbot-mic-stop" class="mic-stop-btn">Tap to cancel</button>
+            </div>
+
             <div class="chatbot-header">
                 <div class="chatbot-header-info">
                     <div class="chatbot-avatar">🤖</div>
@@ -1128,7 +1179,15 @@
             </div>
 
             <div class="chatbot-input-area">
-                <textarea id="chatbot-input" placeholder="Type your message..." rows="1"></textarea>
+                <textarea id="chatbot-input" placeholder="Type or talk to me..." rows="1"></textarea>
+                <button id="chatbot-mic" class="chatbot-mic-btn" title="Voice Input">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="23" />
+                        <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
+                </button>
                 <button id="chatbot-send" class="chatbot-send-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="22" y1="2" x2="11" y2="13" />
