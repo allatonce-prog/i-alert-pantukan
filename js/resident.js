@@ -9,6 +9,26 @@ window.selectedEmergencyType = null;
 let currentPage = 1;
 const itemsPerPage = 5;
 
+// Fallback and Config placeholders
+let CLOUDINARY_CONFIG = {
+    cloudName: 'djghkklph',
+    apiKey: '613592386419746',
+    apiSecret: 'CREDENTIAL_STORED_IN_FIRESTORE'
+};
+
+async function syncCloudinaryConfig() {
+    try {
+        const doc = await db.collection('config').doc('cloudinary').get();
+        if (doc.exists) {
+            CLOUDINARY_CONFIG = doc.data();
+            console.log("[Resident] Cloudinary config synced from Firestore");
+        }
+    } catch (e) {
+        console.warn("[Resident] Cloudinary sync failed:", e);
+    }
+}
+syncCloudinaryConfig();
+
 // Check authentication
 async function checkAuth() {
     const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
@@ -650,9 +670,7 @@ async function compressImage(file, maxWidth = 1024, quality = 0.7) {
 
 // Upload Image to Cloudinary
 async function uploadImageToCloudinary(file) {
-    const cloudName = 'djghkklph';
-    const apiKey = '613592386419746';
-    const apiSecret = 'CSrGl9AN4MNyylk_4Zb2UA7S22g'; // Note: Exposed secret is insecure for production
+    const { cloudName, apiKey, apiSecret } = CLOUDINARY_CONFIG;
     const timestamp = Math.round((new Date()).getTime() / 1000);
 
     // Generate signature
