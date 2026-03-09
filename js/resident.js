@@ -1354,3 +1354,17 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
     viewerContent.addEventListener('touchmove', handleMove, { passive: true });
     viewerContent.addEventListener('touchend', handleEnd);
 })();
+
+// ── Dynamic Island Scroll Effect ──────────────────
+(function initDynamicIsland() {
+    const header = document.querySelector('.app-header');
+    if (!header) return;
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 80) {
+            header.classList.add('island-mode');
+        } else {
+            header.classList.remove('island-mode');
+        }
+    }, { passive: true });
+})();

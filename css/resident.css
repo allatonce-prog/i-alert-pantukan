@@ -219,6 +219,100 @@ body.dark-mode .app-header {
     border-bottom-color: var(--border-color);
 }
 
+/* Dynamic Island Morphing */
+.app-header.island-mode {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 180px;
+    height: 48px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(25px) saturate(200%);
+    -webkit-backdrop-filter: blur(25px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0 6px;
+    margin: 0;
+    overflow: visible;
+    /* Changed from hidden to allow dropdown */
+}
+
+body.dark-mode .app-header.island-mode {
+    background: rgba(28, 28, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.app-header.island-mode .header-content {
+    padding: 0 12px;
+    gap: 12px;
+}
+
+.app-header.island-mode .logo-small {
+    width: 32px;
+    height: 32px;
+    border: none;
+    box-shadow: none;
+}
+
+.app-header.island-mode .header-logo-img {
+    display: none;
+}
+
+.app-header.island-mode .user-avatar {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+}
+
+.app-header.island-mode .header-left {
+    gap: 8px;
+}
+
+/* Island Specific Dropdown Layout */
+.app-header.island-mode .dropdown-menu {
+    top: calc(100% + 10px);
+    right: 50%;
+    transform: translateX(50%) scale(0.9);
+    width: 160px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 6px;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+body.dark-mode .app-header.island-mode .dropdown-menu {
+    background: rgba(28, 28, 30, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.app-header.island-mode .dropdown-menu.active {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(50%) scale(1);
+}
+
+.app-header.island-mode .dropdown-item {
+    padding: 8px 12px;
+    border-radius: 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.app-header.island-mode .dropdown-divider {
+    margin: 4px 8px;
+    opacity: 0.1;
+}
+
 .header-content {
     max-width: 1280px;
     margin: 0 auto;
@@ -2067,92 +2161,100 @@ body {
 
 .bottom-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 24px;
+    left: 16px;
+    right: 16px;
     z-index: 200;
-    height: 68px;
-    background: var(--color-surface);
-    border-top: 1px solid var(--border-color);
+    height: 64px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(25px) saturate(200%);
+    -webkit-backdrop-filter: blur(25px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 32px;
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    padding: 0 var(--sp-2);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, .06);
+    justify-content: space-between;
+    padding: 0 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(0, 0, 0, 0.05);
     /* GPU-accelerated smooth slide */
     transform: translateY(0);
     will-change: transform;
     backface-visibility: hidden;
-    transition: transform 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-        background var(--transition-slow),
-        border-color var(--transition-slow);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Slide out downward — ease-in (accelerate into hide) */
+body.dark-mode .bottom-nav {
+    background: rgba(28, 28, 30, 0.8);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Slide out downward */
 .bottom-nav.nav-hidden {
-    transform: translateY(100%);
-    transition: transform 0.32s cubic-bezier(0.55, 0, 1, 0.45);
+    transform: translateY(calc(100% + 40px));
 }
 
 /* Nav button */
 .nav-btn {
     flex: 1;
+    height: 48px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    background: none;
+    gap: 8px;
+    background: transparent;
     border: none;
     cursor: pointer;
-    padding: var(--sp-2) var(--sp-1);
-    border-radius: var(--radius-lg);
+    border-radius: 24px;
     color: var(--color-text-muted);
-    transition: color var(--transition-fast), background var(--transition-fast);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
-    min-height: 52px;
     touch-action: manipulation;
+    overflow: hidden;
 }
 
 .nav-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
-    transition: transform var(--transition-spring);
+    z-index: 2;
 }
 
 .nav-btn span {
-    font-size: 0.68rem;
-    font-weight: 600;
-    font-family: var(--font-body);
-    letter-spacing: 0.02em;
-}
-
-.nav-btn:hover {
-    color: var(--color-text-secondary);
-    background: var(--color-bg-tertiary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: var(--font-header);
+    letter-spacing: -0.01em;
+    display: none;
+    /* Hide text by default */
+    z-index: 2;
 }
 
 .nav-btn.active {
-    color: var(--color-primary);
-}
-
-.nav-btn.active svg {
-    transform: scale(1.12);
-}
-
-/* Active indicator pill */
-.nav-btn.active::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px;
-    height: 3px;
+    flex: 1.8;
+    color: white;
     background: var(--color-primary);
-    border-radius: var(--radius-full);
+    box-shadow: 0 4px 15px var(--color-primary-glow);
+}
+
+body.dark-mode .nav-btn.active {
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.nav-btn.active span {
+    display: block;
+    /* Show text for active item */
+}
+
+.nav-btn:active {
+    transform: scale(0.92);
+}
+
+/* Remove old indicator pill */
+.nav-btn.active::before {
+    display: none;
 }
 
 /* Notification red dot on nav icon */
@@ -2418,8 +2520,9 @@ body {
 /* ── Chatbot UI (iOS 26 / Ultra-Modern Style) ─────────── */
 .chatbot-container {
     position: fixed;
-    bottom: calc(var(--nav-height, 68px) + var(--sp-6, 1.5rem));
-    right: var(--sp-6, 1.5rem);
+    bottom: 104px;
+    /* Adjusted for floating nav (24 + 64 + 16 gap) */
+    right: 20px;
     z-index: 99999;
     display: block !important;
     visibility: visible !important;
