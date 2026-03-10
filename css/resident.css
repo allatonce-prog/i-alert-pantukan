@@ -285,19 +285,19 @@ a:hover {
     z-index: 100;
     height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
     padding-top: env(safe-area-inset-top, 0px);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
-    backdrop-filter: blur(20px) saturate(200%);
-    -webkit-backdrop-filter: blur(20px) saturate(200%);
-    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: none;
     transition: all var(--transition-spring);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    box-shadow: none;
     transform: none;
     border-radius: 0;
 }
 
 body.dark-mode .app-header {
-    background: rgba(13, 17, 23, 0.88);
-    border-bottom-color: var(--border-color);
+    background: transparent;
+    border-bottom-color: transparent;
 }
 
 /* Dynamic Island Morphing */
@@ -488,6 +488,11 @@ body.dark-mode .app-header.island-mode .dropdown-menu {
 
 .user-avatar {
     border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Dropdown */
@@ -706,8 +711,11 @@ label {
 
 /* ── Main Layout ─────────────────────────── */
 .main-content {
-    padding: var(--sp-8) var(--sp-6) calc(var(--sp-8) + 80px + env(safe-area-inset-bottom, 0px));
-    min-height: calc(100vh - var(--header-height) - env(safe-area-inset-top, 0px));
+    padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 0.5rem);
+    padding-left: var(--sp-6);
+    padding-right: var(--sp-6);
+    padding-bottom: calc(var(--sp-8) + 80px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
 }
 
 .container {
@@ -3090,8 +3098,8 @@ body.dark-mode .typing-indicator {
 /* ── Location Warning Banner ────────────────── */
 .location-alert-banner {
     display: none;
-    position: sticky;
-    top: var(--header-height);
+    position: fixed;
+    top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
     left: 0;
     right: 0;
     z-index: 1001;
