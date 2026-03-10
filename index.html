@@ -43,7 +43,8 @@
                     <div class="wave-slideshow">
                         <img src="PANTUKAN/fire.jpg" alt="" class="wave-slide active">
                         <img src="PANTUKAN/firestation.jpg" alt="" class="wave-slide">
-                        <img src="PANTUKAN/gov.jpg" alt="" class="wave-slide">
+                        <img src="PANTUKAN/image copy 3.png" alt="" class="wave-slide">
+                        <img src="PANTUKAN/image copy 4.png" alt="" class="wave-slide">
                     </div>
 
                     <!-- Decorative sparkles -->
@@ -109,7 +110,8 @@
                     <div class="wave-slideshow">
                         <img src="PANTUKAN/fire.jpg" alt="" class="wave-slide active">
                         <img src="PANTUKAN/firestation.jpg" alt="" class="wave-slide">
-                        <img src="PANTUKAN/gov.jpg" alt="" class="wave-slide">
+                        <img src="PANTUKAN/image copy 3.png" alt="" class="wave-slide">
+                        <img src="PANTUKAN/image copy 4.png" alt="" class="wave-slide">
                     </div>
 
                     <div class="sparkle"></div>
@@ -456,11 +458,17 @@
             slideshows.forEach(show => {
                 const slides = show.querySelectorAll('.wave-slide');
                 if (!slides.length) return;
+
                 slides[currentSlide].classList.remove('active');
                 const next = (currentSlide + 1) % slides.length;
                 slides[next].classList.add('active');
             });
-            currentSlide = (currentSlide + 1) % 3;
+
+            // Increment currentSlide and wrap around based on the first slideshow's length
+            const firstSlideshow = slideshows[0].querySelectorAll('.wave-slide');
+            if (firstSlideshow.length) {
+                currentSlide = (currentSlide + 1) % firstSlideshow.length;
+            }
         }
 
         setInterval(advanceSlides, 3500);   // change every 3.5s

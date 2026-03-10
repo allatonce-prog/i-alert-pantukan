@@ -121,8 +121,29 @@ body {
 }
 
 .wave-slide.active {
-    opacity: 0.45;
-    /* ~50% faded over the red */
+    opacity: 0.65;
+    /* Slightly higher opacity for icons */
+}
+
+.wave-slide.logo-slide {
+    object-fit: contain;
+    padding: 35px;
+    background: white;
+    border-radius: 50%;
+    width: 200px;
+    height: 200px;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.25));
+    border: 4px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Ensure centering works for absolute positioned slides */
+.wave-slideshow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* SVG wave at the bottom of the coral area */
