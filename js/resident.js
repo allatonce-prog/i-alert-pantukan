@@ -1504,20 +1504,27 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
 
 // ── Bottom Sheet Swipe-to-Dismiss ──────────────────
 (function initBottomSheetGestures() {
-    let startY = 0;
-    let currentY = 0;
-    let isDragging = false;
-
     const modals = document.querySelectorAll('.modal');
 
     modals.forEach(modal => {
         const content = modal.querySelector('.modal-content');
         if (!content) return;
 
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+
         content.addEventListener('touchstart', (e) => {
-            // Only allow swipe from the top or grabber area, or if at the top of scroll
-            if (content.scrollTop <= 0) {
+            // If we're clicking an interactive element like textarea or input, skip swipe-to-dismiss
+            const t = e.target;
+            const isInteractive = t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.closest('button') || t.closest('.leaflet-container') || t.closest('.btn');
+
+            // Still allow the grabber to swipe regardless of target
+            const isGrabber = t.classList.contains('modal-grabber');
+
+            if (content.scrollTop <= 0 && (!isInteractive || isGrabber)) {
                 startY = e.touches[0].clientY;
+                currentY = startY; // Reset currentY to startY to avoid delta jitter on taps
                 isDragging = true;
                 content.style.transition = 'none';
             }
@@ -1530,8 +1537,11 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
             const deltaY = currentY - startY;
 
             if (deltaY > 0) {
-                e.preventDefault();
+                // If the user starts swiping down, we can prevent default to avoid double-scrolling
+                // and show the transform.
+                if (e.cancelable) e.preventDefault();
                 content.style.transform = `translateY(${deltaY}px)`;
+
                 // Dim overlay as we swipe down
                 const opacity = 1 - (deltaY / window.innerHeight);
                 modal.style.backgroundColor = `rgba(15, 23, 42, ${0.45 * opacity})`;
@@ -1551,9 +1561,13 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
                 if (closeBtn) {
                     closeBtn.click();
                 } else {
-                    // Fallback dismissal
                     modal.classList.remove('active');
+                    // Reset status if necessary
+                    if (modal.id === 'emergencyModal') {
+                        modal.dataset.type = '';
+                    }
                 }
+
                 // Reset styles after animation
                 setTimeout(() => {
                     content.style.transform = '';
