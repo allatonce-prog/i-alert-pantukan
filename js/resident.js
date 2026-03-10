@@ -678,6 +678,11 @@ async function findNearbyEstablishments(lat, lng) {
             const placeName = revData.name || addr.suburb || addr.village || addr.neighbourhood || "Incident Site";
             if (locationNameEl) locationNameEl.textContent = `Pinned: ${placeName}`;
             if (addressEl) addressEl.textContent = revData.display_name;
+
+            // Store address for watermark/report
+            if (currentLocation && currentLocation.lat === lat && currentLocation.lng === lng) {
+                currentLocation.address = revData.display_name;
+            }
         }
 
         // 4. Cache and Render
@@ -774,16 +779,38 @@ let stream = null;
 let currentFacingMode = 'environment'; // Default to back camera
 
 // Set Image Helper
-function setImage(file) {
-    selectedImageFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        imagePreview.src = e.target.result;
-        imagePreviewContainer.style.display = 'block';
-        cameraInterface.style.display = 'none';
-        stopCamera();
-    };
-    reader.readAsDataURL(file);
+async function setImage(file) {
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImg = document.getElementById('imagePreview');
+    const cameraInterface = document.getElementById('cameraInterface');
+
+    // Show a small processing indicator if possible, or just start
+    try {
+        // Apply watermark and compress immediately for preview
+        const watermarkedFile = await compressImage(file, 1024, 0.85, currentLocation);
+        selectedImageFile = watermarkedFile;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+            cameraInterface.style.display = 'none';
+            stopCamera();
+        };
+        reader.readAsDataURL(watermarkedFile);
+    } catch (err) {
+        console.error("Watermark preview failed:", err);
+        // Fallback to original if something goes wrong
+        selectedImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+            cameraInterface.style.display = 'none';
+            stopCamera();
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // Remove Image
@@ -909,7 +936,7 @@ async function generateSHA1(message) {
 }
 
 // Helper: Compress Image before upload
-async function compressImage(file, maxWidth = 1024, quality = 0.7) {
+async function compressImage(file, maxWidth = 1024, quality = 0.7, watermarkData = null) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -932,6 +959,77 @@ async function compressImage(file, maxWidth = 1024, quality = 0.7) {
 
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
+
+                // Apply Watermark if data provided
+                if (watermarkData) {
+                    // Responsive sizing - relative to image width
+                    const baseFontScale = Math.max(width, height) / 1000;
+                    let fontSize = Math.max(12, Math.floor(16 * baseFontScale));
+
+                    // Caps font size for very large images
+                    if (fontSize > 24) fontSize = 24;
+
+                    const dateStr = new Date().toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                    });
+
+                    let addressLine = 'Location Unavailable';
+                    if (watermarkData.address) {
+                        addressLine = watermarkData.address;
+                        // Initial cleaning: remove redundant country/region if long
+                        if (addressLine.length > 50) {
+                            addressLine = addressLine.replace(', Philippines', '').replace(', Davao Region', '');
+                        }
+                    } else if (watermarkData.lat && watermarkData.lng) {
+                        addressLine = `${watermarkData.lat.toFixed(5)}, ${watermarkData.lng.toFixed(5)}`;
+                    }
+
+                    // Adaptive text measurement loop
+                    ctx.font = `600 ${fontSize}px 'Inter', -apple-system, sans-serif`;
+                    const maxTextWidth = width * 0.88; // Leave 6% margin each side
+
+                    let watermarkText = `iAlert • ${dateStr} • ${addressLine}`;
+                    let metrics = ctx.measureText(watermarkText);
+
+                    // If text is too wide, trim address until it fits
+                    if (metrics.width > maxTextWidth && watermarkData.address) {
+                        let partialAddr = addressLine;
+                        while (ctx.measureText(`iAlert • ${dateStr} • ${partialAddr}...`).width > maxTextWidth && partialAddr.length > 10) {
+                            partialAddr = partialAddr.substring(0, partialAddr.length - 2);
+                        }
+                        addressLine = partialAddr + "...";
+                        watermarkText = `iAlert • ${dateStr} • ${addressLine}`;
+                        metrics = ctx.measureText(watermarkText);
+                    } else if (metrics.width > maxTextWidth) {
+                        // If coordinates are still too long (rare), shrink font
+                        fontSize = Math.floor(fontSize * (maxTextWidth / metrics.width));
+                        ctx.font = `600 ${fontSize}px 'Inter', -apple-system, sans-serif`;
+                        metrics = ctx.measureText(watermarkText);
+                    }
+
+                    const paddingH = fontSize;
+                    const paddingV = fontSize * 0.6;
+                    const boxWidth = metrics.width + (paddingH * 2);
+                    const boxHeight = fontSize + (paddingV * 2);
+
+                    // Style for the container - High readability glass box
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+
+                    // Center the box horizontally or keep bottom offset
+                    const x = (width - boxWidth) / 2;
+                    const y = height - boxHeight - (height * 0.04); // 4% from bottom
+
+                    const radius = Math.max(4, fontSize / 3);
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, boxWidth, boxHeight, radius);
+                    ctx.fill();
+
+                    // Render Final Text
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.textBaseline = 'middle';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(watermarkText, width / 2, y + (boxHeight / 2));
+                }
 
                 canvas.toBlob((blob) => {
                     resolve(new File([blob], file.name, {
@@ -1003,9 +1101,9 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
         // Compress and Upload image - Required
         submitBtn.innerHTML = '<div class="spinner"></div> <span>Optimizing image...</span>';
         try {
-            const compressedFile = await compressImage(selectedImageFile);
+            // Image is already watermarked and compressed in setImage()
             submitBtn.innerHTML = '<div class="spinner"></div> <span>Uploading...</span>';
-            imageUrl = await uploadImageToCloudinary(compressedFile);
+            imageUrl = await uploadImageToCloudinary(selectedImageFile);
         } catch (uploadError) {
             console.error('Image upload failed:', uploadError);
             showToast('Image upload failed. Please try again.', 'error');
