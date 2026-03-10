@@ -345,7 +345,18 @@
                                 </svg>
                                 <span>Use Camera</span>
                             </button>
+                            <button type="button" class="btn-camera secondary" id="galleryBtn"
+                                style="background: rgba(15, 23, 42, 0.05); color: var(--color-text-secondary);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    style="width: 16px; height: 16px;">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <span>Gallery</span>
+                            </button>
                         </div>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
 
                         <!-- Camera Interface (Hidden by default) -->
                         <div id="cameraInterface" style="display: none;">

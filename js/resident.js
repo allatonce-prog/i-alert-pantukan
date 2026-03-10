@@ -718,6 +718,8 @@ const cameraFeed = document.getElementById('cameraFeed');
 const captureBtn = document.getElementById('captureBtn');
 const switchCameraBtn = document.getElementById('switchCameraBtn');
 const closeCameraBtn = document.getElementById('closeCameraBtn');
+const galleryBtn = document.getElementById('galleryBtn');
+const imageInput = document.getElementById('imageInput');
 
 let selectedImageFile = null;
 let stream = null;
@@ -750,31 +752,55 @@ async function startCamera(facingMode = 'environment') {
             stopCamera();
         }
 
-        stream = await navigator.mediaDevices.getUserMedia({
+        const constraints = {
             video: {
-                facingMode: facingMode,
-                aspectRatio: { ideal: 0.75 } // Prefer portrait 3:4 for vertical mobile use
+                facingMode: { ideal: facingMode },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                aspectRatio: { ideal: 0.75 }
             },
             audio: false
-        });
+        };
 
-        cameraFeed.srcObject = stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (firstError) {
+            console.warn("Ideal camera constraints failed, retrying with basic settings...", firstError);
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+        }
+
+        if (cameraFeed) {
+            cameraFeed.srcObject = stream;
+            cameraFeed.onloadedmetadata = () => {
+                cameraFeed.play().catch(e => console.error("Video play failed:", e));
+            };
+        }
+
         cameraInterface.style.display = 'block';
         imagePreviewContainer.style.display = 'none';
 
     } catch (error) {
         console.error('Camera error:', error);
-        showToast('Unable to access camera', 'error');
+        showToast('Unable to start camera. Try using "Gallery" instead.', 'warning');
+        // Fail-safe: trigger gallery if camera is blocked/crashed
+        if (galleryBtn) galleryBtn.click();
     }
 }
 
 // Stop Camera
 function stopCamera() {
     if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+            track.stop();
+            console.log(`[Camera] Stopped track: ${track.label}`);
+        });
         stream = null;
     }
-    cameraInterface.style.display = 'none';
+    if (cameraFeed) cameraFeed.srcObject = null;
+    if (cameraInterface) cameraInterface.style.display = 'none';
 }
 
 // Open Camera Button
@@ -790,6 +816,19 @@ switchCameraBtn.addEventListener('click', () => {
     currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
     startCamera(currentFacingMode);
 });
+
+// Gallery Fallback Listener
+if (galleryBtn && imageInput) {
+    galleryBtn.addEventListener('click', () => {
+        imageInput.click();
+    });
+
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setImage(e.target.files[0]);
+        }
+    });
+}
 
 // Capture Image
 captureBtn.addEventListener('click', () => {
@@ -862,9 +901,8 @@ async function uploadImageToCloudinary(file) {
     const { cloudName, apiKey, apiSecret } = CLOUDINARY_CONFIG;
     const timestamp = Math.round((new Date()).getTime() / 1000);
 
-    // Generate signature
-    // Parameters to sign: timestamp (sorted alphabetically)
-    const paramsToSign = `timestamp = ${timestamp}${apiSecret} `;
+    // Generate signature: Sort parameters alphabetically then append secret
+    const paramsToSign = `timestamp=${timestamp}${apiSecret}`;
     const signature = await generateSHA1(paramsToSign);
 
     const formData = new FormData();
