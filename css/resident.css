@@ -99,11 +99,17 @@ body {
     color: var(--color-text-primary);
     line-height: 1.6;
     min-height: 100vh;
-    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
     transition: background-color var(--transition-slow), color var(--transition-slow);
-    touch-action: pan-x pan-y;
-    /* Prevent double-tap zoom and pinch-zoom */
+}
+
+/* Prevent scroll when modal is active */
+body.modal-open {
+    overflow: hidden !important;
+    touch-action: none !important;
+    -ms-touch-action: none !important;
+    overscroll-behavior: none;
 }
 
 /* ── Aurora Mesh Background ──────────── */
@@ -1398,7 +1404,10 @@ body.dark-mode .section-header {
     justify-content: center;
     padding: 0;
     transition: all 0.3s ease-in-out;
-    touch-action: manipulation;
+    touch-action: none;
+    /* Block all pass-through touch events */
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 @media (min-width: 640px) {
@@ -1425,6 +1434,9 @@ body.dark-mode .section-header {
     border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     animation: sheetUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    touch-action: pan-y;
+    /* Allow only vertical panning for swipe-to-dismiss */
+    overscroll-behavior: contain;
 }
 
 @media (min-width: 640px) {

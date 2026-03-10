@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#DC2626">
 
     <title>Admin Dashboard - iAlert Pantukan</title>
@@ -20,6 +21,10 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/admin.css">
+
+    <!-- Report Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -340,6 +345,62 @@
                     <div class="chart-wrapper">
                         <canvas id="distributionChart"></canvas>
                     </div>
+                </div>
+            </div>
+
+            <!-- Generate Report Section -->
+            <div class="chart-box" style="margin-top: var(--spacing-lg);">
+                <div class="chart-header">
+                    <h3>Generate System Report</h3>
+                    <p>Export emergency data for documentation and analysis</p>
+                </div>
+                <div class="export-controls"
+                    style="display: flex; gap: var(--spacing-md); flex-wrap: wrap; align-items: flex-end; padding: var(--spacing-md); background: var(--color-bg-tertiary); border-radius: var(--border-radius-md); margin-top: var(--spacing-md);">
+                    <div class="control-group">
+                        <label
+                            style="display: block; font-size: var(--font-size-xs); font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px;">Time
+                            Period</label>
+                        <select id="exportPeriod" class="filter-select" style="min-width: 160px;">
+                            <option value="weekly">This Week</option>
+                            <option value="monthly">This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+
+                    <div id="exportCustomRange" style="display: none; gap: var(--spacing-xs); align-items: center;">
+                        <div class="control-group">
+                            <label
+                                style="display: block; font-size: var(--font-size-xs); font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px;">Start
+                                Date</label>
+                            <input type="date" id="exportStartDate" class="date-input">
+                        </div>
+                        <div class="control-group">
+                            <label
+                                style="display: block; font-size: var(--font-size-xs); font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px;">End
+                                Date</label>
+                            <input type="date" id="exportEndDate" class="date-input">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label
+                            style="display: block; font-size: var(--font-size-xs); font-weight: 700; color: var(--color-text-secondary); margin-bottom: 4px;">Format</label>
+                        <select id="exportFormat" class="filter-select" style="min-width: 120px;">
+                            <option value="pdf">PDF Document</option>
+                            <option value="word">Word (DOCX)</option>
+                        </select>
+                    </div>
+
+                    <button id="btnGenerateReport" class="btn btn-primary"
+                        style="height: 42px; padding: 0 var(--spacing-lg); display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            style="width: 18px; height: 18px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        <span>Export Now</span>
+                    </button>
                 </div>
             </div>
         </div>

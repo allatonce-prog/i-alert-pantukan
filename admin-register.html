@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#DC2626">
 
     <title>Admin Registration - iAlert Pantukan</title>
@@ -104,9 +105,20 @@
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
-                        Password
+                        Admin Password
                     </label>
                     <input type="password" id="adminPassword" placeholder="Create a secure password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminToken">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.5-2.5" />
+                        </svg>
+                        Department Access Token
+                    </label>
+                    <input type="password" id="adminToken" placeholder="Enter security token" required>
                 </div>
 
 

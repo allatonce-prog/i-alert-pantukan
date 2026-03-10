@@ -782,14 +782,12 @@ window.updateReportStatus = async function (reportId, newStatus) {
 // Close Report Modal
 document.getElementById('closeReportModal').addEventListener('click', () => {
     document.getElementById('reportModal').classList.remove('active');
-    stopResponderGPS(); // stop broadcasting if modal dismissed
 });
 
 // Close Report Modal on Backdrop Click
 document.getElementById('reportModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'reportModal') {
         document.getElementById('reportModal').classList.remove('active');
-        stopResponderGPS();
     }
 });
 
@@ -1394,3 +1392,247 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', () => {
     viewerContent.addEventListener('touchmove', handleMove, { passive: true });
     viewerContent.addEventListener('touchend', handleEnd);
 })();
+
+/**
+ * Report Generation & Export Logic
+ */
+
+// Toggle Custom Range Visibility
+document.getElementById('exportPeriod')?.addEventListener('change', (e) => {
+    const customRange = document.getElementById('exportCustomRange');
+    if (customRange) {
+        customRange.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+    }
+});
+
+// Main Export Handler
+document.getElementById('btnGenerateReport')?.addEventListener('click', async () => {
+    const period = document.getElementById('exportPeriod').value;
+    const format = document.getElementById('exportFormat').value;
+    const btn = document.getElementById('btnGenerateReport');
+
+    // 1. Determine Date Range
+    let startDate, endDate;
+    const now = new Date();
+
+    if (period === 'weekly') {
+        startDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        endDate = now;
+    } else if (period === 'monthly') {
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        endDate = now;
+    } else {
+        const startVal = document.getElementById('exportStartDate').value;
+        const endVal = document.getElementById('exportEndDate').value;
+        if (!startVal || !endVal) {
+            showToast('Please select both start and end dates', 'warning');
+            return;
+        }
+        startDate = new Date(startVal);
+        endDate = new Date(endVal);
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            showToast('Invalid date selection', 'error');
+            return;
+        }
+        endDate.setHours(23, 59, 59);
+    }
+
+    // Validation: Start before end
+    if (startDate > endDate) {
+        showToast('Start date must be before end date', 'warning');
+        return;
+    }
+
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span> Processing...';
+
+    try {
+        // 2. Fetch Data (Client-side filtering to avoid complex index requirements)
+        const snapshot = await db.collection('emergencyReports')
+            .where('type', 'in', [adminDepartment, 'other'])
+            .get();
+
+        const data = [];
+        snapshot.forEach(doc => {
+            const docData = doc.data();
+            if (docData.createdAt) {
+                const reportDate = docData.createdAt.toDate();
+                if (reportDate >= startDate && reportDate <= endDate) {
+                    data.push({ id: doc.id, ...docData });
+                }
+            }
+        });
+
+        // Sort by date descending
+        data.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+
+        if (data.length === 0) {
+            showToast('No reports found for the selected range', 'info');
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            return;
+        }
+
+        // 3. Format & Download
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `iAlert_Report_${period}_${timestamp}`;
+
+        if (format === 'pdf') {
+            await generatePDF(data, filename, startDate, endDate);
+        } else {
+            await generateWord(data, filename, startDate, endDate);
+        }
+
+        showToast('Report generated successfully', 'success');
+    } catch (error) {
+        console.error('Export Error:', error);
+        showToast('Failed to generate report', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+});
+
+async function generatePDF(reports, filename, start, end) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Header Styling
+    doc.setFillColor(220, 38, 38); // Header Color
+    doc.rect(0, 0, 210, 40, 'F');
+
+    doc.setFontSize(24);
+    doc.setTextColor(255, 255, 255);
+    doc.text('iAlert Pantukan', 14, 20);
+
+    doc.setFontSize(14);
+    doc.text('Emergency System - Admin Report', 14, 30);
+
+    // Report Info
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Department: ${EMERGENCY_TYPES[adminDepartment]?.label || 'General'}`, 14, 50);
+    doc.text(`Period: ${start.toLocaleDateString()} to ${end.toLocaleDateString()}`, 14, 56);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 62);
+    doc.text(`Total Records: ${reports.length}`, 14, 68);
+
+    // Summary Section
+    const resolvedCount = reports.filter(r => r.status === 'resolved').length;
+    const rate = Math.round((resolvedCount / reports.length) * 100);
+
+    doc.autoTable({
+        startY: 75,
+        head: [['Statistical Summary', 'Value']],
+        body: [
+            ['Total Emergency Reports', reports.length.toString()],
+            ['Successfully Resolved', resolvedCount.toString()],
+            ['Resolution Rate', rate + '%'],
+            ['Ongoing/Pending', (reports.length - resolvedCount).toString()]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [220, 38, 38], textColor: 255 }
+    });
+
+    // Main Data Table
+    const tableData = reports.map(r => [
+        r.createdAt?.toDate().toLocaleString() || 'N/A',
+        EMERGENCY_TYPES[r.type]?.label || r.type,
+        r.address || 'N/A',
+        (r.status || 'pending').toUpperCase(),
+        r.description || 'No description provided'
+    ]);
+
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY + 15,
+        head: [['Date/Time', 'Category', 'Barangay', 'Status', 'Description']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [15, 23, 42], textColor: 255 },
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: {
+            0: { cellWidth: 35 },
+            1: { cellWidth: 25 },
+            2: { cellWidth: 30 },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 'auto' }
+        }
+    });
+
+    doc.save(`${filename}.pdf`);
+}
+
+async function generateWord(reports, filename, start, end) {
+    const resolved = reports.filter(r => r.status === 'resolved').length;
+    const rate = Math.round((resolved / reports.length) * 100);
+
+    let tableRows = '';
+    reports.forEach(r => {
+        tableRows += `
+            <tr>
+                <td style="border: 1px solid #000; padding: 5px;">${r.createdAt?.toDate().toLocaleString() || 'N/A'}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${EMERGENCY_TYPES[r.type]?.label || r.type}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${r.address || 'N/A'}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${(r.status || 'pending').toUpperCase()}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${r.description || ''}</td>
+            </tr>
+        `;
+    });
+
+    const content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; }
+            .header { background-color: #DC2626; color: white; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { background-color: #0F172A; color: white; border: 1px solid #000; padding: 8px; text-align: left; }
+        </style></head>
+        <body>
+            <div class="header">
+                <h1>iAlert Pantukan</h1>
+                <p>Emergency System - Admin Report</p>
+            </div>
+            
+            <div style="padding: 20px;">
+                <p><b>Department:</b> ${EMERGENCY_TYPES[adminDepartment]?.label || 'General'}</p>
+                <p><b>Period:</b> ${start.toLocaleDateString()} to ${end.toLocaleDateString()}</p>
+                <p><b>Generated on:</b> ${new Date().toLocaleString()}</p>
+                
+                <h2>Summary Statistics</h2>
+                <ul>
+                    <li>Total Reports: ${reports.length}</li>
+                    <li>Resolved: ${resolved}</li>
+                    <li>Resolution Rate: ${rate}%</li>
+                </ul>
+                
+                <h2>Detailed Report Records</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Category</th>
+                            <th>Barangay</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            </div>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob(['\ufeff', content], {
+        type: 'application/msword'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}

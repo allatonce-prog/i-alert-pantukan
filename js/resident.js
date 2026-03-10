@@ -154,11 +154,13 @@ profileLink.addEventListener('click', (e) => {
     }
 
     profileModal.classList.add('active');
+    document.body.classList.add('modal-open');
 });
 
 // Close Profile Modal
 function closeProfileModal() {
     profileModal.classList.remove('active');
+    document.body.classList.remove('modal-open');
     profileForm.reset();
 }
 
@@ -225,11 +227,13 @@ settingsLink.addEventListener('click', (e) => {
     e.preventDefault();
     userDropdown.classList.remove('active');
     settingsModal.classList.add('active');
+    document.body.classList.add('modal-open');
 });
 
 // Close Settings
 function closeSettings() {
     settingsModal.classList.remove('active');
+    document.body.classList.remove('modal-open');
 }
 
 closeSettingsModalBtn.addEventListener('click', closeSettings);
@@ -316,6 +320,7 @@ function openEmergencyModal() {
     }, 100);
 
     modal.classList.add('active');
+    document.body.classList.add('modal-open');
 }
 
 // Expose to window for chatbot access
@@ -327,6 +332,7 @@ document.getElementById('closeModal')?.addEventListener('click', closeModal);
 document.getElementById('cancelBtn')?.addEventListener('click', closeModal);
 function closeReportDetailsModal() {
     document.getElementById('reportDetailsModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
     // Clean up live responder resources
     if (_responderUnsubscribe) { _responderUnsubscribe(); _responderUnsubscribe = null; }
     if (_responderMap) { _responderMap.remove(); _responderMap = null; }
@@ -337,6 +343,7 @@ document.getElementById('closeDetailsBtn')?.addEventListener('click', closeRepor
 function closeModal() {
     const modal = document.getElementById('emergencyModal');
     modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
     modal.dataset.type = ''; // Reset type
     if (map) {
         map.remove();
@@ -1160,6 +1167,7 @@ let _responderMap = null;          // Leaflet map instance for responder
 window.viewReportDetails = function (report) {
     const reportId = report.id || report.reportId;
     const modal = document.getElementById('reportDetailsModal');
+    document.body.classList.add('modal-open');
     const typeLabel = EMERGENCY_TYPES[report.type]?.label || 'Emergency';
     const typeIcon = EMERGENCY_TYPES[report.type]?.icon || '⚠️';
 
@@ -1515,6 +1523,12 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
         let isDragging = false;
 
         content.addEventListener('touchstart', (e) => {
+            // Ignore if more than one finger is touching (e.g. pinch)
+            if (e.touches.length > 1) {
+                isDragging = false;
+                return;
+            }
+
             // If we're clicking an interactive element like textarea or input, skip swipe-to-dismiss
             const t = e.target;
             const isInteractive = t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.closest('button') || t.closest('.leaflet-container') || t.closest('.btn');
@@ -1531,7 +1545,10 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
         }, { passive: true });
 
         content.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
+            if (!isDragging || e.touches.length > 1) {
+                isDragging = false;
+                return;
+            }
 
             currentY = e.touches[0].clientY;
             const deltaY = currentY - startY;
@@ -1562,6 +1579,7 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
                     closeBtn.click();
                 } else {
                     modal.classList.remove('active');
+                    document.body.classList.remove('modal-open');
                     // Reset status if necessary
                     if (modal.id === 'emergencyModal') {
                         modal.dataset.type = '';
