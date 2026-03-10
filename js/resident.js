@@ -75,22 +75,11 @@ async function checkAuth() {
             // Update UI
             document.getElementById('userName').textContent = `Welcome, ${userData.name}`;
 
-            // Setup Dynamic Greeting
+            // Setup Fixed Greeting
             const firstName = userData.name.split(' ')[0];
-            const greetings = [
-                `Hi, ${firstName}! We're here to keep you safe.`,
-                `Welcome back, ${firstName}. Stay safe today.`,
-                `Hello, ${firstName}! We're always here for you.`,
-                `Stay safe, ${firstName}. Help is one tap away.`,
-                `Welcome back, ${firstName}! Stay safe out there.`,
-                `Good day, ${firstName}! Your safety matters.`
-            ];
-
-            // Pick a random greeting and assign it
-            const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
             const greetingEl = document.getElementById('dynamicGreeting');
             if (greetingEl) {
-                greetingEl.textContent = randomGreeting;
+                greetingEl.textContent = `Welcome, ${firstName}`;
             }
 
             // Load user's reports
