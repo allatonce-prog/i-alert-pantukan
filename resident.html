@@ -784,43 +784,11 @@
             });
         });
 
-        // ══ HIDE ON SCROLL DOWN / SHOW ON UP ═══════
+        // ══ BOTTOM NAV PERMANENTLY VISIBLE ═══════
         const bottomNav = document.getElementById('bottomNav');
-        let lastScrollY = window.scrollY;
-        let scrollDelta = 0;
-        let ticking = false;
-
-        function showNav() {
+        if (bottomNav) {
             bottomNav.classList.remove('nav-hidden');
         }
-
-        function hideNav() {
-            bottomNav.classList.add('nav-hidden');
-        }
-
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const y = window.scrollY;
-                    scrollDelta += y - lastScrollY;
-
-                    if (y <= 10) {
-                        showNav();
-                        scrollDelta = 0;
-                    } else if (scrollDelta > 20) {
-                        hideNav();
-                        scrollDelta = 0;
-                    } else if (scrollDelta < -12) {
-                        showNav();
-                        scrollDelta = 0;
-                    }
-
-                    lastScrollY = y;
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        }, { passive: true });
 
         // ══ MAP TAB — Leaflet + GPS ═════════════════
         function initNavMap() {
