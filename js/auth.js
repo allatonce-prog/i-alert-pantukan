@@ -263,7 +263,9 @@ if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const name = document.getElementById('registerName').value;
+        const firstName = document.getElementById('registerFirstname').value;
+        const lastName = document.getElementById('registerLastname').value;
+        const birthday = document.getElementById('registerBirthday').value;
         const email = document.getElementById('registerEmail').value.trim();
         const phone = document.getElementById('registerPhone').value;
         const barangay = document.getElementById('registerAddress').value;
@@ -290,7 +292,10 @@ if (registerForm) {
 
             const userData = {
                 id: authUser.uid,
-                name: name,
+                firstName: firstName,
+                lastName: lastName,
+                birthday: birthday,
+                name: `${firstName} ${lastName}`,
                 email: email,
                 phone: phone,
                 address: fullAddress,
