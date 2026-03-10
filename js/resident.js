@@ -145,7 +145,9 @@ profileLink.addEventListener('click', (e) => {
 
     // Fill current data
     if (currentUser) {
-        document.getElementById('profileName').value = currentUser.name || '';
+        document.getElementById('profileFirstName').value = currentUser.firstName || '';
+        document.getElementById('profileLastName').value = currentUser.lastName || '';
+        document.getElementById('profileBirthday').value = currentUser.birthday || '';
         document.getElementById('profilePhone').value = currentUser.phone || '';
         document.getElementById('profileAddress').value = currentUser.address || '';
         document.getElementById('profilePassword').value = ''; // Clear password field
@@ -173,7 +175,10 @@ profileForm.addEventListener('submit', async (e) => {
     saveBtn.innerHTML = '<div class="spinner"></div> Saving...';
 
     const updates = {
-        name: document.getElementById('profileName').value,
+        firstName: document.getElementById('profileFirstName').value,
+        lastName: document.getElementById('profileLastName').value,
+        birthday: document.getElementById('profileBirthday').value,
+        name: `${document.getElementById('profileFirstName').value} ${document.getElementById('profileLastName').value}`,
         phone: document.getElementById('profilePhone').value,
         address: document.getElementById('profileAddress').value
     };
