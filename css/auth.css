@@ -768,6 +768,68 @@ body {
     }
 }
 
+/* ── Login Success Content ───────────────── */
+.login-success-content {
+    text-align: center;
+    animation: successPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes successPop {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.success-icon-lottie {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 24px;
+}
+
+.checkmark-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.checkmark-circle-l {
+    stroke: #22c55e;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check-l {
+    stroke: #22c55e;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-miterlimit: 10;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+}
+
+.success-title {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.success-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
 /* ── Toast ─────────────────────────────────── */
 .toast {
     position: fixed;
@@ -813,13 +875,23 @@ body {
 
 /* ── Spinner ────────────────────────────────── */
 .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2.5px solid rgba(255, 255, 255, .4);
-    border-top-color: white;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-left-color: #fff;
     border-radius: 50%;
-    animation: spin .7s linear infinite;
+    animation: button-spin 0.8s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
     display: inline-block;
+}
+
+@keyframes button-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes spin {
