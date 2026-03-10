@@ -277,8 +277,11 @@ a:hover {
 
 /* ── Header ─────────────────────────────── */
 .app-header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     z-index: 100;
     height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
     padding-top: env(safe-area-inset-top, 0px);
@@ -286,8 +289,10 @@ a:hover {
     backdrop-filter: blur(20px) saturate(200%);
     -webkit-backdrop-filter: blur(20px) saturate(200%);
     border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    transition: all var(--transition-slow);
+    transition: all var(--transition-spring);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    transform: none;
+    border-radius: 0;
 }
 
 body.dark-mode .app-header {
@@ -297,7 +302,6 @@ body.dark-mode .app-header {
 
 /* Dynamic Island Morphing */
 .app-header.island-mode {
-    position: fixed;
     top: calc(12px + env(safe-area-inset-top, 0px));
     left: 50%;
     transform: translateX(-50%);
@@ -313,7 +317,6 @@ body.dark-mode .app-header {
     padding: 0 6px;
     margin: 0;
     overflow: visible;
-    /* Changed from hidden to allow dropdown */
 }
 
 body.dark-mode .app-header.island-mode {
