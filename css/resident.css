@@ -711,7 +711,7 @@ label {
 
 /* ── Main Layout ─────────────────────────── */
 .main-content {
-    padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 0.5rem);
+    padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 1.5rem);
     padding-left: var(--sp-6);
     padding-right: var(--sp-6);
     padding-bottom: calc(var(--sp-8) + 80px + env(safe-area-inset-bottom, 0px));
@@ -2399,7 +2399,7 @@ body.dark-mode .nav-btn.active {
     display: flex;
     align-items: center;
     gap: var(--sp-3);
-    padding: var(--sp-6) var(--sp-6) var(--sp-4);
+    padding: var(--sp-12) var(--sp-6) var(--sp-4);
 }
 
 .notif-header h2 {
@@ -2591,9 +2591,9 @@ body.dark-mode .nav-btn.active {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--sp-5) var(--sp-6) var(--sp-4);
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--border-color);
+    padding: var(--sp-12) var(--sp-6) var(--sp-6);
+    background: transparent;
+    border-bottom: none;
     flex-shrink: 0;
 }
 
