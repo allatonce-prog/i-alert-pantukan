@@ -402,52 +402,71 @@ function requestBackgroundLocation(isUserTriggered = false) {
         btn.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:5px;"></div> Trying...';
     }
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            currentLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-                accuracy: position.coords.accuracy
-            };
-            console.log('Background GPS location acquired successfully.');
-            if (banner) banner.classList.remove('active');
+    const geoOptions = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    };
 
-            if (isUserTriggered) {
-                showToast('GPS Location enabled!', 'success');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = 'Enable GPS';
-                }
+    const success = (position) => {
+        currentLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy
+        };
+        console.log('Background GPS location acquired successfully.');
+        if (banner) banner.classList.remove('active');
+
+        if (isUserTriggered) {
+            showToast('GPS Location enabled!', 'success');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Enable GPS';
             }
-        },
-        (error) => {
-            console.warn('Background GPS location failed or denied:', error);
-            // On failure or denial, show the banner
-            if (banner) banner.classList.add('active');
+        }
+    };
 
-            if (isUserTriggered) {
-                let msg = 'Unable to get location';
-                if (error.code === 1) msg = 'Location access denied. Please enable it in your phone settings.';
-                else if (error.code === 3) msg = 'Location request timed out. Try again in a more open area.';
+    const error = (err) => {
+        console.warn('Background GPS location failed or denied:', err);
 
-                showToast(msg, 'error');
+        // Android Fallback: If high accuracy fails, try low accuracy
+        if (err.code !== 1 && geoOptions.enableHighAccuracy) {
+            console.log('Retrying location with low accuracy...');
+            geoOptions.enableHighAccuracy = false;
+            navigator.geolocation.getCurrentPosition(success, error, geoOptions);
+            return;
+        }
 
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = 'Enable GPS';
-                }
+        if (banner) banner.classList.add('active');
 
-                // Check for in-app browsers (Messenger/Facebook) which often block GPS
-                const ua = navigator.userAgent || navigator.vendor || window.opera;
-                if ((ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1) || (ua.indexOf('Messenger') > -1)) {
-                    setTimeout(() => {
-                        showToast('Tip: If GPS still fails, tap the three dots (⋮) and chose "Open in Chrome/System Browser"', 'info');
-                    }, 3000);
-                }
+        if (isUserTriggered) {
+            let msg = 'Unable to get location';
+            if (err.code === 1) {
+                msg = 'Location access denied. Please allow location in your phone & browser settings.';
+            } else if (err.code === 3) {
+                msg = 'Location request timed out. Try again in a more open area.';
             }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+
+            showToast(msg, 'error');
+
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Enable GPS';
+            }
+
+            // Check for in-app browsers (Messenger/Facebook) which often block GPS
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isInApp = (ua.indexOf('FBAN') > -1) || (ua.indexOf('FBAV') > -1) || (ua.indexOf('Messenger') > -1) || (ua.indexOf('Instagram') > -1);
+
+            if (isInApp) {
+                setTimeout(() => {
+                    showToast('Messenger Tip: Tap (⋮) and choose "Open in Browser" for better GPS reliability.', 'info', 8000);
+                }, 2000);
+            }
+        }
+    };
+
+    navigator.geolocation.getCurrentPosition(success, error, geoOptions);
 }
 
 // Global listener for "Enable GPS" button
@@ -466,43 +485,65 @@ function triggerGPS() {
     const btn = document.getElementById('btnLiveLocation');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<div class="spinner"></div> <span>Getting GPS...</span>';
+        btn.innerHTML = '<div class="spinner"></div> <span>Acquiring...</span>';
     }
 
     const banner = document.getElementById('locationAlert');
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const { latitude, longitude, accuracy } = position.coords;
-            setIncidentLocation(latitude, longitude, accuracy, false);
+    const geoOptions = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+    };
 
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> <span>Get Live GPS</span>';
-            }
+    const success = (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        setIncidentLocation(latitude, longitude, accuracy, false);
 
-            if (banner) banner.classList.remove('active');
-            showToast('Live location acquired', 'success');
-        },
-        (error) => {
-            console.error('Geolocation error:', error);
-            let errorMessage = 'Unable to get your location';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> <span>Get Live GPS</span>';
+        }
 
-            if (error.code === 1) errorMessage = 'Location permission denied';
-            else if (error.code === 2) errorMessage = 'Location unavailable';
-            else if (error.code === 3) {
-                errorMessage = 'Location request timed out. Please try Manual Pin mode.';
-            }
+        if (banner) banner.classList.remove('active');
+        showToast('Live location acquired', 'success');
+    };
 
-            showToast(errorMessage, 'error', 6000);
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> <span>Get Live GPS</span>';
-            }
-            if (banner) banner.classList.add('active');
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    const error = (err) => {
+        console.error('Geolocation error:', err);
+
+        // Android Fallback: If high accuracy fails/timeouts, try low accuracy which is more reliable indoors/on some Androids
+        if (err.code !== 1 && geoOptions.enableHighAccuracy) {
+            console.log('Retrying GPS with basic settings...');
+            geoOptions.enableHighAccuracy = false;
+            geoOptions.timeout = 10000;
+            navigator.geolocation.getCurrentPosition(success, error, geoOptions);
+            return;
+        }
+
+        let errorMessage = 'Unable to get your location';
+        if (err.code === 1) errorMessage = 'Location permission denied. Please check your browser/phone settings.';
+        else if (err.code === 2) errorMessage = 'Location unavailable. Turn on your phone GPS.';
+        else if (err.code === 3) errorMessage = 'Location timed out. Please try Manual Pin mode.';
+
+        showToast(errorMessage, 'error', 6000);
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg> <span>Get Live GPS</span>';
+        }
+        if (banner) banner.classList.add('active');
+
+        // Guidance for In-App Browsers
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.includes('fb') || ua.includes('messenger') || ua.includes('instagram')) {
+            setTimeout(() => {
+                showToast('Messenger Tip: For 100% GPS accuracy, tap (⋮) and choose "Open in Browser".', 'info', 8000);
+            }, 3000);
+        }
+    };
+
+    navigator.geolocation.getCurrentPosition(success, error, geoOptions);
 }
 
 // ── Incident Location Logic ───────────────────

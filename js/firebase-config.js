@@ -19,16 +19,17 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Helper: Show toast notification
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', duration = 3500) {
     const toast = document.getElementById('toast');
     if (!toast) return;
 
     toast.textContent = message;
     toast.className = `toast show ${type}`;
 
+    // Clear any existing timeouts if possible (skip for simplicity)
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, duration);
 }
 
 // Helper: Format timestamp
