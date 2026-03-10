@@ -786,6 +786,17 @@ async function setImage(file) {
 
     // Show a small processing indicator if possible, or just start
     try {
+        // Ensure we have an address for the watermark
+        if (currentLocation && !currentLocation.address) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentLocation.lat}&lon=${currentLocation.lng}&zoom=18`);
+                if (res.ok) {
+                    const data = await res.json();
+                    currentLocation.address = data.display_name;
+                }
+            } catch (e) { console.warn("Failed to get quick address for watermark", e); }
+        }
+
         // Apply watermark and compress immediately for preview
         const watermarkedFile = await compressImage(file, 1024, 0.85, currentLocation);
         selectedImageFile = watermarkedFile;
