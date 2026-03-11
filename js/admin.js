@@ -144,7 +144,9 @@ if (profileBtn) {
         if (currentAdmin) {
             document.getElementById('profileName').value = currentAdmin.name || '';
             document.getElementById('profileEmail').value = currentAdmin.email || '';
+            document.getElementById('profilePhone').value = currentAdmin.phone || '';
             document.getElementById('profileDepartment').value = currentAdmin.department || '';
+            document.getElementById('profileStation').value = currentAdmin.station || '';
             document.getElementById('profilePassword').value = ''; // Clear password field
         }
 
@@ -179,7 +181,9 @@ if (profileForm) {
         saveBtn.innerHTML = '<div class="spinner"></div> Saving...';
 
         const updates = {
-            name: document.getElementById('profileName').value
+            name: document.getElementById('profileName').value,
+            phone: document.getElementById('profilePhone').value,
+            station: document.getElementById('profileStation').value
         };
 
         const newPassword = document.getElementById('profilePassword').value;

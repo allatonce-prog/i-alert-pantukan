@@ -138,6 +138,7 @@ profileLink.addEventListener('click', (e) => {
         document.getElementById('profileLastName').value = currentUser.lastName || '';
         document.getElementById('profileBirthday').value = currentUser.birthday || '';
         document.getElementById('profilePhone').value = currentUser.phone || '';
+        document.getElementById('profileEmail').value = currentUser.email || '';
 
         // Handle splitting address (Street, Barangay)
         const fullAddr = currentUser.address || '';
