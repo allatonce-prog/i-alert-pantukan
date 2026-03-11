@@ -43,7 +43,7 @@
         <div class="header-content">
             <div class="header-left">
                 <div class="logo-small">
-                    <img src="assets/logo/logo.jpg" alt="Logo">
+                    <img src="assets/logo/pantukan.jpg" alt="Pantukan Logo">
                 </div>
                 <img src="assets/logo/ialert.png" alt="iAlert Logo" class="header-logo-img">
                 <span id="userName" style="display:none;"></span>
@@ -765,6 +765,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1058,11 +1059,32 @@
             rescue: 'Search & Rescue', traffic: 'Road Accident', other: 'Other Emergency'
         };
         const notifStore = {};
+        const alertSound = new Audio('sound/emergency-alert.mp3');
+        let isAudioEnabled = false;
+
+        // Unlock audio on interaction
+        const unlockResidentAudio = () => {
+            if (isAudioEnabled) return;
+            alertSound.volume = 0;
+            alertSound.play().then(() => {
+                alertSound.pause();
+                alertSound.currentTime = 0;
+                alertSound.volume = 1;
+                isAudioEnabled = true;
+            }).catch(() => {});
+        };
+        document.addEventListener('click', unlockResidentAudio, { once: true });
+        document.addEventListener('touchstart', unlockResidentAudio, { once: true });
 
         let initialLoad = true;
 
         function startNotifListener(userId) {
             if (typeof db === 'undefined') return;
+
+            // Request FCM & Notification permissions
+            if (window.requestNotificationPermission) {
+                window.requestNotificationPermission(userId, 'USERS');
+            }
 
             // Show Skeletons on initial load
             if (initialLoad && typeof showSkeletons === 'function') {
@@ -1088,7 +1110,19 @@
                             if (!initialLoad && c.type === 'modified') {
                                 const newStatus = c.doc.data().status;
                                 if (window.showToast && newStatus) {
-                                    window.showToast(`Report status updated to: ${newStatus.toUpperCase()}`, 'success');
+                                    const msg = `Report status updated to: ${newStatus.toUpperCase()}`;
+                                    window.showToast(msg, 'success');
+                                    
+                                    // Play audio if backgrounded/active
+                                    if (isAudioEnabled) {
+                                        alertSound.currentTime = 0;
+                                        alertSound.play().catch(() => {});
+                                    }
+                                    
+                                    // Native Notification
+                                    if (document.visibilityState === 'hidden' && window.showNativeNotification) {
+                                        window.showNativeNotification('Emergency Update', msg);
+                                    }
                                 }
                             }
                         }
@@ -1221,6 +1255,9 @@
             </div>
         </div>
     </div>
+
+    <!-- PWA Install Helper -->
+    <script src="js/pwa-install.js"></script>
 
     <!-- Chatbot Logic -->
     <script src="js/chatbot.js"></script>

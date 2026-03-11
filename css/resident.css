@@ -442,6 +442,12 @@ body.dark-mode .app-header.island-mode .dropdown-menu {
     border-radius: inherit;
 }
 
+.header-logo-img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+}
+
 .header-left h2 {
     font-size: 1.25rem;
     font-weight: 800;

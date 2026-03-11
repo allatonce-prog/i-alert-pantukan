@@ -550,3 +550,135 @@ textarea::placeholder {
     font-weight: 600;
     pointer-events: none;
 }
+
+/* ── PWA Install Card ────────────────── */
+.pwa-install-card {
+    position: fixed;
+    bottom: 90px;
+    left: 16px;
+    right: 16px;
+    z-index: 99999;
+    background: rgba(30, 41, 59, 0.85); /* Slightly darker for better contrast */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+    max-width: 500px;
+    margin: 0 auto;
+    pointer-events: none;
+}
+
+.pwa-install-card.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.pwa-install-card.hidden {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .pwa-install-card {
+        bottom: 30px;
+        left: 30px;
+        right: auto;
+        width: 380px;
+    }
+}
+
+.pwa-install-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    position: relative;
+}
+
+.pwa-install-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.pwa-install-icon img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.pwa-install-text {
+    flex: 1;
+}
+
+.pwa-install-text h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.pwa-install-text p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+}
+
+.ios-share-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3Cpolyline points='16 6 12 2 8 6'/%3E%3Cline x1='12' y1='2' x2='12' y2='15'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+#pwa-install-btn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    white-space: nowrap;
+    height: auto;
+}
+
+.pwa-close-btn {
+    position: absolute;
+    top: -12px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+}
+
+.pwa-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}

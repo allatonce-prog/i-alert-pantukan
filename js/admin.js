@@ -89,6 +89,9 @@ async function checkAuth() {
             // Load dashboard
             loadDashboard();
             startRealtimeListener();
+
+            // Request permission for push notifications
+            requestNotificationPermission(user.id, 'ADMIN');
         } else {
             // User document doesn't exist (deleted?)
             localStorage.removeItem('currentUser');
@@ -1193,7 +1196,13 @@ function startRealtimeListener() {
                 if (change.type === 'added' && !initialLoad) {
                     const reportData = change.doc.data();
                     const emergency = EMERGENCY_TYPES[reportData.type];
-                    showToast(`🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`, 'error');
+                    const msg = `🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`;
+                    showToast(msg, 'error');
+                    
+                    // Show native notification if tab is in background
+                    if (document.visibilityState === 'hidden') {
+                        showNativeNotification('New Emergency Report!', msg);
+                    }
 
                     // Play emergency alert sound
                     try {
