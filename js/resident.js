@@ -138,7 +138,20 @@ profileLink.addEventListener('click', (e) => {
         document.getElementById('profileLastName').value = currentUser.lastName || '';
         document.getElementById('profileBirthday').value = currentUser.birthday || '';
         document.getElementById('profilePhone').value = currentUser.phone || '';
-        document.getElementById('profileAddress').value = currentUser.address || '';
+
+        // Handle splitting address (Street, Barangay)
+        const fullAddr = currentUser.address || '';
+        if (fullAddr.includes(',')) {
+            const parts = fullAddr.split(',');
+            const bar = parts.pop().trim();
+            const str = parts.join(',').trim();
+            document.getElementById('profileAddress').value = bar;
+            document.getElementById('profileStreet').value = str;
+        } else {
+            document.getElementById('profileAddress').value = fullAddr;
+            document.getElementById('profileStreet').value = '';
+        }
+
         document.getElementById('profilePassword').value = ''; // Clear password field
     }
 
@@ -171,7 +184,9 @@ profileForm.addEventListener('submit', async (e) => {
         birthday: document.getElementById('profileBirthday').value,
         name: `${document.getElementById('profileFirstName').value} ${document.getElementById('profileLastName').value}`,
         phone: document.getElementById('profilePhone').value,
-        address: document.getElementById('profileAddress').value
+        address: document.getElementById('profileStreet').value.trim() 
+            ? `${document.getElementById('profileStreet').value.trim()}, ${document.getElementById('profileAddress').value}`
+            : document.getElementById('profileAddress').value
     };
 
     const newPassword = document.getElementById('profilePassword').value;
