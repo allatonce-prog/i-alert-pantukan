@@ -1101,22 +1101,7 @@
             rescue: 'Search & Rescue', traffic: 'Road Accident', other: 'Other Emergency'
         };
         const notifStore = {};
-        const alertSound = new Audio('sound/emergency-alert.mp3');
-        let isAudioEnabled = false;
 
-        // Unlock audio on interaction
-        const unlockResidentAudio = () => {
-            if (isAudioEnabled) return;
-            alertSound.volume = 0;
-            alertSound.play().then(() => {
-                alertSound.pause();
-                alertSound.currentTime = 0;
-                alertSound.volume = 1;
-                isAudioEnabled = true;
-            }).catch(() => {});
-        };
-        document.addEventListener('click', unlockResidentAudio, { once: true });
-        document.addEventListener('touchstart', unlockResidentAudio, { once: true });
 
         let initialLoad = true;
 
@@ -1154,12 +1139,6 @@
                                 if (window.showToast && newStatus) {
                                     const msg = `Report status updated to: ${newStatus.toUpperCase()}`;
                                     window.showToast(msg, 'success');
-                                    
-                                    // Play audio if backgrounded/active
-                                    if (isAudioEnabled) {
-                                        alertSound.currentTime = 0;
-                                        alertSound.play().catch(() => {});
-                                    }
                                     
                                     // Native Notification
                                     if (document.visibilityState === 'hidden' && window.showNativeNotification) {
