@@ -112,6 +112,25 @@
 
         <!-- Alert Toast -->
         <div id="toast" class="toast"></div>
+
+        <!-- Page Transition and Success Overlay -->
+        <div id="pageTransition" class="page-transition-overlay">
+            <div class="transition-container" id="transitionContainer">
+                <div class="transition-loader"></div>
+                <div class="transition-text">Syncing</div>
+            </div>
+
+            <div class="login-success-content" id="loginSuccessContent" style="display: none;">
+                <div class="success-icon-lottie">
+                    <svg viewBox="0 0 52 52" class="checkmark-svg">
+                        <circle class="checkmark-circle-l" cx="26" cy="26" r="25" fill="none" />
+                        <path class="checkmark-check-l" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                    </svg>
+                </div>
+                <h2 class="success-title">Master Setup Complete</h2>
+                <p class="success-subtitle">Redirecting to Super Admin Panel...</p>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase -->

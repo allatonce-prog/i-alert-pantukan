@@ -41,6 +41,25 @@ function showSuccess() {
     }
 }
 
+// ── Success Animation Transition ────────────────
+function triggerSuccessTransition(targetUrl) {
+    const overlay = document.getElementById('pageTransition');
+    const container = document.getElementById('transitionContainer');
+    const success = document.getElementById('loginSuccessContent');
+
+    if (overlay && success) {
+        if (container) container.style.display = 'none';
+        success.style.display = 'block';
+        overlay.classList.add('active');
+
+        setTimeout(() => {
+            window.location.href = targetUrl;
+        }, 1800);
+    } else {
+        window.location.href = targetUrl;
+    }
+}
+
 // ── Navigation Listeners ─────────────────────
 const goToRegisterBtn = document.getElementById('goToRegisterBtn');
 if (goToRegisterBtn) {
@@ -210,18 +229,14 @@ if (loginForm) {
                     localStorage.removeItem('currentUser'); // Clear any old persistent session
                 }
 
-                showToast('Logon successful!', 'success');
+                showToast('Login successful!', 'success');
 
-                setTimeout(() => {
-                    const role = userData.role;
-                    if (role === 'super-admin') {
-                        window.location.href = 'super-admin.html';
-                    } else if (role === 'admin') {
-                        window.location.href = 'admin.html';
-                    } else {
-                        window.location.href = 'resident.html';
-                    }
-                }, 1000);
+                const role = userData.role;
+                let target = 'resident.html';
+                if (role === 'super-admin') target = 'super-admin.html';
+                else if (role === 'admin') target = 'admin.html';
+
+                triggerSuccessTransition(target);
             } else {
                 // profile missing in DB
                 throw new Error('Authenticated, but system profile not found.');
@@ -313,10 +328,7 @@ if (registerForm) {
             localStorage.setItem('currentUser', JSON.stringify(userData));
 
             showToast('Account created successfully!', 'success');
-
-            setTimeout(() => {
-                window.location.href = 'resident.html';
-            }, 1000);
+            triggerSuccessTransition('resident.html');
 
         } catch (error) {
             console.error('Registration error:', error);

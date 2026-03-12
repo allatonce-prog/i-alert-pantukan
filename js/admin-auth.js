@@ -35,6 +35,25 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ── Success Animation Transition ────────────────
+function triggerSuccessTransition(targetUrl) {
+    const overlay = document.getElementById('pageTransition');
+    const container = document.getElementById('transitionContainer');
+    const success = document.getElementById('loginSuccessContent');
+
+    if (overlay && success) {
+        if (container) container.style.display = 'none';
+        success.style.display = 'block';
+        overlay.classList.add('active');
+
+        setTimeout(() => {
+            window.location.href = targetUrl;
+        }, 1800);
+    } else {
+        window.location.href = targetUrl;
+    }
+}
+
 // Admin Registration Handler
 if (adminRegisterForm) {
     adminRegisterForm.addEventListener('submit', async (e) => {
@@ -95,13 +114,8 @@ if (adminRegisterForm) {
 
             showToast('Admin account created successfully!', 'success');
 
-            setTimeout(() => {
-                if (isSuperAdmin) {
-                    window.location.href = 'super-admin.html';
-                } else {
-                    window.location.href = 'admin.html';
-                }
-            }, 1000);
+            const target = isSuperAdmin ? 'super-admin.html' : 'admin.html';
+            triggerSuccessTransition(target);
 
         } catch (error) {
             console.error('Admin registration error:', error);

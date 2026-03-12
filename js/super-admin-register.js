@@ -23,6 +23,25 @@ if (document.querySelector('.auth-container')) {
     checkAuth();
 }
 
+// ── Success Animation Transition ────────────────
+function triggerSuccessTransition(targetUrl) {
+    const overlay = document.getElementById('pageTransition');
+    const container = document.getElementById('transitionContainer');
+    const success = document.getElementById('loginSuccessContent');
+
+    if (overlay && success) {
+        if (container) container.style.display = 'none';
+        success.style.display = 'block';
+        overlay.classList.add('active');
+
+        setTimeout(() => {
+            window.location.href = targetUrl;
+        }, 1800);
+    } else {
+        window.location.href = targetUrl;
+    }
+}
+
 if (superRegisterForm) {
     superRegisterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -71,10 +90,7 @@ if (superRegisterForm) {
             localStorage.setItem('currentUser', JSON.stringify(superData));
 
             showToast('Super Admin initialized successfully!', 'success');
-
-            setTimeout(() => {
-                window.location.href = 'super-admin.html';
-            }, 1000);
+            triggerSuccessTransition('super-admin.html');
 
         } catch (error) {
             console.error('Super Admin registration error:', error);
