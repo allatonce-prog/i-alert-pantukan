@@ -266,6 +266,7 @@ if (registerForm) {
         const firstName = document.getElementById('registerFirstname').value;
         const lastName = document.getElementById('registerLastname').value;
         const birthday = document.getElementById('registerBirthday').value;
+        const gender = document.getElementById('registerGender').value;
         const email = document.getElementById('registerEmail').value.trim();
         const phone = document.getElementById('registerPhone').value;
         const barangay = document.getElementById('registerAddress').value;
@@ -295,6 +296,7 @@ if (registerForm) {
                 firstName: firstName,
                 lastName: lastName,
                 birthday: birthday,
+                gender: gender,
                 name: `${firstName} ${lastName}`,
                 email: email,
                 phone: phone,

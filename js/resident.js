@@ -137,6 +137,7 @@ profileLink.addEventListener('click', (e) => {
         document.getElementById('profileFirstName').value = currentUser.firstName || '';
         document.getElementById('profileLastName').value = currentUser.lastName || '';
         document.getElementById('profileBirthday').value = currentUser.birthday || '';
+        document.getElementById('profileGender').value = currentUser.gender || '';
         document.getElementById('profilePhone').value = currentUser.phone || '';
         document.getElementById('profileEmail').value = currentUser.email || '';
 
@@ -183,6 +184,7 @@ profileForm.addEventListener('submit', async (e) => {
         firstName: document.getElementById('profileFirstName').value,
         lastName: document.getElementById('profileLastName').value,
         birthday: document.getElementById('profileBirthday').value,
+        gender: document.getElementById('profileGender').value,
         name: `${document.getElementById('profileFirstName').value} ${document.getElementById('profileLastName').value}`,
         phone: document.getElementById('profilePhone').value,
         address: document.getElementById('profileStreet').value.trim() 
