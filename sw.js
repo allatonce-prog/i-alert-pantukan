@@ -15,6 +15,7 @@ const ASSETS_TO_CACHE = [
     './js/admin.js',
     './js/resident.js',
     './js/pwa-install.js',
+    './sound/emergency-alert.mp3',
     './manifest.json',
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',

@@ -22,8 +22,14 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification.body,
     icon: 'assets/icons/icon-192x192.png',
     badge: 'assets/icons/icon-192x192.png',
-    vibrate: [200, 100, 200],
-    data: payload.data
+    vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40, 500],
+    sound: 'sound/emergency-alert.mp3',
+    renotify: true,
+    tag: 'emergency-alert',
+    data: payload.data,
+    actions: [
+      { action: 'open', title: '🚨 View Emergency' }
+    ]
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
