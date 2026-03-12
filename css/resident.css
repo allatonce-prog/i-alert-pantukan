@@ -443,7 +443,7 @@ body.dark-mode .app-header.island-mode .dropdown-menu {
 }
 
 .header-logo-img {
-    height: 38px;
+    height: 80px;
     width: auto;
     object-fit: contain;
 }
@@ -3446,7 +3446,7 @@ body.dark-mode .glass-box-text {
 
 /* Header Logo Styling */
 .header-logo-img {
-    height: 64px;
+    height: 80px;
     width: auto;
     display: block;
     object-fit: contain;

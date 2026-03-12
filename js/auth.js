@@ -210,19 +210,7 @@ if (loginForm) {
                     localStorage.removeItem('currentUser'); // Clear any old persistent session
                 }
 
-                const transitionOverlay = document.getElementById('pageTransition');
-                const transitionContainer = document.getElementById('transitionContainer');
-                const loginSuccessContent = document.getElementById('loginSuccessContent');
-
-                if (transitionOverlay && transitionContainer && loginSuccessContent) {
-                    // Show overlay
-                    transitionOverlay.classList.add('active');
-                    // Hide default spinner, show success content
-                    transitionContainer.style.display = 'none';
-                    loginSuccessContent.style.display = 'block';
-                }
-
-                showToast('Login successful!', 'success');
+                showToast('Logon successful!', 'success');
 
                 setTimeout(() => {
                     const role = userData.role;
@@ -233,7 +221,7 @@ if (loginForm) {
                     } else {
                         window.location.href = 'resident.html';
                     }
-                }, 2000); // Increased delay for premium animation feel
+                }, 1000);
             } else {
                 // profile missing in DB
                 throw new Error('Authenticated, but system profile not found.');
@@ -322,24 +310,11 @@ if (registerForm) {
             // Auto-login locally
             localStorage.setItem('currentUser', JSON.stringify(userData));
 
-            const transitionOverlay = document.getElementById('pageTransition');
-            const transitionContainer = document.getElementById('transitionContainer');
-            const loginSuccessContent = document.getElementById('loginSuccessContent');
-
-            if (transitionOverlay && transitionContainer && loginSuccessContent) {
-                transitionOverlay.classList.add('active');
-                transitionContainer.style.display = 'none';
-                loginSuccessContent.style.display = 'block';
-                // Update text for registration if possible, or just use general success
-                const title = loginSuccessContent.querySelector('.success-title');
-                if (title) title.textContent = "Account Created";
-            }
-
             showToast('Account created successfully!', 'success');
 
             setTimeout(() => {
                 window.location.href = 'resident.html';
-            }, 2000);
+            }, 1000);
 
         } catch (error) {
             console.error('Registration error:', error);
