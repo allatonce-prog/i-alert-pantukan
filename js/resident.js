@@ -778,8 +778,6 @@ const cameraFeed = document.getElementById('cameraFeed');
 const captureBtn = document.getElementById('captureBtn');
 const switchCameraBtn = document.getElementById('switchCameraBtn');
 const closeCameraBtn = document.getElementById('closeCameraBtn');
-const galleryBtn = document.getElementById('galleryBtn');
-const imageInput = document.getElementById('imageInput');
 
 let selectedImageFile = null;
 let stream = null;
@@ -877,9 +875,7 @@ async function startCamera(facingMode = 'environment') {
 
     } catch (error) {
         console.error('Camera error:', error);
-        showToast('Unable to start camera. Try using "Gallery" instead.', 'warning');
-        // Fail-safe: trigger gallery if camera is blocked/crashed
-        if (galleryBtn) galleryBtn.click();
+        showToast('Unable to start camera. Please ensure camera permissions are granted in your browser settings.', 'error');
     }
 }
 
@@ -910,18 +906,7 @@ switchCameraBtn.addEventListener('click', () => {
     startCamera(currentFacingMode);
 });
 
-// Gallery Fallback Listener
-if (galleryBtn && imageInput) {
-    galleryBtn.addEventListener('click', () => {
-        imageInput.click();
-    });
 
-    imageInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            setImage(e.target.files[0]);
-        }
-    });
-}
 
 // Capture Image
 captureBtn.addEventListener('click', () => {
@@ -1100,7 +1085,7 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
     const description = document.getElementById('description').value;
 
     if (!selectedImageFile) {
-        showToast('Please provide an image as proof of the emergency', 'warning');
+        showToast('Please capture an incident photo to proceed with the report', 'warning');
         return;
     }
 
