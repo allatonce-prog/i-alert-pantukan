@@ -71,7 +71,11 @@ function refreshTable() {
     directoryBody.innerHTML = filtered.map(acc => `
         <tr>
             <td class="profile-cell" data-label="Account Member">
-                <div class="avatar-box">${(acc.name || 'U').charAt(0).toUpperCase()}</div>
+                <div class="avatar-box" style="cursor: pointer;" onclick="viewUserDetails('${acc.id}')">
+                    ${acc.photoURL 
+                        ? `<img src="${acc.photoURL}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">` 
+                        : (acc.name || 'U').charAt(0).toUpperCase()}
+                </div>
                 <div style="text-align: left;">
                     <div style="font-weight: 800; color: #0F172A; font-size: 0.95rem;">${acc.name || 'Unnamed'}</div>
                     <div style="font-size: 0.7rem; color: #94A3B8; font-family: monospace; letter-spacing: 0.5px;">UID: ${acc.id.substring(0, 12)}...</div>
@@ -277,7 +281,12 @@ window.viewUserDetails = (id) => {
     if (!acc) return;
 
     // Base Info
-    document.getElementById('detailAvatar').textContent = (acc.name || 'U').charAt(0).toUpperCase();
+    const avatarEl = document.getElementById('detailAvatar');
+    if (acc.photoURL) {
+        avatarEl.innerHTML = `<img src="${acc.photoURL}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 24px;">`;
+    } else {
+        avatarEl.textContent = (acc.name || 'U').charAt(0).toUpperCase();
+    }
     document.getElementById('detailName').textContent = acc.name || 'Unnamed User';
     
     const roleBadge = document.getElementById('detailRole');
