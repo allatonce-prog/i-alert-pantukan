@@ -1113,3 +1113,36 @@ body {
         transform: translateY(0);
     }
 }
+
+/* ── Quick Login Accounts ──────────────────── */
+.saved-account-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.saved-account-card:hover {
+    transform: scale(1.05);
+}
+
+.saved-account-card:active {
+    transform: scale(0.95);
+}
+
+#savedAccountsList::-webkit-scrollbar {
+    display: none;
+}
+
+#savedAccountsList {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.saved-account-card button {
+    transition: all 0.2s ease;
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.saved-account-card:hover button {
+    opacity: 1;
+    transform: scale(1);
+}

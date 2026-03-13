@@ -189,6 +189,73 @@ if (document.querySelector('.auth-container')) {
         const rememberCheckbox = document.getElementById('rememberMe');
         if (rememberCheckbox) rememberCheckbox.checked = true;
     }
+    renderSavedAccounts();
+}
+
+// ── Saved Accounts Logic ─────────────────────
+function renderSavedAccounts() {
+    const list = document.getElementById('savedAccountsList');
+    const section = document.getElementById('quickLoginSection');
+    if (!list || !section) return;
+
+    const saved = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+    if (saved.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = saved.map(acc => `
+        <div class="saved-account-card" style="flex: 0 0 auto; width: 100px; text-align: center; position: relative;">
+            <div onclick="selectSavedAccount('${acc.email}')" style="cursor: pointer;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--color-primary); margin: 0 auto 8px; overflow: hidden; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--color-primary); font-size: 1.5rem;">
+                    ${acc.photoURL ? `<img src="${acc.photoURL}" style="width: 100%; height: 100%; object-fit: cover;">` : acc.name.charAt(0).toUpperCase()}
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px;">${acc.name.split(' ')[0]}</div>
+                <div style="font-size: 0.6rem; color: #64748b;">${acc.role}</div>
+            </div>
+            <button onclick="removeSavedAccount('${acc.email}')" style="position: absolute; top: -5px; right: 15px; width: 20px; height: 20px; border-radius: 50%; border: none; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 12px; height: 12px;">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    `).join('');
+}
+
+window.selectSavedAccount = (email) => {
+    const emailInput = document.getElementById('loginEmail');
+    const passInput = document.getElementById('loginPassword');
+    if (emailInput) {
+        emailInput.value = email;
+        if (passInput) passInput.focus();
+        showToast('Account selected', 'info');
+    }
+};
+
+window.removeSavedAccount = (email) => {
+    let saved = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+    saved = saved.filter(acc => acc.email !== email);
+    localStorage.setItem('savedAccounts', JSON.stringify(saved));
+    renderSavedAccounts();
+    showToast('Saved account removed', 'info');
+};
+
+function saveAccountInfo(userData) {
+    let saved = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+    // Remove if already exists to update it
+    saved = saved.filter(acc => acc.email !== userData.email);
+    // Add to front
+    saved.unshift({
+        name: userData.name,
+        email: userData.email,
+        photoURL: userData.photoURL || null,
+        role: userData.role
+    });
+    // Limit to 5 accounts
+    if (saved.length > 5) saved = saved.slice(0, 5);
+    localStorage.setItem('savedAccounts', JSON.stringify(saved));
 }
 
 // Login Handler
@@ -242,6 +309,7 @@ if (loginForm) {
                 if (rememberMe) {
                     localStorage.setItem('currentUser', JSON.stringify(userData));
                     localStorage.setItem('rememberedEmail', email);
+                    saveAccountInfo(userData);
                 } else {
                     sessionStorage.setItem('currentUser', JSON.stringify(userData));
                     localStorage.removeItem('rememberedEmail');
