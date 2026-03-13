@@ -257,7 +257,7 @@ profileForm.addEventListener('submit', async (e) => {
         if (selectedProfileImage) {
             saveBtn.innerHTML = '<div class="spinner"></div> Uploading photo...';
             // Compress/Optimize profile image before upload
-            const optimizedPhoto = await compressImage(selectedProfileImage, 0.7, 800);
+            const optimizedPhoto = await compressProfileImage(selectedProfileImage, 0.7, 800);
             const photoURL = await uploadImageToCloudinary(optimizedPhoto);
             updates.photoURL = photoURL;
         }
@@ -1118,8 +1118,8 @@ async function compressImage(file, maxWidth = 1024, quality = 0.7, watermarkData
     });
 }
 
-// Simple Compress (No Watermark)
-async function compressImage(file, quality = 0.7, maxSize = 1200) {
+// Simple Compress (No Watermark) for Profiles
+async function compressProfileImage(file, quality = 0.7, maxSize = 1200) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
