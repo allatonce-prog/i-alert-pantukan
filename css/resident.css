@@ -4360,4 +4360,60 @@ body.dark-mode .mic-stop-btn {
     background: var(--color-primary);
     opacity: 0.5;
 }
+
+/* ── Request History Filters ─────────────── */
+.request-filters {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 15px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+.request-filters::-webkit-scrollbar {
+    display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.filter-chip {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.dark-mode .filter-chip {
+    background: var(--color-bg-secondary);
+    border-color: var(--border-color);
+}
+
+.filter-chip:hover {
+    background: var(--border-color-hover);
+    color: var(--color-text-primary);
+}
+
+.filter-chip.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px var(--color-primary-glow);
+}
+
+.notif-status-pill {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.pill-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+.pill-responding { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+.pill-resolved { background: rgba(16, 185, 129, 0.1); color: #10B981; }
 

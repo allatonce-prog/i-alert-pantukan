@@ -212,6 +212,15 @@
                     <h2>Requests</h2>
                     <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
                 </div>
+
+                <!-- Request Status Filters -->
+                <div class="request-filters">
+                    <button class="filter-chip active" data-filter="all">All</button>
+                    <button class="filter-chip" data-filter="pending">Pending</button>
+                    <button class="filter-chip" data-filter="responding">Responding</button>
+                    <button class="filter-chip" data-filter="resolved">Completed</button>
+                </div>
+
                 <div id="notifList" class="notif-list">
                     <div class="notif-empty">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
@@ -852,6 +861,7 @@
                     document.getElementById('navNotifDot').style.display = 'none';
                     document.getElementById('notifBadge').style.display = 'none';
                     unreadCount = 0;
+                    if (typeof renderNotif === 'function') renderNotif();
                 }
 
                 if (id === 'tabMap' && !navMapInitialised) initNavMap();
@@ -1166,24 +1176,58 @@
                                     }
                                 }
                             }
+                        } else if (c.type === 'removed') {
+                            delete notifStore[c.doc.id];
                         }
                     });
                     renderNotif();
                     initialLoad = false;
+                }, err => {
+                    console.error('Request Listener Error:', err);
+                    const list = document.getElementById('notifList');
+                    if (list) {
+                        list.innerHTML = `
+                            <div class="notif-empty">
+                                <p style="color: #ef4444;">Error loading requests</p>
+                                <span style="font-size: 0.75rem;">${err.message}</span>
+                            </div>`;
+                    }
                 });
         }
 
         window._notifMap = {}; // Global store for notified reports
+        let currentFilter = 'all';
 
         function renderNotif() {
             const list = document.getElementById('notifList');
             if (!list) return;
 
-            const entries = Object.values(notifStore)
+            let entries = Object.values(notifStore)
                 .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 
+            // Apply filter
+            if (currentFilter !== 'all') {
+                entries = entries.filter(e => {
+                    const status = (e.status || 'pending').toLowerCase();
+                    return status === currentFilter;
+                });
+            }
+
             if (!entries.length) {
-                list.innerHTML = '<div class="notif-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>No notifications yet</p><span>Your report updates will appear here</span></div>';
+                const emptyMsg = currentFilter === 'all' 
+                    ? 'No requests found' 
+                    : `No ${currentFilter} requests`;
+                
+                list.innerHTML = `
+                    <div class="notif-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                            <path d="M9 12h6"></path><path d="M9 16h6"></path><path d="M9 8h6"></path>
+                        </svg>
+                        <p>${emptyMsg}</p>
+                        <span>Your report history will appear here</span>
+                    </div>`;
                 return;
             }
 
@@ -1196,7 +1240,6 @@
                 const lbl = s.charAt(0).toUpperCase() + s.slice(1);
                 const rid = report.id;
 
-                // Save to global map for retrieval on click
                 window._notifMap[rid] = { ...report, reportId: rid };
 
                 html += `
@@ -1215,6 +1258,19 @@
             list.innerHTML = html;
         }
 
+        // Filter chips event listeners
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                // UI update
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                
+                // State update
+                currentFilter = chip.getAttribute('data-filter');
+                renderNotif();
+            });
+        });
+
         function timeAgo(d) {
             const s = Math.floor((Date.now() - d.getTime()) / 1000);
             if (s < 60) return 'Just now';
@@ -1223,12 +1279,29 @@
             return Math.floor(s / 86400) + 'd ago';
         }
 
-        // Start once user data is in localStorage
+        // Start once user data is in storage
         (function poll() {
             try {
-                const u = JSON.parse(localStorage.getItem('currentUser'));
-                const userId = u?.id || u?.uid;
-                if (userId) { startNotifListener(userId); return; }
+                // Try global user first if available
+                let userId = null;
+                const activeUser = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+                if (activeUser) {
+                    userId = activeUser.id || activeUser.uid;
+                }
+                
+                if (!userId) {
+                    const uJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+                    if (uJson) {
+                        const u = JSON.parse(uJson);
+                        userId = u?.id || u?.uid;
+                    }
+                }
+
+                if (userId) { 
+                    console.log("[Requests] Starting listener for UID:", userId);
+                    startNotifListener(userId); 
+                    return; 
+                }
             } catch (_) { }
             setTimeout(poll, 800);
         })();
