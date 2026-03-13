@@ -574,6 +574,48 @@ body {
 
 .input-wrap input {
     flex: 1;
+    padding-right: 40px; /* Room for toggle */
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--auth-muted);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    border-radius: 50%;
+    z-index: 5;
+}
+
+.password-toggle:hover {
+    color: var(--auth-coral);
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.password-toggle svg {
+    width: 18px;
+    height: 18px;
+}
+
+.password-toggle .eye-on {
+    display: none;
+}
+
+.password-toggle.visible .eye-off {
+    display: none;
+}
+
+.password-toggle.visible .eye-on {
+    display: block;
+    color: var(--auth-coral);
 }
 
 /* Remember me + Forgot row */

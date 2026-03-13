@@ -159,9 +159,28 @@ function checkAuth() {
     }
 }
 
+// Password Toggle Logic
+function initPasswordToggles() {
+    const toggles = document.querySelectorAll('.password-toggle');
+    toggles.forEach(toggle => {
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            const input = this.parentElement.querySelector('input');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.classList.add('visible');
+            } else {
+                input.type = 'password';
+                this.classList.remove('visible');
+            }
+        });
+    });
+}
+
 // Only run checkAuth on login/register pages
 if (document.querySelector('.auth-container')) {
     checkAuth();
+    initPasswordToggles();
 
     // Pre-fill Remembered Email
     const rememberedEmail = localStorage.getItem('rememberedEmail');
