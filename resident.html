@@ -1243,7 +1243,13 @@
                         <p>Always online</p>
                     </div>
                 </div>
-                <button id="chatbot-close" class="chatbot-close-btn">&times;</button>
+                <div class="chatbot-header-actions" style="display: flex; align-items: center; gap: 8px;">
+                    <button id="chatbot-stop-voice" class="chatbot-stop-voice-btn" title="Stop Voice" style="display: none; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 6px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; align-items: center; gap: 4px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;"><rect x="6" y="6" width="12" height="12" /></svg>
+                        Stop
+                    </button>
+                    <button id="chatbot-close" class="chatbot-close-btn">&times;</button>
+                </div>
             </div>
 
             <div id="chatbot-messages" class="chatbot-messages">
@@ -1253,22 +1259,47 @@
                 </div>
             </div>
 
+            <div id="chatbot-attachment-preview" class="chatbot-attachment-preview" style="display: none;">
+                <div class="attachment-item">
+                    <img id="attachment-thumb" src="" alt="Attachment">
+                    <button id="remove-attachment" class="remove-attachment-btn">&times;</button>
+                </div>
+            </div>
+
             <div class="chatbot-input-area">
-                <textarea id="chatbot-input" placeholder="Type or talk to me..." rows="1"></textarea>
-                <button id="chatbot-mic" class="chatbot-mic-btn" title="Voice Input">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                        <line x1="12" y1="19" x2="12" y2="23" />
-                        <line x1="8" y1="23" x2="16" y2="23" />
-                    </svg>
-                </button>
-                <button id="chatbot-send" class="chatbot-send-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                </button>
+                <div class="chatbot-input-actions-left">
+                    <button id="chatbot-camera" class="chatbot-btn-alt" title="AI Photo Scan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </button>
+                    <button id="chatbot-upload" class="chatbot-btn-alt" title="Upload Photo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
+                    </button>
+                    <input type="file" id="chatbot-file-input" accept="image/*" style="display: none;">
+                </div>
+
+                <textarea id="chatbot-input" placeholder="Type or talk..." rows="1"></textarea>
+
+                <div class="chatbot-input-actions-right">
+                    <button id="chatbot-mic" class="chatbot-mic-btn" title="Voice Input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                    </button>
+                    <button id="chatbot-send" class="chatbot-send-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13" />
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

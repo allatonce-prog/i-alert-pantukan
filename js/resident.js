@@ -320,11 +320,13 @@ function openEmergencyModal() {
     document.getElementById('locationText').textContent = 'Click the button above to get your current location';
     currentLocation = null;
 
-    // Initialize map and trigger GPS automatically
-    setTimeout(() => {
-        initMap();
-        triggerGPS(); // Auto-trigger GPS when modal opens
-    }, 100);
+    // Initialize map and trigger GPS automatically (Skip if it's just an AI Vision Scan)
+    if (!modal.classList.contains('vision-scan-mode')) {
+        setTimeout(() => {
+            initMap();
+            triggerGPS();
+        }, 100);
+    }
 
     modal.classList.add('active');
     document.body.classList.add('modal-open');
@@ -915,14 +917,20 @@ captureBtn.addEventListener('click', () => {
     const canvas = document.getElementById('cameraCanvas');
     const context = canvas.getContext('2d');
 
-    // Set canvas dimensions to match video stream
     canvas.width = cameraFeed.videoWidth;
     canvas.height = cameraFeed.videoHeight;
-
-    // Draw current video frame to canvas
     context.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
 
-    // Convert to file
+    // AI SCAN HOOK: If triggered from chatbot
+    if (window.isChatbotScan) {
+        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        if (typeof window.onImageCapturedForChat === 'function') {
+            window.onImageCapturedForChat(base64);
+        }
+        window.isChatbotScan = false; // Reset
+    }
+
+    // Standard flow (save for report)
     canvas.toBlob((blob) => {
         const file = new File([blob], `capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
         setImage(file);

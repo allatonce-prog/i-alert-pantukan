@@ -6,7 +6,7 @@
 // Fallback key (Replaced by Firestore config)
 let CHAT_API_KEY = "";
 const CHAT_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const CHAT_MODEL = "llama-3.3-70b-versatile";
+const CHAT_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"; // New Llama 4 Vision Model
 
 // Centralized Configuration Loader
 async function syncGrokConfig() {
@@ -14,38 +14,30 @@ async function syncGrokConfig() {
         const doc = await db.collection('config').doc('chatbot').get();
         if (doc.exists) {
             const data = doc.data();
-            // Check multiple potential field names for the Grok key
             const key = data.apiKey || data.groqApiKey;
             if (key) {
                 CHAT_API_KEY = key.trim();
-                console.log("[Chatbot] API Key successfully synced");
-            } else {
-                console.warn("[Chatbot] Document exists but no API key field found");
+                console.log("[Chatbot] Vision AI synced");
             }
-        } else {
-            console.warn("[Chatbot] No config/chatbot document found in Firestore");
         }
-    } catch (e) {
-        console.error("[Chatbot] Firestore sync failed:", e);
-    }
+    } catch (e) { console.error("Config sync failed", e); }
 }
 syncGrokConfig();
 
-const SYSTEM_PROMPT = `You are the iAlert Pantukan Assistant, an emergency response AI for the Municipality of Pantukan.
-Your goal is to provide safety tips, emergency procedures, and guide residents on how to use the iAlert system.
+const SYSTEM_PROMPT = `You are the iAlert Pantukan AI Vision Assistant.
+You have the ability to see and analyze photos sent by residents.
+
+Your core mission:
+1. **Analyze Images**: If an image is provided, identify the type of emergency (Fire, Medical, Road Accident, etc.).
+2. **Assess Danger**: Estimate the severity and provide immediate life-saving instructions.
+3. **Guide Action**: Always remind the user to click the "SEND ALERT" button to notify real human responders.
+4. **Safety Tips**: Provide context-specific advice (e.g., if you see a fire, tell them to stay low and find an exit).
 
 Guidelines:
-1. If a user describes a real-time emergency (e.g., "There is a fire right now!"), strongly advise them to click the "SEND ALERT" button on the dashboard immediately to notify authorities.
-2. Provide concise, actionable safety tips for categories like:
-   - Fire (escape routes, fire extinguisher use)
-   - Medical (CPR basics, first aid for wounds)
-   - Police (personal safety, reporting crimes)
-   - Rescue (flood safety, earthquake drills)
-   - Road Accidents (securing the scene, calling for help)
-3. Be professional, empathetic, and always ready to help.
-4. Keep your responses relatively short (under 150 words) for better mobile readability.
-5. If you don't know something specific about Pantukan's local laws, advise checking with the local government office.
-6. When the user mentions an emergency or asks for help with one, mention that they can use the "Quick Alert" buttons below to send an official report immediately.`;
+- If no image is provided, act as a helpful emergency information assistant.
+- Keep responses under 150 words.
+- Be precise and calm.
+- If an image is unclear, ask for a better view while giving general safety advice.`;
 
 const EMERGENCY_ACTIONS = [
     { type: 'fire', label: 'Fire', icon: '🔥' },
@@ -66,6 +58,9 @@ function initChatbot() {
     const chatbotMic = document.getElementById('chatbot-mic');
     const voiceOverlay = document.getElementById('chatbot-voice-overlay');
     const stopMicBtn = document.getElementById('chatbot-mic-stop');
+    const attachmentPreview = document.getElementById('chatbot-attachment-preview');
+    const attachmentThumb = document.getElementById('attachment-thumb');
+    const removeAttachmentBtn = document.getElementById('remove-attachment');
 
     let chatHistory = [];
     let isRecording = false;
@@ -146,18 +141,139 @@ function initChatbot() {
         });
     }
 
+    const chatbotCamera = document.getElementById('chatbot-camera');
+    const chatbotUpload = document.getElementById('chatbot-upload');
+    const chatbotFileInput = document.getElementById('chatbot-file-input');
+    const stopVoiceBtn = document.getElementById('chatbot-stop-voice');
+    let pendingImageBase64 = null;
+
+    // Handle Remove Attachment
+    if (removeAttachmentBtn) {
+        removeAttachmentBtn.addEventListener('click', () => {
+            pendingImageBase64 = null;
+            if (attachmentPreview) attachmentPreview.style.display = 'none';
+        });
+    }
+
+    // Handle Voice Stop
+    if (stopVoiceBtn) {
+        stopVoiceBtn.addEventListener('click', () => {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                stopVoiceBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // Handle Local Photo Upload
+    if (chatbotUpload && chatbotFileInput) {
+        chatbotUpload.addEventListener('click', () => chatbotFileInput.click());
+        
+        chatbotFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = event.target.result;
+                window.onImageCapturedForChat(base64);
+            };
+            reader.readAsDataURL(file);
+            chatbotFileInput.value = ''; // Reset for same file re-upload
+        });
+    }
+
+    // Handle Camera Scan
+    if (chatbotCamera) {
+        chatbotCamera.addEventListener('click', () => {
+            if (typeof window.openEmergencyModal === 'function') {
+                showToast("Opening camera for AI Photo Scan...", "info");
+                
+                // Add a special class to hide form elements
+                const modal = document.getElementById('emergencyModal');
+                if (modal) modal.classList.add('vision-scan-mode');
+
+                window.selectedEmergencyType = 'other';
+                window.openEmergencyModal();
+                
+                // Then click the camera button
+                setTimeout(() => {
+                    const camBtn = document.getElementById('openCameraBtn');
+                    if (camBtn) camBtn.click();
+                }, 400);
+                
+                window.isChatbotScan = true;
+                chatbotWindow.classList.remove('active'); 
+            } else {
+                showToast("Camera access is only available on the resident mobile dashboard.", "warning");
+            }
+        });
+    }
+
+    // Global hook for captured images (set from resident.js)
+    window.onImageCapturedForChat = (base64) => {
+        pendingImageBase64 = base64;
+        
+        // Remove the special scan class
+        const modal = document.getElementById('emergencyModal');
+        if (modal) modal.classList.remove('vision-scan-mode');
+
+        // Close the modal (return to chat)
+        if (typeof window.closeModal === 'function') {
+            window.closeModal();
+        }
+
+        chatbotWindow.classList.add('active');
+        
+        // Show attachment preview instead of auto-sending
+        if (attachmentThumb && attachmentPreview) {
+            attachmentThumb.src = base64;
+            attachmentPreview.style.display = 'flex';
+            chatbotInput.placeholder = "Add a message about this photo...";
+            chatbotInput.focus();
+        }
+
+        scrollToBottom();
+    };
+
     // Handle Sending Message
     const sendMessage = async () => {
         const message = chatbotInput.value.trim();
-        if (!message) return;
+        const currentImage = pendingImageBase64;
+        
+        if (!message && !currentImage) return;
 
         // Add user message to UI
-        addMessage(message, 'user');
+        if (currentImage) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'message user image-preview';
+            previewDiv.innerHTML = `
+                <img src="${currentImage}" style="max-width: 100%; border-radius: 12px;">
+                ${message ? `<div class="image-caption" style="padding: 10px; background: rgba(0,0,0,0.05); border-radius: 10px; margin-top: 8px; font-weight: 500; font-size: 0.95rem; color: #1c1c1e;">${message}</div>` : ''}
+            `;
+            chatbotMessages.appendChild(previewDiv);
+            if (attachmentPreview) attachmentPreview.style.display = 'none';
+        } else {
+            addMessage(message, 'user');
+        }
+
         chatbotInput.value = '';
         chatbotInput.style.height = 'auto';
+        chatbotInput.placeholder = "Type or talk...";
+        pendingImageBase64 = null; // Clear after use
 
-        // Add to history
-        chatHistory.push({ role: "user", content: message });
+        // Add to history (Multimodal format)
+        if (currentImage) {
+            chatHistory.push({
+                role: "user",
+                content: [
+                    { type: "text", text: message || "Look at this image." },
+                    { type: "image_url", image_url: { url: currentImage } }
+                ]
+            });
+        } else {
+            chatHistory.push({ role: "user", content: message });
+        }
 
         // Show typing indicator
         const typingId = showTypingIndicator();
@@ -168,14 +284,13 @@ function initChatbot() {
             addMessage(responseText, 'bot');
             chatHistory.push({ role: "assistant", content: responseText });
 
-            // Grok Voice Support: Speak the response
+            // Grok Voice Support
             speakResponse(responseText);
 
-            // Check if we should show quick alerts
-            const emergencyKeywords = ['emergency', 'fire', 'police', 'medical', 'rescue', 'accident', 'help', 'alert', 'situation', 'happening'];
+            const emergencyKeywords = ['emergency', 'fire', 'police', 'medical', 'rescue', 'accident', 'help', 'alert', 'danger'];
             const shouldShowAlerts = emergencyKeywords.some(kw =>
                 responseText.toLowerCase().includes(kw) ||
-                message.toLowerCase().includes(kw)
+                (typeof message === 'string' && message.toLowerCase().includes(kw))
             );
 
             if (shouldShowAlerts) {
@@ -184,17 +299,11 @@ function initChatbot() {
         } catch (error) {
             console.error("Chatbot Error:", error);
             removeTypingIndicator(typingId);
-
-            let userFriendlyMsg = "I'm sorry, I'm having trouble connecting right now. Please try again later.";
-            if (error.message.includes("quota") || error.message.includes("429")) {
-                userFriendlyMsg = "I've reached my message limit (API Quota Exceeded). Please try again in a few minutes.";
-            } else if (error.message.includes("api_key")) {
-                userFriendlyMsg = "There's an issue with the AI API key. Please contact support.";
-            }
-
-            addMessage(userFriendlyMsg, 'bot');
+            addMessage("Vision Scan Error: " + (error.message || "Connection failed"), 'bot');
         }
     };
+
+    // ... (rest of listeners) ...
 
     if (chatbotSend) {
         chatbotSend.addEventListener('click', sendMessage);
@@ -208,7 +317,6 @@ function initChatbot() {
             }
         });
 
-        // Auto-resize textarea
         chatbotInput.addEventListener('input', () => {
             chatbotInput.style.height = 'auto';
             chatbotInput.style.height = (chatbotInput.scrollHeight) + 'px';
@@ -221,7 +329,6 @@ function initChatbot() {
         msgDiv.className = `message ${side}`;
         msgDiv.textContent = text;
 
-        // Add "Listen" button to bot messages
         if (side === 'bot') {
             const listenBtn = document.createElement('button');
             listenBtn.className = 'message-listen-btn';
@@ -234,36 +341,31 @@ function initChatbot() {
         scrollToBottom();
     }
 
-    // Helper: Speak Response (Grok Voice Output)
-    // Helper: Speak Response (Grok Voice Output)
+    // Helper: Speak Response
     function speakResponse(text) {
         if (!window.speechSynthesis) return;
-
-        // Cancel any current speech
         window.speechSynthesis.cancel();
+        
+        if (stopVoiceBtn) stopVoiceBtn.style.display = 'flex';
 
         const utterance = new SpeechSynthesisUtterance(text);
+        
+        utterance.onend = () => {
+            if (stopVoiceBtn) stopVoiceBtn.style.display = 'none';
+        };
+
+        utterance.onerror = () => {
+            if (stopVoiceBtn) stopVoiceBtn.style.display = 'none';
+        };
 
         const setVoice = () => {
             const voices = window.speechSynthesis.getVoices();
-            // Prioritize high-quality English voices
-            const preferredVoice = voices.find(v => v.name.toLocaleLowerCase().includes('premium') && v.lang.startsWith('en')) ||
-                voices.find(v => v.name.includes('Google') && v.lang.startsWith('en')) ||
-                voices.find(v => v.lang.startsWith('en')) ||
-                voices[0];
-
+            const preferredVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
             if (preferredVoice) utterance.voice = preferredVoice;
-            utterance.rate = 1.05; // Slightly faster for modern feel
-            utterance.pitch = 1.0;
             window.speechSynthesis.speak(utterance);
         };
-
-        if (window.speechSynthesis.getVoices().length > 0) {
-            setVoice();
-        } else {
-            // Voices might load asynchronously
-            window.speechSynthesis.onvoiceschanged = setVoice;
-        }
+        if (window.speechSynthesis.getVoices().length > 0) setVoice();
+        else window.speechSynthesis.onvoiceschanged = setVoice;
     }
 
     // Helper: Scroll to Bottom
@@ -273,13 +375,9 @@ function initChatbot() {
 
     // Helper: Add Quick Alert Buttons
     function addQuickAlerts() {
-        // Check if last message already had alerts (prevent duplicates)
         if (chatbotMessages.querySelector('.chatbot-quick-alerts:last-child')) return;
-
         const alertsDiv = document.createElement('div');
         alertsDiv.className = 'chatbot-quick-alerts';
-
-        // Add "Send Alert" header if desired, or just buttons
         EMERGENCY_ACTIONS.forEach(action => {
             const btn = document.createElement('button');
             btn.className = 'quick-alert-btn';
@@ -287,40 +385,20 @@ function initChatbot() {
             btn.onclick = () => handleQuickAlert(action.type);
             alertsDiv.appendChild(btn);
         });
-
         chatbotMessages.appendChild(alertsDiv);
         scrollToBottom();
     }
 
     // Helper: Handle Quick Alert Trigger
     function handleQuickAlert(type) {
-        // Close chatbot window first for better focus on alert progress
         chatbotWindow.classList.remove('active');
-
-        // Check environment (Resident or Admin)
         const isResidentPage = window.location.pathname.includes('resident') || document.getElementById('tabHome');
-
         if (isResidentPage) {
-            // 1. Switch to Home Tab if not already there
             const homeBtn = document.getElementById('navBtnHome');
-            if (homeBtn && !homeBtn.classList.contains('active')) {
-                homeBtn.click();
-            }
-
-            // 2. Trigger the global resident alert function
+            if (homeBtn && !homeBtn.classList.contains('active')) homeBtn.click();
             if (typeof window.openEmergencyModal === 'function') {
                 window.selectedEmergencyType = type;
                 window.openEmergencyModal();
-            } else {
-                console.error("openEmergencyModal not found. Ensure resident.js is loaded correctly.");
-                if (window.showToast) window.showToast("Opening emergency form...", "info");
-            }
-        } else {
-            // Admin environment or other - Notify that this is for residents
-            if (window.showToast) {
-                window.showToast(`Emergency alert (${type.toUpperCase()}) triggered. Only residents can send official reports.`, 'warning');
-            } else {
-                alert(`Note: Official emergency triggers are for residents. Admin is for monitoring.`);
             }
         }
     }
@@ -330,11 +408,7 @@ function initChatbot() {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'typing-indicator';
         typingDiv.id = 'typing-' + Date.now();
-        typingDiv.innerHTML = `
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-        `;
+        typingDiv.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
         chatbotMessages.appendChild(typingDiv);
         scrollToBottom();
         return typingDiv.id;
@@ -348,42 +422,30 @@ function initChatbot() {
 
     // AI API Call
     async function callChatAPI() {
-        if (!CHAT_API_KEY) {
-            throw new Error("api_key_missing: AI API key not configured in Firestore.");
-        }
+        if (!CHAT_API_KEY) throw new Error("API Key missing");
 
         const messages = [
             { role: "system", content: SYSTEM_PROMPT },
-            ...chatHistory.slice(-10)
+            ...chatHistory.slice(-6) // Reduced slice for token room with images
         ];
 
-        try {
-            const response = await fetch(CHAT_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${CHAT_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: CHAT_MODEL,
-                    messages: messages,
-                    temperature: 0.7,
-                    max_tokens: 500
-                })
-            });
+        const response = await fetch(CHAT_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${CHAT_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: CHAT_MODEL,
+                messages: messages,
+                temperature: 0.5,
+                max_tokens: 512
+            })
+        });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                console.error("[Chatbot API Error]", data);
-                throw new Error(data.error?.message || `API error: ${response.status}`);
-            }
-
-            return data.choices[0].message.content;
-        } catch (err) {
-            console.error("[Chatbot Network Error]", err);
-            throw err;
-        }
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "API Error");
+        return data.choices[0].message.content;
     }
 }
 
