@@ -70,24 +70,34 @@ function refreshTable() {
 
     directoryBody.innerHTML = filtered.map(acc => `
         <tr>
-            <td class="profile-cell">
+            <td class="profile-cell" data-label="Account Member">
                 <div class="avatar-box">${(acc.name || 'U').charAt(0).toUpperCase()}</div>
-                <div>
+                <div style="text-align: left;">
                     <div style="font-weight: 800; color: #0F172A; font-size: 0.95rem;">${acc.name || 'Unnamed'}</div>
                     <div style="font-size: 0.7rem; color: #94A3B8; font-family: monospace; letter-spacing: 0.5px;">UID: ${acc.id.substring(0, 12)}...</div>
                 </div>
             </td>
-            <td>
+            <td data-label="Role & Access">
                 <span class="role-badge role-${acc.role}">${acc.role}</span>
             </td>
-            <td>
+            <td data-label="Contact Info">
                 <div style="color: #64748B; font-size: 0.85rem; font-weight: 600;">${acc.email}</div>
                 <div style="font-size: 0.75rem; color: #CBD5E1;">${acc.phone || 'No Contact Number'}</div>
             </td>
-            <td style="color: #94A3B8; font-size: 0.8rem; font-weight: 500;">
+            <td data-label="Registered" style="color: #94A3B8; font-size: 0.8rem; font-weight: 500;">
                 ${acc.createdAt ? new Date(acc.createdAt.seconds * 1000).toLocaleDateString() : 'Historical'}
             </td>
-            <td style="text-align: right;">
+            <td data-label="Inspect" style="text-align: center;">
+                <button class="btn-terminal" style="background: var(--super-accent); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);" onclick="viewUserDetails('${acc.id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>View</span>
+                </button>
+            </td>
+            <td data-label="Actions" style="text-align: right;">
                 <button class="btn-terminal" onclick="hubDeleteRequest('${acc.id}', '${acc.collection}')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -261,7 +271,52 @@ if (provisionForm) {
     });
 }
 
-// 🗑️ 6. Termination Flow
+// 👤 6. Detailed Inspection Logic
+window.viewUserDetails = (id) => {
+    const acc = systemAccounts.find(a => a.id === id);
+    if (!acc) return;
+
+    // Base Info
+    document.getElementById('detailAvatar').textContent = (acc.name || 'U').charAt(0).toUpperCase();
+    document.getElementById('detailName').textContent = acc.name || 'Unnamed User';
+    
+    const roleBadge = document.getElementById('detailRole');
+    roleBadge.textContent = acc.role;
+    roleBadge.className = `role-badge role-${acc.role}`;
+
+    document.getElementById('detailEmail').textContent = acc.email || 'N/A';
+    document.getElementById('detailPhone').textContent = acc.phone || 'N/A';
+    document.getElementById('detailDate').textContent = acc.createdAt 
+        ? new Date(acc.createdAt.seconds * 1000).toLocaleString() 
+        : 'Historical Record';
+
+    // Conditional visibility
+    const adminRows = document.getElementById('adminDetailRows');
+    const residentRows = document.getElementById('residentDetailRows');
+
+    if (acc.role === 'admin') {
+        adminRows.style.display = 'contents';
+        residentRows.style.display = 'none';
+        
+        document.getElementById('detailDept').textContent = acc.department || 'General';
+        document.getElementById('detailStation').textContent = acc.station || 'Frontline';
+    } else {
+        adminRows.style.display = 'none';
+        residentRows.style.display = 'contents';
+        
+        document.getElementById('detailGender').textContent = acc.gender || 'Not Specified';
+        document.getElementById('detailBirthday').textContent = acc.birthday || 'N/A';
+        document.getElementById('detailAddress').textContent = acc.address || 'N/A';
+    }
+
+    document.getElementById('userDetailsModal').style.display = 'flex';
+};
+
+window.closeDetailsModal = () => {
+    document.getElementById('userDetailsModal').style.display = 'none';
+};
+
+// 🗑️ 7. Termination Flow
 window.hubDeleteRequest = (id, col) => {
     deleteQueue = { id, collection: col };
     confirmModal.style.display = 'flex';
