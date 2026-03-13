@@ -20,6 +20,10 @@ let systemAccounts = [];
 let tableFilter = 'all';
 let deleteQueue = null;
 
+// Pagination
+let currentPage = 1;
+const pageSize = 10;
+
 // 🛡️ 1. Global Security & Session
 function masterVerify() {
     const userJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
@@ -68,7 +72,16 @@ function refreshTable() {
         return matchesQuery && matchesFilter;
     });
 
-    directoryBody.innerHTML = filtered.map(acc => `
+    // Pagination Logic
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIdx = (currentPage - 1) * pageSize;
+    const paginated = filtered.slice(startIdx, startIdx + pageSize);
+
+    directoryBody.innerHTML = paginated.map(acc => `
         <tr>
             <td class="profile-cell" data-label="Account Member">
                 <div class="avatar-box" style="cursor: pointer;" onclick="viewUserDetails('${acc.id}')">
@@ -113,10 +126,65 @@ function refreshTable() {
         </tr>
     `).join('');
 
-    if (filtered.length === 0) {
+    renderPagination(totalItems, totalPages);
+
+    if (totalItems === 0) {
         directoryBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 100px 0; color: #94A3B8; font-weight: 600;">No accounts found.</td></tr>`;
+        document.getElementById('accPagination').innerHTML = '';
     }
 }
+
+function renderPagination(totalItems, totalPages) {
+    const container = document.getElementById('accPagination');
+    if (!container) return;
+
+    if (totalPages <= 1) {
+        container.innerHTML = `<div class="pagination-info">Showing ${totalItems} members</div>`;
+        return;
+    }
+
+    const startRange = (currentPage - 1) * pageSize + 1;
+    const endRange = Math.min(currentPage * pageSize, totalItems);
+
+    let html = `
+        <div class="pagination-info">
+            Showing <b>${startRange}-${endRange}</b> of <b>${totalItems}</b> members
+        </div>
+        <div class="pagination-btns">
+            <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 14px;">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </button>
+    `;
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            html += `<button class="page-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += `<span style="color: #94A3B8; padding: 8px;">...</span>`;
+        }
+    }
+
+    html += `
+            <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 14px;">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </button>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+window.changePage = (pg) => {
+    currentPage = pg;
+    refreshTable();
+    // Scroll table to top
+    document.querySelector('.scroll-area').scrollTop = 0;
+};
 
 // 🧭 4. Nav Logic (Sidebar & Tabs)
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -357,12 +425,16 @@ modalNo.addEventListener('click', () => {
 });
 
 // 🔍 7. Dashboard Interactivity
-accSearchInput.addEventListener('input', refreshTable);
+accSearchInput.addEventListener('input', () => {
+    currentPage = 1;
+    refreshTable();
+});
 tableTabs.forEach(tab => {
     tab.addEventListener('click', () => {
         tableTabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         tableFilter = tab.getAttribute('data-filter');
+        currentPage = 1;
         refreshTable();
     });
 });

@@ -221,13 +221,13 @@ syncSystemConfig();
 // This prevents pinch-to-zoom and double-tap zoom for a more native application feel.
 (function fixedViewportiOS() {
     document.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 1) e.preventDefault();
+        if (e.touches.length > 1 && e.cancelable) e.preventDefault();
     }, { passive: false });
 
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
         const now = Date.now();
-        if (now - lastTouchEnd <= 300) e.preventDefault();
+        if (now - lastTouchEnd <= 300 && e.cancelable) e.preventDefault();
         lastTouchEnd = now;
     }, false);
 })();

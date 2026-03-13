@@ -600,6 +600,65 @@
                 font-size: 0.65rem;
             }
         }
+
+        /* ── Pagination ──────────────── */
+        .pagination-bar {
+            padding: 20px 24px;
+            background: #F8FAFC;
+            border-top: 1px solid #EDF2F7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-info {
+            font-size: 0.85rem;
+            color: #64748B;
+            font-weight: 500;
+        }
+
+        .pagination-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--super-accent);
+            color: var(--super-accent);
+            background: #F5F3FF;
+        }
+
+        .page-btn.active {
+            background: var(--super-accent);
+            color: white;
+            border-color: var(--super-accent);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #F1F5F9;
+        }
     </style>
 </head>
 
@@ -766,6 +825,10 @@
                                     <!-- JS Populated -->
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <div id="accPagination" class="pagination-bar">
+                            <!-- JS Populated -->
                         </div>
                     </div>
                 </div>
