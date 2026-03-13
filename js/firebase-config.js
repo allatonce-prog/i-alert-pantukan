@@ -35,19 +35,27 @@ async function requestNotificationPermission(userId, collection = 'USERS') {
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            const token = await messaging.getToken({
-                vapidKey: VAPID_KEY
-            });
-
-            if (token) {
-                console.log('FCM Token:', token);
-                // Save token to firestore for this user
-                await db.collection(collection).doc(userId).update({
-                    fcmToken: token,
-                    notificationsEnabled: true,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            // Ensure service worker is registered and active
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+                // Wait for it to be active
+                await navigator.serviceWorker.ready;
+                
+                const token = await messaging.getToken({
+                    vapidKey: VAPID_KEY,
+                    serviceWorkerRegistration: registration
                 });
-                return token;
+
+                if (token) {
+                    console.log('FCM Token:', token);
+                    // Save token to firestore for this user
+                    await db.collection(collection).doc(userId).update({
+                        fcmToken: token,
+                        notificationsEnabled: true,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    return token;
+                }
             }
         }
     } catch (error) {

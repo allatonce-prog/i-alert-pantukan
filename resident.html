@@ -52,7 +52,8 @@
             <!-- User Menu -->
             <div class="user-menu">
                 <button class="btn-icon user-avatar" id="userMenuBtn" aria-label="Account menu">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <img id="navUserAvatar" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none;">
+                    <svg id="navUserIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
                     </svg>
@@ -271,6 +272,8 @@
             <div id="navMap" class="nav-map-container"></div>
         </div><!-- /tabMap -->
 
+
+
     </main>
 
     <!-- ── Bottom Nav Bar ─────────────────── -->
@@ -293,6 +296,8 @@
             </div>
             <span>Notifications</span>
         </button>
+
+
 
         <button class="nav-btn" id="navBtnMap" data-tab="tabMap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -477,7 +482,17 @@
             <div class="modal-grabber"></div>
             <div class="modal-header profile-header">
                 <div class="header-main">
-                    <div class="profile-avatar-large">👤</div>
+                    <div class="profile-avatar-large" id="profileAvatarContainer" title="Click to upload photo">
+                        <img id="profileAvatarPreview" src="" alt="Profile Photo" style="display: none;">
+                        <span id="profileAvatarIcon">👤</span>
+                        <div class="avatar-edit-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;">
                     <div class="header-text">
                         <h2>Update Profile</h2>
                         <p>Keep your contact details up to date</p>
@@ -799,6 +814,8 @@
         </div>
     </div>
 
+
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -830,6 +847,7 @@
                     document.getElementById('notifBadge').style.display = 'none';
                     unreadCount = 0;
                 }
+
                 if (id === 'tabMap' && !navMapInitialised) initNavMap();
             });
         });

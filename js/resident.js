@@ -82,6 +82,9 @@ async function checkAuth() {
                 greetingEl.textContent = `Welcome, ${firstName}`;
             }
 
+            // Update Navbar Avatar
+            updateNavbarAvatar();
+
             // Load user's reports
             loadMyReports();
 
@@ -97,6 +100,22 @@ async function checkAuth() {
         console.error('Error loading user data:', error);
         showToast('Error loading user data', 'error');
         // Optional: clear session
+    }
+}
+
+// Update Navbar User Photo
+function updateNavbarAvatar() {
+    const navAvatar = document.getElementById('navUserAvatar');
+    const navIcon = document.getElementById('navUserIcon');
+    if (currentUser && currentUser.photoURL) {
+        if (navAvatar) {
+            navAvatar.src = currentUser.photoURL;
+            navAvatar.style.display = 'block';
+        }
+        if (navIcon) navIcon.style.display = 'none';
+    } else {
+        if (navAvatar) navAvatar.style.display = 'none';
+        if (navIcon) navIcon.style.display = 'block';
     }
 }
 
@@ -126,6 +145,29 @@ const profileModal = document.getElementById('profileModal');
 const profileForm = document.getElementById('profileForm');
 const closeProfileModalBtn = document.getElementById('closeProfileModal');
 const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+let selectedProfileImage = null;
+
+// Photo Selection Logic
+const avatarContainer = document.getElementById('profileAvatarContainer');
+const photoInput = document.getElementById('profilePhotoInput');
+if (avatarContainer && photoInput) {
+    avatarContainer.addEventListener('click', () => photoInput.click());
+    photoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedProfileImage = file;
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                const preview = document.getElementById('profileAvatarPreview');
+                const icon = document.getElementById('profileAvatarIcon');
+                preview.src = re.target.result;
+                preview.style.display = 'block';
+                icon.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
 // Open Profile Modal
 profileLink.addEventListener('click', (e) => {
@@ -155,6 +197,19 @@ profileLink.addEventListener('click', (e) => {
         }
 
         document.getElementById('profilePassword').value = ''; // Clear password field
+
+        // Profile Photo Setup
+        const avatarPreview = document.getElementById('profileAvatarPreview');
+        const avatarIcon = document.getElementById('profileAvatarIcon');
+        if (currentUser.photoURL) {
+            avatarPreview.src = currentUser.photoURL;
+            avatarPreview.style.display = 'block';
+            avatarIcon.style.display = 'none';
+        } else {
+            avatarPreview.style.display = 'none';
+            avatarIcon.style.display = 'block';
+        }
+        selectedProfileImage = null; // Reset selection
     }
 
     profileModal.classList.add('active');
@@ -198,6 +253,15 @@ profileForm.addEventListener('submit', async (e) => {
     }
 
     try {
+        // Handle Photo Upload if selected
+        if (selectedProfileImage) {
+            saveBtn.innerHTML = '<div class="spinner"></div> Uploading photo...';
+            // Compress/Optimize profile image before upload
+            const optimizedPhoto = await compressImage(selectedProfileImage, 0.7, 800);
+            const photoURL = await uploadImageToCloudinary(optimizedPhoto);
+            updates.photoURL = photoURL;
+        }
+
         // Update Firestore
         await db.collection('USERS').doc(currentUser.uid).update(updates);
 
@@ -209,6 +273,7 @@ profileForm.addEventListener('submit', async (e) => {
 
         // Update UI
         document.getElementById('userName').textContent = `Welcome, ${currentUser.name}`;
+        updateNavbarAvatar();
 
         showToast('Profile updated successfully', 'success');
         closeProfileModal();
@@ -1053,6 +1118,44 @@ async function compressImage(file, maxWidth = 1024, quality = 0.7, watermarkData
     });
 }
 
+// Simple Compress (No Watermark)
+async function compressImage(file, quality = 0.7, maxSize = 1200) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                }, 'image/jpeg', quality);
+            };
+        };
+    });
+}
+
 // Upload Image to Cloudinary
 async function uploadImageToCloudinary(file) {
     const { cloudName, apiKey, apiSecret } = CLOUDINARY_CONFIG;
@@ -1708,3 +1811,4 @@ document.getElementById('forceUpdateBtn')?.addEventListener('click', async () =>
         });
     });
 })();
+
