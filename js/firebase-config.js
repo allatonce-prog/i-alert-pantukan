@@ -139,11 +139,9 @@ const STATUS_LABELS = {
 
 // Department authorization codes (in production, these should be server-side)
 const DEPARTMENT_CODES = {
-    fire: 'FIRE2026',
-    police: 'POLICE2026',
-    medical: 'MEDICAL2026',
-    rescue: 'RESCUE2026',
-    traffic: 'TRAFFIC2026'
+    mdrrmc: 'MDRRMC2026',
+    bfp: 'BFP2026',
+    pnp: 'PNP2026'
 };
 
 console.log('Firebase initialized successfully');

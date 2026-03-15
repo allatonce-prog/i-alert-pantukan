@@ -65,9 +65,16 @@ if (adminRegisterForm) {
         const department = document.getElementById('adminDepartment').value;
         const station = document.getElementById('adminStation').value;
         const password = document.getElementById('adminPassword').value.trim();
+        const token = document.getElementById('adminToken').value.trim();
         const submitBtn = adminRegisterForm.querySelector('button[type="submit"]');
 
-        // Validate password length
+        // 1. Validate Token
+        if (token !== DEPARTMENT_CODES[department]) {
+            showToast('Invalid Department Access Token', 'error');
+            return;
+        }
+
+        // 2. Validate password length
         if (password.length < 6) {
             showToast('Password must be at least 6 characters long', 'error');
             return;

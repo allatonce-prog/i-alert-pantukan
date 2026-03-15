@@ -5,6 +5,28 @@ let adminDepartment = null;
 let reportsListener = null;
 let currentStatusFilter = 'pending';
 
+// Helper: Get emergency types visible to this admin based on department
+function getAdminQueryTypes() {
+    if (!adminDepartment) return ['other'];
+    const types = ['other']; // Always include 'other' for all admins
+    
+    if (adminDepartment === 'mdrrmc') {
+        // MDRRMC handles medical, rescue, and road incidents
+        types.push('medical', 'rescue', 'traffic');
+    } else if (adminDepartment === 'bfp') {
+        // BFP handles fire incidents
+        types.push('fire');
+    } else if (adminDepartment === 'pnp') {
+        // PNP handles police assistance and road accident reports
+        types.push('police', 'traffic');
+    } else {
+        // Fallback for any other custom admins
+        types.push(adminDepartment);
+    }
+    
+    return [...new Set(types)];
+}
+
 // Live Map Variables
 let adminMap = null;
 let mapMarkers = {};
@@ -394,9 +416,9 @@ async function loadDashboard() {
             endDate.setHours(23, 59, 59);
         }
 
-        // Get reports for this department (and 'other' unclassified emergencies)
+        // Get reports for this department (including cross-department notifications)
         const allReports = await db.collection('emergencyReports')
-            .where('type', 'in', [adminDepartment, 'other'])
+            .where('type', 'in', getAdminQueryTypes())
             .get();
 
         let pendingCount = 0;
@@ -477,7 +499,7 @@ async function loadReports(statusFilter = currentStatusFilter) {
     currentStatusFilter = statusFilter;
     try {
         let query = db.collection('emergencyReports')
-            .where('type', 'in', [adminDepartment, 'other']);
+            .where('type', 'in', getAdminQueryTypes());
         // Removed .orderBy('createdAt', 'desc') to avoid index error
 
         if (statusFilter !== 'all') {
@@ -810,7 +832,7 @@ async function loadHistory(page = 1) {
             historyList.innerHTML = '<div class="loader-container"><div class="loader"></div><p>Loading history...</p></div>';
 
             const historySnapshot = await db.collection('emergencyReports')
-                .where('type', 'in', [adminDepartment, 'other'])
+                .where('type', 'in', getAdminQueryTypes())
                 .where('status', '==', 'resolved')
                 .get();
 
@@ -934,7 +956,7 @@ async function loadAnalytics() {
         // Fetch all relevant reports once, then filter client-side for better UX
         // You could also optimize this with indexed Firestore queries if data is massive
         const reportsSnapshot = await db.collection('emergencyReports')
-            .where('type', 'in', [adminDepartment, 'other'])
+            .where('type', 'in', getAdminQueryTypes())
             .get();
 
         const allReports = [];
@@ -1089,7 +1111,7 @@ function startMapListener() {
     if (mapListener) mapListener(); // Unsubscribe if exists
 
     mapListener = db.collection('emergencyReports')
-        .where('type', 'in', [adminDepartment, 'other'])
+        .where('type', 'in', getAdminQueryTypes())
         .onSnapshot((snapshot) => {
             snapshot.docChanges().forEach((change) => {
                 const report = change.doc.data();
@@ -1192,7 +1214,7 @@ function startRealtimeListener() {
     }
 
     reportsListener = db.collection('emergencyReports')
-        .where('type', 'in', [adminDepartment, 'other'])
+        .where('type', 'in', getAdminQueryTypes())
         .where('status', '==', 'pending')
         .onSnapshot((snapshot) => {
             snapshot.docChanges().forEach((change) => {
@@ -1463,7 +1485,7 @@ document.getElementById('btnGenerateReport')?.addEventListener('click', async ()
     try {
         // 2. Fetch Data (Client-side filtering to avoid complex index requirements)
         const snapshot = await db.collection('emergencyReports')
-            .where('type', 'in', [adminDepartment, 'other'])
+            .where('type', 'in', getAdminQueryTypes())
             .get();
 
         const data = [];
