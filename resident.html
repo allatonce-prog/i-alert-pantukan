@@ -284,6 +284,42 @@
             <div id="navMap" class="nav-map-container"></div>
         </div><!-- /tabMap -->
 
+        <!-- ══ TAB VIEW: MESSAGES (Messenger Style) ══ -->
+        <div class="tab-view" id="tabMessages">
+            <div class="messenger-container">
+                <div class="messenger-header">
+                    <h2>Chats</h2>
+                    <button class="btn-icon" id="startNewChatBtn" title="New Message">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Inbox Search -->
+                <div class="chat-search-wrap">
+                    <div class="chat-search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        <input type="text" id="chatSearchInput" placeholder="Search for people..." autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Conversations List -->
+                <div id="conversationList" class="conversation-list">
+                    <!-- Conversations injected here -->
+                    <div class="chat-empty-state">
+                        <div class="empty-icon">💬</div>
+                        <p>No messages yet</p>
+                        <span>Start a conversation with a responder or other residents.</span>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /tabMessages -->
+
 
 
     </main>
@@ -312,7 +348,15 @@
             <span>Requests</span>
         </button>
 
-
+        <button class="nav-btn" id="navBtnChat" data-tab="tabMessages">
+            <div class="nav-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-11.7 8.38 8.38 0 0 1 3.8.9L21 3.5l-1 4.5z" />
+                </svg>
+                <span class="nav-notif-dot" id="chatNotifDot" style="display:none;"></span>
+            </div>
+            <span>Messages</span>
+        </button>
 
         <button class="nav-btn" id="navBtnMap" data-tab="tabMap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -775,6 +819,15 @@
                             <span class="slider round"></span>
                         </label>
                     </div>
+                    
+                    <div class="setting-row" style="display: none; border-top: 1px solid rgba(255,255,255,0.05); padding: 12px 16px; margin-top: 20px;">
+                        <div class="setting-info">
+                            <h4>Install App</h4>
+                            <p>Fast access and offline support</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm pwa-install-trigger" style="padding: 6px 12px; font-size: 13px;">Install</button>
+                    </div>
+
                     <div class="settings-section"
                         style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
                         <h3 class="section-title" style="color: var(--color-error);">System</h3>
@@ -794,6 +847,79 @@
                     <div class="modal-actions settings-actions">
                         <button type="button" class="btn btn-secondary" id="closeSettingsBtn">Close Settings</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <!-- ══ CHAT MODAL (Messenger Style) ══ -->
+    <div id="chatModal" class="chat-modal">
+        <div class="chat-modal-content">
+            <div class="chat-header">
+                <button class="btn-icon" id="closeChatBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                </button>
+                <div class="chat-header-user">
+                    <div class="chat-header-info">
+                        <h3 id="chatHeaderName">Loading...</h3>
+                        <p id="chatHeaderSub">Active now</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="chat-messages-area">
+                <!-- Messages will be injected here -->
+            </div>
+
+            <div id="chatTypingIndicator" class="typing-bubble-wrap" style="display: none;">
+                <div class="typing-bubble">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <button class="btn-icon" id="chatAttachBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                </button>
+                <div class="chat-input-wrap">
+                    <textarea id="chatInput" placeholder="Aa" rows="1"></textarea>
+                </div>
+                <button class="btn-send-chat" id="sendChatBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Search Modal (Modern Refresh) -->
+    <div id="searchUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Chat</h2>
+                <button class="btn-close" id="closeSearchBtn">
+                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <div class="search-input-wrap">
+                    <input type="text" id="userSearchInput" placeholder="Search residents or responders..." autocomplete="off">
+                </div>
+                <div id="userSearchResults" class="search-results-list">
+                    <!-- Results injected here -->
                 </div>
             </div>
         </div>
@@ -835,6 +961,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
 
     <!-- Leaflet JS -->
@@ -843,6 +970,7 @@
     <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/resident.js"></script>
+    <script src="js/messenger.js"></script>
 
     <script>
         // ══ BOTTOM NAV: Tab switching ══════════════

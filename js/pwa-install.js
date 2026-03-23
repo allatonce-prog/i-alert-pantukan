@@ -9,6 +9,7 @@ class PWAInstallManager {
         this.installCard = null;
         this.installBtn = null;
         this.closeBtn = null;
+        this.settingsBtns = []; // Buttons inside settings modals
         this.init();
     }
 
@@ -22,15 +23,59 @@ class PWAInstallManager {
             }
 
             this.createInstallCard();
+            this.bindSettingsButtons();
             this.setupListeners();
+            
+            // Proactively show buttons after a delay if not running in standalone mode
+            // This is for environments where the browser support exists but the prompt is delayed
+            setTimeout(() => {
+                if (!this.isAppInstalled()) {
+                    this.showSettingsButtons();
+                }
+            }, 2000);
         });
     }
 
     isAppInstalled() {
         // Check if browser is running in standalone mode
-        return window.matchMedia('(display-mode: standalone)').matches || 
-               window.navigator.standalone || 
-               document.referrer.includes('android-app://');
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                           window.navigator.standalone || 
+                           document.referrer.includes('android-app://');
+        
+        if (isStandalone) {
+            this.hideAllInstallUI();
+        }
+        return isStandalone;
+    }
+
+    hideAllInstallUI() {
+        // Hide settings buttons if app is already installed
+        document.querySelectorAll('.pwa-install-trigger').forEach(btn => {
+            const section = btn.closest('.setting-row') || btn.closest('.setting-item');
+            if (section) section.style.display = 'none';
+        });
+    }
+
+    bindSettingsButtons() {
+        this.settingsBtns = document.querySelectorAll('.pwa-install-trigger');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        this.settingsBtns.forEach(btn => {
+            // Hide by default
+            const section = btn.closest('.setting-row') || btn.closest('.setting-item');
+            if (section) section.style.display = 'none';
+
+            // On iOS, we show it manually because there's no 'beforeinstallprompt' event
+            if (isIOS) {
+                if (section) section.style.display = (section.classList.contains('setting-item')) ? 'flex' : 'block';
+            }
+
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleInstallClick();
+            });
+        });
     }
 
     createInstallCard() {
@@ -87,25 +132,7 @@ class PWAInstallManager {
         });
 
         if (this.installBtn) {
-            this.installBtn.addEventListener('click', async () => {
-                if (!this.deferredPrompt) {
-                     // If for some reason button is clicked but no prompt, hide card
-                    this.hideCard();
-                    return;
-                }
-                
-                // Show the install prompt
-                this.deferredPrompt.prompt();
-                
-                // Wait for the user to respond to the prompt
-                const { outcome } = await this.deferredPrompt.userChoice;
-                console.log(`[PWA] User response to the install prompt: ${outcome}`);
-                
-                if (outcome === 'accepted') {
-                    this.hideCard();
-                }
-                this.deferredPrompt = null;
-            });
+            this.installBtn.addEventListener('click', () => this.handleInstallClick());
         }
 
         if (this.closeBtn) {
@@ -124,11 +151,49 @@ class PWAInstallManager {
         });
     }
 
-    showCard() {
-        const dismissed = localStorage.getItem('pwa-install-dismissed');
-        if (dismissed) {
-            const now = new Date().getTime();
-            if (now < parseInt(dismissed)) return;
+    showSettingsButtons() {
+        this.settingsBtns.forEach(btn => {
+            const section = btn.closest('.setting-row') || btn.closest('.setting-item');
+            if (section) section.style.display = 'flex';
+        });
+    }
+
+    async handleInstallClick() {
+        if (!this.deferredPrompt) {
+            // On iOS, manual trigger can just show the instructions card
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS) {
+                this.showCard(true); // Force show card even if dismissed
+            } else {
+                console.log('[PWA] No install prompt available or already installed');
+                // Optionally show a toast if no prompt is ready
+                if (window.showToast) {
+                    window.showToast('Browser is not ready to install. Try again in a few seconds.', 'info');
+                }
+                this.hideCard();
+            }
+            return;
+        }
+        
+        // Show the install prompt
+        this.deferredPrompt.prompt();
+        
+        // Wait for the user to respond to the prompt
+        const { outcome } = await this.deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            this.hideCard();
+            this.hideAllInstallUI();
+        }
+        this.deferredPrompt = null;
+    }
+
+    showCard(force = false) {
+        if (!force) {
+            const dismissed = localStorage.getItem('pwa-install-dismissed');
+            if (dismissed) {
+                const now = new Date().getTime();
+                if (now < parseInt(dismissed)) return;
+            }
         }
         
         setTimeout(() => {

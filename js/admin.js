@@ -1207,7 +1207,8 @@ function updateMapMarker(id, report) {
 }
 
 // Realtime Listener
-let initialLoad = true; // Use a flag to prevent on-load alert sounds
+let appStartTime = Date.now(); // Record when the app was actually opened
+
 function startRealtimeListener() {
     if (reportsListener) {
         reportsListener();
@@ -1217,37 +1218,41 @@ function startRealtimeListener() {
         .where('type', 'in', getAdminQueryTypes())
         .where('status', '==', 'pending')
         .onSnapshot((snapshot) => {
+            // Firestore onSnapshot fires twice: once for local cache, once for server sync.
+            // We only want sounds for confirmed server-side adds.
+            if (snapshot.metadata.fromCache && snapshot.docChanges().length > 0) return;
+
             snapshot.docChanges().forEach((change) => {
-                // If it's literally a newly added report and not the initial connection populating our local data cache
-                if (change.type === 'added' && !initialLoad) {
+                if (change.type === 'added') {
                     const reportData = change.doc.data();
-                    const emergency = EMERGENCY_TYPES[reportData.type];
-                    const msg = `🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`;
-                    showToast(msg, 'error');
+                    const createdAt = reportData.createdAt?.toMillis() || Date.now();
                     
-                    // Show native notification if tab is in background
-                    if (document.visibilityState === 'hidden') {
-                        showNativeNotification('New Emergency Report!', msg);
-                    }
-
-                    // Play emergency alert sound
-                    try {
-                        if (isAudioEnabled) {
-                            alertSound.currentTime = 0; // Restart if already playing
-                            alertSound.play().catch(err => {
-                                console.log("Audio playback blocked by browser or failed:", err);
-                            });
-                        } else {
-                            console.log("Audio not yet unlocked by user interaction.");
+                    // Only play sound if the report was created AFTER the admin opened the dashboard (with a 10s buffer)
+                    if (createdAt > (appStartTime - 10000)) {
+                        const emergency = EMERGENCY_TYPES[reportData.type];
+                        const msg = `🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`;
+                        showToast(msg, 'error');
+                        
+                        if (document.visibilityState === 'hidden') {
+                            showNativeNotification('New Emergency Report!', msg);
                         }
-                    } catch (err) {
-                        console.log("Audio not supported.");
-                    }
 
+                        // Play emergency alert sound
+                        try {
+                            if (isAudioEnabled) {
+                                alertSound.pause(); // Reset if already playing
+                                alertSound.currentTime = 0;
+                                alertSound.play().catch(err => {
+                                    console.log("Audio playback blocked by browser or failed:", err);
+                                });
+                            }
+                        } catch (err) {
+                            console.log("Audio not supported.");
+                        }
+                    }
                 }
             });
 
-            initialLoad = false; // Initial batch of logs is finished
             loadDashboard(); // Refresh the counts and lists
         }, (error) => {
             console.error('Realtime listener error:', error);

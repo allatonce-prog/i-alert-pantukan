@@ -5,6 +5,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyBiuAzJKByWtxNIMARwPADDqoMv0hWajig",
     authDomain: "i-alert-pantukan.firebaseapp.com",
+    databaseURL: "https://i-alert-pantukan-default-rtdb.firebaseio.com",
     projectId: "i-alert-pantukan",
     storageBucket: "i-alert-pantukan.firebasestorage.app",
     messagingSenderId: "189485516577",
@@ -17,6 +18,7 @@ firebase.initializeApp(firebaseConfig);
 // Initialize services
 const auth = firebase.auth();
 const db = firebase.firestore();
+const rtdb = firebase.database();
 
 // Initialize Cloud Messaging (FCM)
 let messaging = null;
