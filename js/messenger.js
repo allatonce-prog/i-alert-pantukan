@@ -128,10 +128,12 @@ function renderInbox(conversations) {
                 <img src="${chat.otherUserAvatar}" alt="Avatar">
             </div>
             <div class="chat-info">
-                <h4>${chat.otherUserName}</h4>
+                <div class="chat-info-header">
+                    <h4 class="chat-user-name">${chat.otherUserName}</h4>
+                    <span class="time-divider">${time}</span>
+                </div>
                 <div class="chat-snippet-row">
                     <p>${chat.lastMessage || 'Sent an attachment'}</p>
-                    <span class="time-divider">• ${time}</span>
                 </div>
             </div>
             ${isUnread ? '<div class="unread-dot-fixed"></div>' : ''}`;
@@ -178,20 +180,38 @@ async function openChat(otherUid, otherName, otherAvatar) {
         });
 
         function updateHeaderStatus(data) {
+            // Update Activity Status
             if (!data || !data.lastActive) {
                 sub.textContent = 'Offline';
                 sub.style.color = 'var(--color-text-muted)';
-                return;
-            }
-            const lastTs = data.lastActive.toMillis();
-            const now = Date.now();
-            const diff = (now - lastTs) / 1000;
-            if (diff < 120) { // Under 2 mins
-                sub.textContent = 'Active now';
-                sub.style.color = '#10B981'; // var(--color-success)
             } else {
-                sub.textContent = 'Active ' + formatLastSeen(lastTs);
-                sub.style.color = 'var(--color-text-muted)';
+                const lastTs = data.lastActive.toMillis();
+                const now = Date.now();
+                const diff = (now - lastTs) / 1000;
+                if (diff < 120) { // Under 2 mins
+                    sub.textContent = 'Active now';
+                    sub.style.color = '#10B981'; // var(--color-success)
+                } else {
+                    sub.textContent = 'Active ' + formatLastSeen(lastTs);
+                    sub.style.color = 'var(--color-text-muted)';
+                }
+            }
+
+            // Update Department Badge (if admin/responder)
+            const deptEl = document.getElementById('chatHeaderDept');
+            if (deptEl) {
+                if (data && data.department) {
+                    const deptInfo = EMERGENCY_TYPES[data.department];
+                    deptEl.textContent = (deptInfo ? deptInfo.label : data.department).toUpperCase();
+                    deptEl.style.display = 'inline-block';
+                    // Use dept-specific color if available
+                    if (deptInfo && deptInfo.color) {
+                        deptEl.style.background = `${deptInfo.color}18`; // ~10% opacity
+                        deptEl.style.color = deptInfo.color;
+                    }
+                } else {
+                    deptEl.style.display = 'none';
+                }
             }
         }
     }
@@ -282,9 +302,22 @@ function renderMessage(msg) {
     const ts = msg.timestamp?.toMillis() || Date.now();
     const displayTime = formatTimeOnly(ts);
 
+    let content = '';
+    if (msg.imageUrl) {
+        content += `<img src="${msg.imageUrl}" class="chat-image-msg" onclick="window.openFullscreenImage('${msg.imageUrl}')">`;
+    }
+    if (msg.text) {
+        content += `<div>${msg.text}</div>`;
+    }
+
+    let bubbleClass = `message-bubble ${isMine ? 'outgoing' : 'incoming'}`;
+    if (msg.imageUrl && !msg.text) {
+        bubbleClass += ' image-only';
+    }
+
     div.innerHTML = `
-        <div class="message-bubble ${isMine ? 'outgoing' : 'incoming'}">
-            ${msg.text}
+        <div class="${bubbleClass}">
+            ${content}
         </div>
         <div class="message-meta">${displayTime}</div>
     `;
@@ -292,31 +325,61 @@ function renderMessage(msg) {
     container.appendChild(div);
 }
 
+let selectedChatFile = null;
+
+function clearChatImagePreview() {
+    selectedChatFile = null;
+    const previewArea = document.getElementById('chatImagePreviewArea');
+    if (previewArea) previewArea.style.display = 'none';
+}
+
 async function sendMessage() {
     const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (!text || !currentChatRoom || !currentUser) return;
+    const text = input ? input.value.trim() : '';
+    
+    // Check if we have an image to upload from preview
+    let finalImageUrl = null;
+    
+    if (!text && !selectedChatFile) return;
+    if (!currentChatRoom || !currentUser) return;
 
     const myUid = currentUser.id || currentUser.uid;
     const myName = currentUser.name;
     const myAvatar = currentUser.photoURL || DEFAULT_AVATAR(myName);
 
-    const msgData = {
-        senderId: myUid,
-        text: text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    input.value = '';
-    input.style.height = 'auto';
+    const sendBtn = document.getElementById('sendChatBtn');
+    const originalBtn = sendBtn ? sendBtn.innerHTML : '';
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<div class="spinner-sm" style="width:14px;height:14px;border-width:2px;"></div>';
+    }
 
     try {
-        // 1. Add Message to Subcollection
+        // 1. If image selected, upload it FIRST
+        if (selectedChatFile) {
+            showToast("Sending photo...", "info");
+            finalImageUrl = await uploadChatImage(selectedChatFile);
+            clearChatImagePreview();
+        }
+
+        const msgData = {
+            senderId: myUid,
+            text: text,
+            imageUrl: finalImageUrl,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (input) {
+            input.value = '';
+            input.style.height = 'auto';
+        }
+
+        // 2. Add Message to Subcollection
         await db.collection('CHATS').doc(currentChatRoom).collection('MESSAGES').add(msgData);
 
-        // 2. Update parent CHATS doc (Inbox)
+        // 3. Update parent CHATS doc (Inbox)
         const chatUpdate = {
-            lastMessage: text,
+            lastMessage: finalImageUrl ? '📷 Photo' : text,
             lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
             participants: [myUid, currentChatPartnerId],
             participantInfo: {
@@ -328,15 +391,18 @@ async function sendMessage() {
             }
         };
 
-        // Increment unread for partner
         chatUpdate[`unreadCount.${currentChatPartnerId}`] = firebase.firestore.FieldValue.increment(1);
-
         await db.collection('CHATS').doc(currentChatRoom).set(chatUpdate, { merge: true });
 
         stopTyping();
     } catch (e) {
         console.error("Error sending message:", e);
         showToast("Message failed to send", "error");
+    } finally {
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = originalBtn;
+        }
     }
 }
 
@@ -457,6 +523,48 @@ function formatTimeOnly(ts) {
     return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+// ── Cloudinary Image Upload ───────────────────
+let CHAT_CLOUDINARY = {
+    cloudName: 'djghkklph',
+    apiKey: '613592386419746',
+    apiSecret: 'CREDENTIAL_STORED_IN_FIRESTORE'
+};
+
+db.collection('config').doc('cloudinary').get().then(doc => {
+    if (doc.exists) CHAT_CLOUDINARY = doc.data();
+});
+
+async function uploadChatImage(file) {
+    const { cloudName, apiKey, apiSecret } = CHAT_CLOUDINARY;
+    const timestamp = Math.round((new Date()).getTime() / 1000);
+    
+    // Auth Signature
+    const paramsToSign = `timestamp=${timestamp}${apiSecret}`;
+    const msgBuffer = new TextEncoder().encode(paramsToSign);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', apiKey);
+    formData.append('timestamp', timestamp);
+    formData.append('signature', signature);
+
+    try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) throw new Error('Upload failed');
+        const data = await response.json();
+        return data.secure_url;
+    } catch (error) {
+        console.error('Chat image upload error:', error);
+        throw error;
+    }
+}
+
 // ── DOM Initialization ──────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -524,6 +632,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Action Logic
     document.getElementById('sendChatBtn')?.addEventListener('click', sendMessage);
+    
+    // Image Preview Action
+    document.getElementById('removeChatImageBtn')?.addEventListener('click', clearChatImagePreview);
+
+    // Image Upload Initialisation
+    const attachBtn = document.getElementById('chatAttachBtn');
+    if (attachBtn) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        fileInput.id = 'chatImageInput';
+        document.body.appendChild(fileInput);
+
+        attachBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            selectedChatFile = file;
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                const previewArea = document.getElementById('chatImagePreviewArea');
+                const previewImg = document.getElementById('chatImagePreview');
+                if (previewArea && previewImg) {
+                    previewImg.src = re.target.result;
+                    previewArea.style.display = 'block';
+                    scrollChatToBottom();
+                }
+            };
+            reader.readAsDataURL(file);
+            fileInput.value = ''; // Reset input to allow same file again
+        });
+    }
+
+
     document.getElementById('chatInput')?.addEventListener('input', (e) => {
         e.target.style.height = 'auto';
         e.target.style.height = (e.target.scrollHeight) + 'px';
