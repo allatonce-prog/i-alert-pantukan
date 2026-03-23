@@ -4601,6 +4601,30 @@ body.dark-mode .chat-card:hover {
     opacity: 0.6;
 }
 
+.chat-card.unread {
+    background: rgba(0, 132, 255, 0.05) !important;
+}
+
+body.dark-mode .chat-card.unread {
+    background: rgba(0, 132, 255, 0.1) !important;
+}
+
+.chat-card.unread h4 {
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.chat-card.unread .chat-snippet-row p {
+    color: var(--color-text-primary);
+    font-weight: 700;
+}
+
+@keyframes pulse-unread-res {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.25); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 .unread-dot-fixed {
     width: 12px;
     height: 12px;
@@ -4608,15 +4632,8 @@ body.dark-mode .chat-card:hover {
     border-radius: 50%;
     margin-left: 10px;
     flex-shrink: 0;
-}
-
-.chat-card.unread h4 {
-    font-weight: 800;
-}
-
-.chat-card.unread .chat-snippet-row p {
-    color: var(--color-text-primary);
-    font-weight: 700;
+    box-shadow: 0 0 10px rgba(0, 132, 255, 0.4);
+    animation: pulse-unread-res 2s infinite ease-in-out;
 }
 
 /* User Search Modal (Modern Centered View) */

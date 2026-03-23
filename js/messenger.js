@@ -117,7 +117,8 @@ function renderInbox(conversations) {
 
     conversations.forEach(chat => {
         const card = document.createElement('div');
-        card.className = `chat-card ${chat.unread ? 'unread' : ''}`;
+        const isUnread = chat.unread === true;
+        card.className = `chat-card ${isUnread ? 'unread' : ''}`;
         card.onclick = () => openChat(chat.otherUserId, chat.otherUserName, chat.otherUserAvatar);
 
         const time = formatTimestampShort(chat.lastTimestamp);
@@ -133,7 +134,7 @@ function renderInbox(conversations) {
                     <span class="time-divider">• ${time}</span>
                 </div>
             </div>
-            ${chat.unread ? '<div class="unread-dot-fixed"></div>' : ''}`;
+            ${isUnread ? '<div class="unread-dot-fixed"></div>' : ''}`;
         list.appendChild(card);
     });
 }
@@ -206,9 +207,44 @@ async function openChat(otherUid, otherName, otherAvatar) {
     db.collection('CHATS').doc(currentChatRoom).onSnapshot(doc => {
         if (!doc.exists) return;
         const data = doc.data();
+        
+        // Handle Typing
         const typing = data.typingStatus ? data.typingStatus[otherUid] : false;
-        document.getElementById('chatTypingIndicator').style.display = typing ? 'block' : 'none';
+        const indicator = document.getElementById('chatTypingIndicator');
+        if (indicator) {
+            if (typing) {
+                // Personalize the typing text with their name
+                const typingName = otherName.toUpperCase();
+                let textEl = indicator.querySelector('.typing-text');
+                if (!textEl) {
+                    textEl = document.createElement('span');
+                    textEl.className = 'typing-text';
+                    textEl.style.fontSize = '0.75rem';
+                    textEl.style.fontWeight = '700';
+                    textEl.style.color = '#64748B';
+                    textEl.style.marginLeft = '8px';
+                    textEl.style.textTransform = 'uppercase';
+                    indicator.appendChild(textEl);
+                }
+                textEl.textContent = `${typingName} is typing...`;
+                indicator.style.display = 'flex';
+                indicator.style.alignItems = 'center';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
         if (typing) scrollChatToBottom();
+
+        // ── AUTO MARK AS READ (if modal is active) ──
+        if (document.getElementById('chatModal').classList.contains('active')) {
+            const currentUid = currentUser.id || currentUser.uid;
+            if (data.unreadCount && data.unreadCount[currentUid] > 0) {
+                console.log("[Messenger] Modal active, auto-clearing unread count.");
+                db.collection('CHATS').doc(currentChatRoom).update({
+                    [`unreadCount.${currentUid}`]: 0
+                }).catch(() => {});
+            }
+        }
     });
 
     // Load Messages
