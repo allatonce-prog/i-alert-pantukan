@@ -15,6 +15,11 @@ let inboxUnsubscribe = null;
 let typingTimeout = null;
 let inboxCache = []; // Global cache for real-time search
 let lastSearchQuery = '';
+let currentGroupData = null; // Store current group info
+
+// ── Group Chat State ──
+let isGroupMode = false;
+let selectedMembers = []; // Array of {id, name, photoURL}
 
 const DEFAULT_AVATAR = (name) => `https://ui-avatars.com/api/?background=EBEDEF&color=475569&bold=true&name=${encodeURIComponent(name || 'User')}`;
 
@@ -76,15 +81,30 @@ function initInbox(userId) {
             const conversations = [];
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                // Find the other participant's info
-                const otherId = data.participants.find(id => id !== userId);
-                const info = data.participantInfo ? data.participantInfo[otherId] : {};
+                const isGroup = data.isGroup || false;
                 
+                let otherUserId = null;
+                let otherUserName = 'Unknown User';
+                let otherUserAvatar = '';
+
+                if (isGroup) {
+                    otherUserName = data.groupName || 'Group Chat';
+                    otherUserAvatar = ''; // Group default handled by DEFAULT_AVATAR or logic
+                } else {
+                    otherUserId = data.participants.find(id => id !== userId);
+                    const info = data.participantInfo ? data.participantInfo[otherUserId] : null;
+                    if (info) {
+                        otherUserName = info.name;
+                        otherUserAvatar = info.photoURL;
+                    }
+                }
+
                 conversations.push({ 
                     id: doc.id, 
-                    otherUserId: otherId,
-                    otherUserName: info.name || 'User',
-                    otherUserAvatar: info.photoURL || DEFAULT_AVATAR(info.name),
+                    otherUserId,
+                    otherUserName,
+                    otherUserAvatar,
+                    isGroup,
                     lastMessage: data.lastMessage,
                     lastTimestamp: data.lastTimestamp?.toMillis() || Date.now(),
                     unread: data.unreadCount ? data.unreadCount[userId] > 0 : false
@@ -119,13 +139,14 @@ function renderInbox(conversations) {
         const card = document.createElement('div');
         const isUnread = chat.unread === true;
         card.className = `chat-card ${isUnread ? 'unread' : ''}`;
-        card.onclick = () => openChat(chat.otherUserId, chat.otherUserName, chat.otherUserAvatar);
+        card.onclick = () => openChat(chat.otherUserId || chat.id, chat.otherUserName, chat.otherUserAvatar, chat.isGroup);
 
         const time = formatTimestampShort(chat.lastTimestamp);
         
         card.innerHTML = `
             <div class="chat-avatar-wrap">
-                <img src="${chat.otherUserAvatar}" alt="Avatar">
+                <img src="${chat.otherUserAvatar || DEFAULT_AVATAR(chat.otherUserName)}" alt="Avatar">
+                ${chat.isGroup ? '<div class="group-icon-badge">👥</div>' : ''}
             </div>
             <div class="chat-info">
                 <div class="chat-info-header">
@@ -143,44 +164,65 @@ function renderInbox(conversations) {
 
 // ── Chat Window Logic ────────────────────────
 
-async function openChat(otherUid, otherName, otherAvatar) {
+async function openChat(otherUidOrGroupId, name, avatar, isGroup = false) {
     if (!currentUser) {
         const uJson = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || localStorage.getItem('user');
         if (uJson) currentUser = JSON.parse(uJson);
     }
     if (!currentUser) return;
     
-    currentChatPartnerId = otherUid;
     const myUid = currentUser.id || currentUser.uid;
-    
-    // Deterministic Convo ID
-    currentChatRoom = [myUid, otherUid].sort().join('_');
+
+    if (isGroup) {
+        currentChatRoom = otherUidOrGroupId;
+        currentChatPartnerId = null;
+    } else {
+        currentChatPartnerId = otherUidOrGroupId;
+        currentChatRoom = [myUid, otherUidOrGroupId].sort().join('_');
+    }
     
     // UI Update
-    document.getElementById('chatHeaderName').textContent = otherName;
+    document.getElementById('chatHeaderName').textContent = name;
     const headerAvatar = document.getElementById('chatHeaderAvatar');
-    if (headerAvatar) headerAvatar.src = otherAvatar || DEFAULT_AVATAR(otherName);
+    if (headerAvatar) headerAvatar.src = avatar || DEFAULT_AVATAR(name);
     
-    // Setup Partner Status Listener
+    // Setup Header Dept/Status
+    const deptEl = document.getElementById('chatHeaderDept');
+    if (deptEl) deptEl.style.display = 'none';
+
     if (partnerUnsubscribe) partnerUnsubscribe();
     const sub = document.getElementById('chatHeaderSub');
     if (sub) {
-        sub.textContent = 'Connecting...';
+        sub.textContent = isGroup ? 'Group Chat' : 'Connecting...';
         sub.style.color = 'var(--color-text-muted)';
         
-        partnerUnsubscribe = db.collection('USERS').doc(otherUid).onSnapshot(doc => {
-            if (!doc.exists) {
-                // Check ADMIN if not in USERS
-                db.collection('ADMIN').doc(otherUid).get().then(adminDoc => {
-                    if (adminDoc.exists) updateHeaderStatus(adminDoc.data());
-                });
-                return;
-            }
-            updateHeaderStatus(doc.data());
-        });
+        if (!isGroup) {
+            partnerUnsubscribe = db.collection('USERS').doc(otherUidOrGroupId).onSnapshot(doc => {
+                if (!doc.exists) {
+                    db.collection('ADMIN').doc(otherUidOrGroupId).get().then(adminDoc => {
+                        if (adminDoc.exists) updateHeaderStatus(adminDoc.data());
+                    });
+                    return;
+                }
+                updateHeaderStatus(doc.data());
+            });
+        } else {
+            // Group specific headers
+            sub.textContent = 'Active conversation room';
+            sub.style.color = 'var(--color-text-muted)';
+            
+            // Fetch and store group member info
+            db.collection('CHATS').doc(otherUidOrGroupId).get().then(doc => {
+                if (doc.exists) currentGroupData = doc.data();
+            });
+        }
+
+        // Show/Hide Info Button
+        const infoBtn = document.getElementById('groupInfoBtn');
+        if (infoBtn) infoBtn.style.display = isGroup ? 'flex' : 'none';
 
         function updateHeaderStatus(data) {
-            // Update Activity Status
+            // ... [Activity Status Logic] ...
             if (!data || !data.lastActive) {
                 sub.textContent = 'Offline';
                 sub.style.color = 'var(--color-text-muted)';
@@ -188,29 +230,23 @@ async function openChat(otherUid, otherName, otherAvatar) {
                 const lastTs = data.lastActive.toMillis();
                 const now = Date.now();
                 const diff = (now - lastTs) / 1000;
-                if (diff < 120) { // Under 2 mins
+                if (diff < 120) {
                     sub.textContent = 'Active now';
-                    sub.style.color = '#10B981'; // var(--color-success)
+                    sub.style.color = '#10B981';
                 } else {
                     sub.textContent = 'Active ' + formatLastSeen(lastTs);
                     sub.style.color = 'var(--color-text-muted)';
                 }
             }
 
-            // Update Department Badge (if admin/responder)
-            const deptEl = document.getElementById('chatHeaderDept');
-            if (deptEl) {
-                if (data && data.department) {
-                    const deptInfo = EMERGENCY_TYPES[data.department];
-                    deptEl.textContent = (deptInfo ? deptInfo.label : data.department).toUpperCase();
-                    deptEl.style.display = 'inline-block';
-                    // Use dept-specific color if available
-                    if (deptInfo && deptInfo.color) {
-                        deptEl.style.background = `${deptInfo.color}18`; // ~10% opacity
-                        deptEl.style.color = deptInfo.color;
-                    }
-                } else {
-                    deptEl.style.display = 'none';
+            // Update Department Badge
+            if (deptEl && data && data.department) {
+                const deptInfo = EMERGENCY_TYPES[data.department];
+                deptEl.textContent = (deptInfo ? deptInfo.label : data.department).toUpperCase();
+                deptEl.style.display = 'inline-block';
+                if (deptInfo && deptInfo.color) {
+                    deptEl.style.background = `${deptInfo.color}18`;
+                    deptEl.style.color = deptInfo.color;
                 }
             }
         }
@@ -229,12 +265,27 @@ async function openChat(otherUid, otherName, otherAvatar) {
         const data = doc.data();
         
         // Handle Typing
-        const typing = data.typingStatus ? data.typingStatus[otherUid] : false;
+        let typing = false;
+        let tName = '';
+
+        if (!isGroup) {
+            typing = data.typingStatus ? data.typingStatus[otherUidOrGroupId] : false;
+            tName = name;
+        } else {
+            if (data.typingStatus) {
+                const typingUid = Object.keys(data.typingStatus).find(uid => uid !== myUid && data.typingStatus[uid] === true);
+                if (typingUid) {
+                    typing = true;
+                    const info = data.participantInfo ? data.participantInfo[typingUid] : null;
+                    tName = info ? info.name : 'Someone';
+                }
+            }
+        }
+
         const indicator = document.getElementById('chatTypingIndicator');
         if (indicator) {
             if (typing) {
                 // Personalize the typing text with their name
-                const typingName = otherName.toUpperCase();
                 let textEl = indicator.querySelector('.typing-text');
                 if (!textEl) {
                     textEl = document.createElement('span');
@@ -246,7 +297,7 @@ async function openChat(otherUid, otherName, otherAvatar) {
                     textEl.style.textTransform = 'uppercase';
                     indicator.appendChild(textEl);
                 }
-                textEl.textContent = `${typingName} is typing...`;
+                textEl.textContent = `${tName} IS TYPING...`;
                 indicator.style.display = 'flex';
                 indicator.style.alignItems = 'center';
             } else {
@@ -273,7 +324,7 @@ async function openChat(otherUid, otherName, otherAvatar) {
 
 function loadMessagesFirestore(roomId) {
     const chatContainer = document.getElementById('chatMessages');
-    chatContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--color-text-muted); font-size: 0.8rem;">Secure, encryption enabled.</div>';
+    chatContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--color-text-muted); font-size: 0.8rem;">Start Conversation</div>';
     
     if (chatUnsubscribe) chatUnsubscribe();
 
@@ -380,18 +431,36 @@ async function sendMessage() {
         // 3. Update parent CHATS doc (Inbox)
         const chatUpdate = {
             lastMessage: finalImageUrl ? '📷 Photo' : text,
-            lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            participants: [myUid, currentChatPartnerId],
-            participantInfo: {
+            lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (currentChatPartnerId) {
+            // 1-1 Chat: Update specific participant info
+            chatUpdate.participants = [myUid, currentChatPartnerId];
+            chatUpdate.participantInfo = {
                 [myUid]: { name: myName, photoURL: myAvatar },
                 [currentChatPartnerId]: { 
                     name: document.getElementById('chatHeaderName').textContent,
                     photoURL: document.getElementById('chatHeaderAvatar')?.src || ''
                 }
+            };
+            chatUpdate[`unreadCount.${currentChatPartnerId}`] = firebase.firestore.FieldValue.increment(1);
+        } else {
+            // Group Chat: Update only unread count for everyone ELSE
+            // Since we don't know the full member list in the UI, 
+            // the backend/full snapshot would usually handle this.
+            // But for simple Firestore client-side:
+            const chatSnap = await db.collection('CHATS').doc(currentChatRoom).get();
+            if (chatSnap.exists) {
+                const data = chatSnap.data();
+                data.participants.forEach(pid => {
+                    if (pid !== myUid) {
+                        chatUpdate[`unreadCount.${pid}`] = firebase.firestore.FieldValue.increment(1);
+                    }
+                });
             }
-        };
+        }
 
-        chatUpdate[`unreadCount.${currentChatPartnerId}`] = firebase.firestore.FieldValue.increment(1);
         await db.collection('CHATS').doc(currentChatRoom).set(chatUpdate, { merge: true });
 
         stopTyping();
@@ -478,15 +547,218 @@ async function searchUsers(query) {
 function renderSearchItem(uid, name, avatar, role) {
     const safeName = (name || 'Unknown').replace(/'/g, "\\'");
     const safeAvatar = (avatar || '').replace(/'/g, "\\'");
+    const isSelected = selectedMembers.some(m => m.id === uid);
+    
     return `
-        <div class="search-user-item" onclick="startChatFromSearch('${uid}', '${safeName}', '${safeAvatar}')">
-            <img src="${avatar || 'assets/logo/pantukan.jpg'}" alt="Avatar">
+        <div class="search-user-item ${isGroupMode ? 'group-mode' : ''} ${isSelected ? 'selected' : ''}" 
+             data-id="${uid}" 
+             onclick="selectMember('${uid}', '${safeName}', '${safeAvatar}')">
+            <img src="${avatar || DEFAULT_AVATAR(name)}" alt="Avatar">
             <div class="info">
                 <h5>${name}</h5>
                 <p>${role}</p>
             </div>
+            ${isGroupMode ? '<div class="selection-indicator"></div>' : ''}
         </div>
     `;
+}
+
+// ── Group Chat Interaction Logic ──
+
+function toggleGroupMode() {
+    isGroupMode = !isGroupMode;
+    const btn = document.getElementById('startGroupBtn');
+    const bar = document.getElementById('selectedMembersBar');
+    const nextBtn = document.getElementById('groupNextBtn');
+    
+    if (isGroupMode) {
+        btn.style.background = '#DC2626';
+        btn.style.color = 'white';
+        if (bar) bar.style.display = 'flex';
+        selectedMembers = [];
+        updateSelectionBar();
+        showToast("Select members for group", "info");
+    } else {
+        btn.style.background = 'rgba(220, 38, 38, 0.1)';
+        btn.style.color = '#DC2626';
+        if (bar) bar.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'none';
+    }
+    
+    // Refresh results to show/hide checkboxes
+    const query = document.getElementById('userSearchInput')?.value;
+    if (query) searchUsers(query);
+}
+
+function selectMember(id, name, avatar) {
+    if (!isGroupMode) {
+        startChatFromSearch(id, name, avatar);
+        return;
+    }
+
+    const idx = selectedMembers.findIndex(m => m.id === id);
+    if (idx > -1) {
+        selectedMembers.splice(idx, 1);
+    } else {
+        // Fallback for avatar in selection
+        const safeAvatar = avatar && avatar !== 'null' && avatar !== 'undefined' ? avatar : DEFAULT_AVATAR(name);
+        selectedMembers.push({ id, name, photoURL: safeAvatar });
+    }
+    
+    updateSelectionBar();
+    
+    // Refresh UI state for indicators
+    const items = document.querySelectorAll(`.search-user-item[data-id="${id}"]`);
+    items.forEach(it => it.classList.toggle('selected'));
+}
+
+function updateSelectionBar() {
+    const bar = document.getElementById('selectedMembersBar');
+    const nextBtn = document.getElementById('groupNextBtn');
+    if (!bar) return;
+
+    if (selectedMembers.length > 0) {
+        let html = '';
+        selectedMembers.forEach(m => {
+            html += `
+                <div class="selected-member-bubble">
+                    <img src="${m.photoURL || DEFAULT_AVATAR(m.name)}" alt="Avatar">
+                    <button class="remove-member-small" onclick="selectMember('${m.id}')">&times;</button>
+                </div>
+            `;
+        });
+        bar.innerHTML = html;
+        if (nextBtn) nextBtn.style.display = 'block';
+    } else {
+        bar.innerHTML = '<p style="font-size: 0.75rem; color: #64748B; margin: 4px auto;">Select members...</p>';
+        if (nextBtn) nextBtn.style.display = 'none';
+    }
+}
+
+// Exposed to global scope for reliable interaction
+window.createGroupChat = async function() {
+    console.log("[Messenger] createGroupChat clicked", selectedMembers);
+    if (selectedMembers.length < 1) {
+        showToast("Select at least 1 member", "warning");
+        return;
+    }
+    const modal = document.getElementById('groupNameModal');
+    const previousModal = document.getElementById('searchUserModal');
+    if (modal) {
+        if (previousModal) previousModal.classList.remove('active');
+        modal.classList.add('active');
+        const input = document.getElementById('groupNameInput');
+        if (input) input.focus();
+    } else {
+        console.error("groupNameModal not found");
+    }
+}
+
+window.confirmCreateGroup = async function() {
+    const groupName = document.getElementById('groupNameInput').value.trim();
+    if (!groupName) {
+        showToast("Enter a group name", "warning");
+        return;
+    }
+
+    if (!currentUser) {
+        showToast("Session error, please refresh", "error");
+        return;
+    }
+    const myUid = currentUser.id || currentUser.uid;
+    const myName = currentUser.name || currentUser.fullName || (currentUser.firstName ? `${currentUser.firstName} ${currentUser.lastName}` : 'Someone');
+    const myAvatar = currentUser.photoURL || DEFAULT_AVATAR(myName);
+
+    const participants = [myUid, ...selectedMembers.map(m => m.id)];
+    const participantInfo = {
+        [myUid]: { name: myName, photoURL: myAvatar }
+    };
+    
+    selectedMembers.forEach(m => {
+        participantInfo[m.id] = { 
+            name: m.name || 'Member', 
+            photoURL: m.photoURL || DEFAULT_AVATAR(m.name || 'Member') 
+        };
+    });
+
+    const groupData = {
+        isGroup: true,
+        groupName: groupName,
+        participants: participants,
+        participantInfo: participantInfo,
+        lastMessage: 'Created a new group chat',
+        lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        unreadCount: {}
+    };
+
+    participants.forEach(pid => {
+        groupData.unreadCount[pid] = (pid === myUid) ? 0 : 1;
+    });
+
+    try {
+        const btn = document.getElementById('confirmCreateGroupBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Creating...';
+        }
+
+        const docRef = await db.collection('CHATS').add(groupData);
+        
+        await docRef.collection('MESSAGES').add({
+            senderId: 'system',
+            text: `${myName} created the group "${groupName}"`,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // UI Reset
+        document.getElementById('groupNameModal').classList.remove('active');
+        document.getElementById('searchUserModal').classList.remove('active');
+        document.getElementById('groupNameInput').value = '';
+        
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Create Group';
+        }
+
+        toggleGroupMode(); // Reset isGroupMode and UI
+        openChat(docRef.id, groupName, null, true);
+        showToast("Group created!", "success");
+    } catch (e) {
+        console.error("Creation failed:", e);
+        showToast("Error creating group: " + e.message, "error");
+        const btn = document.getElementById('confirmCreateGroupBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Create Group';
+        }
+    }
+}
+
+// Group Info Logic
+window.showGroupInfo = function() {
+    if (!currentGroupData) {
+        showToast("Loading group info...", "info");
+        return;
+    }
+    const list = document.getElementById('groupMembersList');
+    if (!list) return;
+
+    const info = currentGroupData.participantInfo || {};
+    list.innerHTML = Object.entries(info).map(([id, user]) => `
+        <div class="search-user-item" style="cursor: default; padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.03);">
+            <div class="user-avatar" style="width: 44px; height: 44px; margin-right: 14px;">
+                <img src="${user.photoURL || DEFAULT_AVATAR(user.name)}" alt="Avatar">
+            </div>
+            <div class="user-info">
+                <div class="user-name" style="font-size: 0.95rem; font-weight: 700; color: #1E293B;">
+                    ${user.name} ${id === (currentUser.id || currentUser.uid) ? '<span style="color: var(--color-primary); font-size: 0.75rem; margin-left: 4px;">(You)</span>' : ''}
+                </div>
+                <div class="user-role" style="font-size: 0.75rem; color: #64748B; margin-top: 2px;">Member</div>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('groupInfoModal').classList.add('active');
 }
 
 function startChatFromSearch(uid, name, avatar) {
@@ -614,12 +886,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatUnsubscribe) chatUnsubscribe();
     });
 
-    // Start New Chat Event
     document.getElementById('startNewChatBtn')?.addEventListener('click', () => {
         document.getElementById('searchUserModal').classList.add('active');
+        if (isGroupMode) toggleGroupMode(); // Reset if previously in group mode
     });
+    
+    document.getElementById('closeGroupInfoBtn')?.addEventListener('click', () => {
+        document.getElementById('groupInfoModal').classList.remove('active');
+    });
+
     document.getElementById('closeSearchBtn')?.addEventListener('click', () => {
         document.getElementById('searchUserModal').classList.remove('active');
+        if (isGroupMode) toggleGroupMode(); // Reset
+    });
+
+    // Group Chat Events
+    document.getElementById('startGroupBtn')?.addEventListener('click', toggleGroupMode);
+    // Explicitly using global functions for buttons with onclick
+    document.getElementById('closeGroupNameBtn')?.addEventListener('click', () => {
+        document.getElementById('groupNameModal').classList.remove('active');
+        document.getElementById('searchUserModal')?.classList.add('active'); // RESTORE previous modal
     });
 
     // Search Input Logic

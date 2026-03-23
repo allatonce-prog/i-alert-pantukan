@@ -2750,3 +2750,61 @@ body.dark-mode .map-legend {
     display: inline-block;
     letter-spacing: 0.02em;
 }
+
+/* Group Chat UI */
+.selected-members-bar::-webkit-scrollbar { height: 4px; }
+.selected-members-bar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+.selected-member-bubble {
+    position: relative;
+    flex-shrink: 0;
+}
+.selected-member-bubble img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.remove-member-small {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #FF4D4D;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Selection Indicator in Results */
+.search-user-item.group-mode { cursor: pointer; }
+.search-user-item.group-mode.selected { background: rgba(220, 38, 38, 0.05); }
+.selection-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #E2E8F0;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.search-user-item.selected .selection-indicator {
+    background: #DC2626;
+    border-color: #DC2626;
+}
+.search-user-item.selected .selection-indicator::after {
+    content: "✓";
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+}
