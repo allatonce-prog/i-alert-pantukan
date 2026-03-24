@@ -279,7 +279,7 @@ profileForm.addEventListener('submit', async (e) => {
         }
 
         // Update Firestore
-        await db.collection('USERS').doc(currentUser.uid).update(updates);
+        await db.collection('USERS').doc(currentUser.id || currentUser.uid).update(updates);
 
         // Update Local State and Storage
         const updatedUser = { ...currentUser, ...updates };
@@ -345,14 +345,14 @@ function initDataSettings() {
         barangayToggle.checked = (currentUser.topics && currentUser.topics.includes(`barangay_${barangay}`));
         barangayToggle.onchange = async () => {
             if (barangayToggle.checked) {
-                const success = await subscribeToTopic(currentUser.uid, `barangay_${barangay}`);
+                const success = await subscribeToTopic(currentUser.id || currentUser.uid, `barangay_${barangay}`);
                 if (success) {
                     showToast(`Subscribed to ${barangay} alerts`, 'success');
                     currentUser.topics = currentUser.topics || [];
                     currentUser.topics.push(`barangay_${barangay}`);
                 }
             } else {
-                const success = await unsubscribeFromTopic(currentUser.uid, `barangay_${barangay}`);
+                const success = await unsubscribeFromTopic(currentUser.id || currentUser.uid, `barangay_${barangay}`);
                 if (success) {
                     showToast(`Unsubscribed from ${barangay} alerts`, 'info');
                     currentUser.topics = currentUser.topics.filter(t => t !== `barangay_${barangay}`);
@@ -1308,7 +1308,7 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
 
         // Create emergency report
         const reportData = {
-            userId: currentUser.uid,
+            userId: currentUser.id || currentUser.uid,
             userName: currentUser.name,
             userPhone: currentUser.phone,
             userAddress: currentUser.address,
@@ -1385,7 +1385,7 @@ async function loadMyReports() {
 
     try {
         const reportsSnapshot = await db.collection('emergencyReports')
-            .where('userId', '==', currentUser.uid)
+            .where('userId', '==', currentUser.id || currentUser.uid)
             .get();
 
         const reportsList = document.getElementById('myReportsList');
