@@ -139,7 +139,26 @@ function renderInbox(conversations) {
         const card = document.createElement('div');
         const isUnread = chat.unread === true;
         card.className = `chat-card ${isUnread ? 'unread' : ''}`;
-        card.onclick = () => openChat(chat.otherUserId || chat.id, chat.otherUserName, chat.otherUserAvatar, chat.isGroup);
+        
+        // Handle Long Press for Conversation Deletion
+        let longPressTimer;
+        const startPress = () => {
+            longPressTimer = setTimeout(() => {
+                confirmDeleteConversation(chat.id, chat.otherUserName);
+            }, 700);
+        };
+        const cancelPress = () => clearTimeout(longPressTimer);
+
+        card.addEventListener('mousedown', startPress);
+        card.addEventListener('touchstart', startPress);
+        card.addEventListener('mouseup', cancelPress);
+        card.addEventListener('mouseleave', cancelPress);
+        card.addEventListener('touchend', cancelPress);
+
+        card.onclick = (e) => {
+            if (longPressTimer) clearTimeout(longPressTimer);
+            openChat(chat.otherUserId || chat.id, chat.otherUserName, chat.otherUserAvatar, chat.isGroup);
+        };
 
         const time = formatTimestampShort(chat.lastTimestamp);
         
@@ -159,6 +178,58 @@ function renderInbox(conversations) {
             </div>
             ${isUnread ? '<div class="unread-dot-fixed"></div>' : ''}`;
         list.appendChild(card);
+    });
+}
+
+function confirmDeleteConversation(roomId, name) {
+    showConfirmDeleteModal('conversation', roomId, null, name);
+}
+
+function showConfirmDeleteModal(type, roomId, id, name) {
+    const modal = document.getElementById('confirmDeleteModal');
+    const title = document.getElementById('confirmDeleteTitle');
+    const msg = document.getElementById('confirmDeleteMsg');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+
+    if (type === 'conversation') {
+        title.textContent = 'Delete Conversation?';
+        msg.textContent = `Are you sure you want to delete the conversation with "${name}"? This will remove it from your inbox view.`;
+    } else {
+        title.textContent = 'Delete Message?';
+        msg.textContent = 'This will permanently remove the message for everyone in this chat. This action cannot be undone.';
+    }
+
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.classList.remove('modal-open');
+        confirmBtn.onclick = null; // Cleanup
+    };
+
+    cancelBtn.onclick = closeModal;
+    
+    confirmBtn.onclick = () => {
+        if (type === 'conversation') {
+            executeDeleteConversation(roomId);
+        } else {
+            executeDeleteMessage(roomId, id);
+        }
+        closeModal();
+    };
+}
+
+function executeDeleteConversation(roomId) {
+    const myUid = currentUser.id || currentUser.uid;
+    db.collection('CHATS').doc(roomId).update({
+        participants: firebase.firestore.FieldValue.arrayRemove(myUid)
+    }).then(() => {
+        showToast("Conversation deleted", "success");
+    }).catch(err => {
+        console.error("Delete conversation error:", err);
+        showToast("Error deleting conversation", "error");
     });
 }
 
@@ -335,20 +406,41 @@ function loadMessagesFirestore(roomId) {
             // Optimistic rendering: check for only new changes
             snapshot.docChanges().forEach((change) => {
                 if (change.type === "added") {
-                    renderMessage(change.doc.data());
+                    renderMessage(change.doc.data(), change.doc.id, roomId);
+                } else if (change.type === "removed") {
+                    const msgEl = document.getElementById(`msg-${change.doc.id}`);
+                    if (msgEl) msgEl.remove();
                 }
             });
             scrollChatToBottom();
         });
 }
 
-function renderMessage(msg) {
+function renderMessage(msg, msgId, roomId) {
     const container = document.getElementById('chatMessages');
     const myUid = currentUser.id || currentUser.uid;
     const isMine = msg.senderId === myUid;
 
     const div = document.createElement('div');
+    div.id = `msg-${msgId}`;
     div.className = `message-group ${isMine ? 'outgoing' : 'incoming'}`;
+    
+    // Handle Long Press for Message Deletion (Only for own messages)
+    if (isMine) {
+        let longPressTimer;
+        const startPress = () => {
+            longPressTimer = setTimeout(() => {
+                confirmDeleteMessage(roomId, msgId);
+            }, 700);
+        };
+        const cancelPress = () => clearTimeout(longPressTimer);
+
+        div.addEventListener('mousedown', startPress);
+        div.addEventListener('touchstart', startPress);
+        div.addEventListener('mouseup', cancelPress);
+        div.addEventListener('mouseleave', cancelPress);
+        div.addEventListener('touchend', cancelPress);
+    }
     
     const ts = msg.timestamp?.toMillis() || Date.now();
     const displayTime = formatTimeOnly(ts);
@@ -374,6 +466,21 @@ function renderMessage(msg) {
     `;
     
     container.appendChild(div);
+}
+
+function confirmDeleteMessage(roomId, msgId) {
+    showConfirmDeleteModal('message', roomId, msgId);
+}
+
+function executeDeleteMessage(roomId, msgId) {
+    db.collection('CHATS').doc(roomId).collection('MESSAGES').doc(msgId).delete()
+        .then(() => {
+            showToast("Message deleted", "info");
+        })
+        .catch(err => {
+            console.error("Delete message error:", err);
+            showToast("Error deleting message", "error");
+        });
 }
 
 let selectedChatFile = null;
