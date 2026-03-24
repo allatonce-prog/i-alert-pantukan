@@ -52,13 +52,39 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch Strategy: Network First with Cache Fallback
-// This ensures users always get fresh data (critical for emergency app) but app still loads offline
+// Fetch Strategy: Stale-While-Revalidate
+// 1. Serve from cache instantly
+// 2. Fetch from network in background
+// 3. Update cache with fresh version
 self.addEventListener('fetch', (event) => {
+    // Skip non-GET requests (e.g. Firestore, Auth)
+    if (event.request.method !== 'GET') return;
+
+    // Skip cross-origin requests except for Google Fonts and Leaflet
+    const url = new URL(event.request.url);
+    const isInternal = url.origin === location.origin;
+    const isExternalAsset = url.hostname.includes('fonts.googleapis.com') || 
+                           url.hostname.includes('fonts.gstatic.com') ||
+                           url.hostname.includes('unpkg.com');
+
+    if (!isInternal && !isExternalAsset) return;
+
     event.respondWith(
-        fetch(event.request)
-            .catch(() => {
-                return caches.match(event.request);
-            })
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.match(event.request).then((cachedResponse) => {
+                const fetchedResponse = fetch(event.request).then((networkResponse) => {
+                    // Update cache for GET requests only
+                    if (networkResponse && networkResponse.status === 200) {
+                        cache.put(event.request, networkResponse.clone());
+                    }
+                    return networkResponse;
+                }).catch(() => {
+                    // Fail silently, we'll use cachedResponse if it exists
+                });
+
+                // Return cached response instantly if available, otherwise wait for network
+                return cachedResponse || fetchedResponse;
+            });
+        })
     );
 });

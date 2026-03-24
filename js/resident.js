@@ -22,6 +22,19 @@ window.selectedEmergencyType = null;
 let currentPage = 1;
 const itemsPerPage = 5;
 
+// Low-Bandwidth Detection Helper
+function isLowBandwidth() {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const manualMode = localStorage.getItem('lowBandwidthMode') === 'true';
+    if (manualMode) return true;
+    if (conn) {
+        // 'slow-2g', '2g', or '3g' are considered low bandwidth
+        if (['slow-2g', '2g', '3g'].includes(conn.effectiveType)) return true;
+        if (conn.saveData) return true; // Respect user's Data Saver setting
+    }
+    return false;
+}
+
 // Fallback and Config placeholders
 let CLOUDINARY_CONFIG = {
     cloudName: 'djghkklph',
@@ -90,6 +103,9 @@ async function checkAuth() {
 
             // Auto-request GPS Location when logged in / dashboard loaded
             requestBackgroundLocation();
+
+            // Initialize Settings
+            initDataSettings();
         } else {
             // User deleted or invalid
             localStorage.removeItem('currentUser');
@@ -310,6 +326,51 @@ function closeSettings() {
 
 closeSettingsModalBtn.addEventListener('click', closeSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
+
+// ── Notifications & Data Settings ──────────────────
+const barangayToggle = document.getElementById('barangayNotifToggle');
+const lowBWToggle = document.getElementById('lowBandwidthToggle');
+const barangaySpan = document.getElementById('currentBarangaySpan');
+
+function initDataSettings() {
+    if (!currentUser) return;
+
+    // Set Barangay Label
+    const address = currentUser.address || '';
+    const barangay = address.includes(',') ? address.split(',').pop().trim() : address;
+    if (barangaySpan) barangaySpan.textContent = barangay || 'your barangay';
+
+    // Sync Toggles from Firestore/Local
+    if (barangayToggle) {
+        barangayToggle.checked = (currentUser.topics && currentUser.topics.includes(`barangay_${barangay}`));
+        barangayToggle.onchange = async () => {
+            if (barangayToggle.checked) {
+                const success = await subscribeToTopic(currentUser.uid, `barangay_${barangay}`);
+                if (success) {
+                    showToast(`Subscribed to ${barangay} alerts`, 'success');
+                    currentUser.topics = currentUser.topics || [];
+                    currentUser.topics.push(`barangay_${barangay}`);
+                }
+            } else {
+                const success = await unsubscribeFromTopic(currentUser.uid, `barangay_${barangay}`);
+                if (success) {
+                    showToast(`Unsubscribed from ${barangay} alerts`, 'info');
+                    currentUser.topics = currentUser.topics.filter(t => t !== `barangay_${barangay}`);
+                }
+            }
+        };
+    }
+
+    if (lowBWToggle) {
+        lowBWToggle.checked = localStorage.getItem('lowBandwidthMode') === 'true';
+        lowBWToggle.onchange = () => {
+            localStorage.setItem('lowBandwidthMode', lowBWToggle.checked);
+            if (lowBWToggle.checked) {
+                showToast('Low-Bandwidth Mode specifically enabled', 'info');
+            }
+        };
+    }
+}
 
 // Dark Mode Logic
 function initTheme() {
@@ -870,7 +931,17 @@ async function setImage(file) {
         }
 
         // Apply watermark and compress immediately for preview
-        const watermarkedFile = await compressImage(file, 1024, 0.85, currentLocation);
+        let maxWidth = 1024;
+        let quality = 0.85;
+
+        if (isLowBandwidth()) {
+            console.log("[Data Saver] Using low-bandwidth image settings");
+            maxWidth = 640;
+            quality = 0.5;
+            showToast("Slow connection detected. Compressing photo for faster sending.", "info");
+        }
+
+        const watermarkedFile = await compressImage(file, maxWidth, quality, currentLocation);
         selectedImageFile = watermarkedFile;
 
         const reader = new FileReader();
@@ -1195,9 +1266,16 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
 
     const description = document.getElementById('description').value;
 
-    if (!selectedImageFile) {
+    const lowBW = isLowBandwidth();
+
+    if (!selectedImageFile && !lowBW) {
         showToast('Please capture an incident photo to proceed with the report', 'warning');
         return;
+    }
+
+    if (!selectedImageFile && lowBW) {
+        const confirmSkip = confirm("You are in Low-Bandwidth area. Skip photo to send alert faster?");
+        if (!confirmSkip) return;
     }
 
     if (!currentLocation) {

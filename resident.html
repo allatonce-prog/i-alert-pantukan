@@ -828,6 +828,32 @@
                         <button class="btn btn-primary btn-sm pwa-install-trigger" style="padding: 6px 12px; font-size: 13px;">Install</button>
                     </div>
 
+                    <div class="settings-section" style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                        <h3 class="section-title">Notifications & Data</h3>
+                        
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Barangay Alerts</h4>
+                                <p>Subscribe specifically to <span id="currentBarangaySpan" style="font-weight:700; color:var(--color-primary);">your barangay</span> alerts</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="barangayNotifToggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Low-Bandwidth Mode</h4>
+                                <p>Reduce image quality or skip photos on slow connections</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="lowBandwidthToggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="settings-section"
                         style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
                         <h3 class="section-title" style="color: var(--color-error);">System</h3>

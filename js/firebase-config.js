@@ -18,6 +18,16 @@ firebase.initializeApp(firebaseConfig);
 // Initialize services
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Enable Firestore Offline Persistence
+db.enablePersistence().catch((err) => {
+    if (err.code == 'failed-precondition') {
+        console.warn('Persistence failed: Multiple tabs open');
+    } else if (err.code == 'unimplemented') {
+        console.warn('Persistence failed: Browser no support');
+    }
+});
+
 const rtdb = firebase.database();
 
 // Initialize Cloud Messaging (FCM)
@@ -62,6 +72,36 @@ async function requestNotificationPermission(userId, collection = 'USERS') {
         }
     } catch (error) {
         console.error('Error requesting notification permission:', error);
+    }
+}
+
+// Helper: Subscribe to Topic (Simulation via Firestore)
+async function subscribeToTopic(userId, topic, collection = 'USERS') {
+    try {
+        await db.collection(collection).doc(userId).update({
+            topics: firebase.firestore.FieldValue.arrayUnion(topic),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`[FCM] Subscribed to ${topic}`);
+        return true;
+    } catch (e) {
+        console.error(`[FCM] Failed to subscribe to ${topic}:`, e);
+        return false;
+    }
+}
+
+// Helper: Unsubscribe from Topic
+async function unsubscribeFromTopic(userId, topic, collection = 'USERS') {
+    try {
+        await db.collection(collection).doc(userId).update({
+            topics: firebase.firestore.FieldValue.arrayRemove(topic),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log(`[FCM] Unsubscribed from ${topic}`);
+        return true;
+    } catch (e) {
+        console.error(`[FCM] Failed to unsubscribe from ${topic}:`, e);
+        return false;
     }
 }
 
