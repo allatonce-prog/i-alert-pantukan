@@ -1227,8 +1227,8 @@ function startRealtimeListener() {
                     const reportData = change.doc.data();
                     const createdAt = reportData.createdAt?.toMillis() || Date.now();
                     
-                    // Only play sound if the report was created AFTER the admin opened the dashboard (with a 10s buffer)
-                    if (createdAt > (appStartTime - 10000)) {
+                    // Only play sound if the report was created AFTER the admin opened the dashboard
+                    if (createdAt > appStartTime) {
                         const emergency = EMERGENCY_TYPES[reportData.type];
                         const msg = `🚨 NEW EMERGENCY: ${emergency.label} reported by ${reportData.userName}!`;
                         showToast(msg, 'error');
