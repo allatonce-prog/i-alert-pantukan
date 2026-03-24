@@ -112,8 +112,14 @@ async function checkAuth() {
             loadDashboard();
             startRealtimeListener();
 
-            // Request permission for push notifications
-            requestNotificationPermission(user.id, 'ADMIN');
+            // Request permission for push notifications automatically
+            setTimeout(() => {
+                requestNotificationPermission(user.id, 'ADMIN').then(token => {
+                    if (token) {
+                        console.log("Admin Push Notifications Active");
+                    }
+                });
+            }, 1500); // Slight delay for smoother load
         } else {
             // User document doesn't exist (deleted?)
             localStorage.removeItem('currentUser');
@@ -1254,9 +1260,34 @@ function startRealtimeListener() {
             });
 
             loadDashboard(); // Refresh the counts and lists
+            checkUnattendedReports(snapshot); 
         }, (error) => {
             console.error('Realtime listener error:', error);
         });
+}
+
+function checkUnattendedReports(snapshot) {
+    const banner = document.getElementById('unseenAlertsBanner');
+    const countSpan = document.getElementById('unseenCount');
+    if (!banner || !countSpan) return;
+
+    const thirtyMinsAgo = Date.now() - (30 * 60 * 1000);
+    let unattendedCount = 0;
+
+    snapshot.forEach(doc => {
+        const report = doc.data();
+        const createdAt = report.createdAt?.toMillis() || 0;
+        if (report.status === 'pending' && createdAt > thirtyMinsAgo) {
+            unattendedCount++;
+        }
+    });
+
+    if (unattendedCount > 0) {
+        countSpan.textContent = unattendedCount;
+        banner.style.display = 'flex';
+    } else {
+        banner.style.display = 'none';
+    }
 }
 
 // Helper: Hard Refresh (Clear Cache & Reload)

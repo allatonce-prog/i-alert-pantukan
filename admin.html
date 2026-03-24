@@ -145,9 +145,18 @@
                     </button>
                 </div>
             </div>
-        </div>
-        <!-- Dashboard Page -->
-        <div id="dashboardPage" class="page active">
+            <!-- High Priority Missed Reports Banner (Auto-shows when needed) -->
+            <div id="unseenAlertsBanner" class="unseen-alerts-banner" style="display: none;">
+                <div class="banner-content">
+                    <div class="banner-icon">🚨</div>
+                    <div class="banner-text">
+                        <strong>Action Needed:</strong> There are <span id="unseenCount">0</span> unattended reports from the last 30 minutes.
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="showPage('reports')">View All</button>
+            </div>
+
+            <!-- Page Header -->
             <div class="page-header">
                 <div>
                     <h1>Dashboard</h1>
